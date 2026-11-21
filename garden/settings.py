@@ -148,9 +148,10 @@ EMAIL_USE_TLS = os.environ.get("GARDEN_SMTP_STARTTLS", "1") == "1"
 EMAIL_TIMEOUT = 10
 DEFAULT_FROM_EMAIL = os.environ.get("GARDEN_FROM_EMAIL", "garden@localhost")
 EMAIL_FILE_PATH = BASE_DIR / ".private-mail"
+GARDEN_GMAIL_FILE = EMAIL_FILE_PATH / "gmail.json"
 EMAIL_BACKEND = (
     "django.core.mail.backends.smtp.EmailBackend" if EMAIL_HOST
-    else "django.core.mail.backends.filebased.EmailBackend"
+    else "pilot.mail.LocalMailBackend"
 )
 if not EMAIL_HOST:
     EMAIL_FILE_PATH.mkdir(mode=0o700, exist_ok=True)
