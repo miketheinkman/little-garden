@@ -1,0 +1,22 @@
+name: Feature checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements-visual.txt
+      - run: python -m playwright install --with-deps chromium
+      - run: python manage.py test
+      - run: python manage.py test qa.visual
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: feature-screenshots
+          path: visual-results/
+          retention-days: 7

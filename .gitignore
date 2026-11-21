@@ -5,3 +5,4 @@ __pycache__/
 .env
 .local-secret
 .private-mail/
+visual-results/

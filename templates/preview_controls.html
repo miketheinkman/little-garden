@@ -1,7 +1,8 @@
-<a href="{% url 'library' child.pk %}">Back to lesson library</a>
-<a class="link" href="#feedback">Give feedback</a>
+<div class="preview-nav"><a href="{% url 'library' child.pk %}">Back to lesson library</a>
+<a class="link" href="#feedback">Give feedback</a></div>
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
-<p><strong>Parent preview</strong> · {{ lesson.participation }} · Ages {{ lesson.age }}</p>
+<div class="preview-tools"><p><strong>Parent preview</strong> · {{ lesson.participation }} · Ages {{ lesson.age }}</p>
 <p>Round {{ variation|add:1 }} · {% if variation %}<a href="{% url 'preview' child.pk key 0 %}?v={{ variation|add:-1 }}">Previous round</a> · {% endif %} <a href="{% url 'preview' child.pk key 0 %}?v={{ next_variant }}">Try another round</a></p>
 <form method="post" action="{% url 'library' child.pk %}">{% csrf_token %}
 <input type="hidden" name="variation" value="{{ variation }}"><button name="lesson" value="{{ key }}">Add to {{ child.nickname }}’s queue</button></form>
+</div>
