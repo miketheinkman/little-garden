@@ -1,0 +1,354 @@
+{
+  "ladybugs-v1": {
+    "title": "Ladybug lookout",
+    "skill": "Point and click",
+    "age": "4–5",
+    "kind": "mouse",
+    "items": [
+      {
+        "prompt": "Click the ladybug.",
+        "answer": "🐞",
+        "choices": [],
+        "display": ""
+      },
+      {
+        "prompt": "Click the ladybug.",
+        "answer": "🐞",
+        "choices": [],
+        "display": ""
+      },
+      {
+        "prompt": "Click the ladybug.",
+        "answer": "🐞",
+        "choices": [],
+        "display": ""
+      }
+    ]
+  },
+  "keys-v1": {
+    "title": "Meet the letter keys",
+    "skill": "Keyboard familiarity",
+    "age": "4–5",
+    "kind": "key",
+    "items": [
+      {
+        "prompt": "Find the S key.",
+        "answer": "S",
+        "choices": [
+          "S",
+          "A",
+          "T"
+        ],
+        "display": ""
+      },
+      {
+        "prompt": "Find the A key.",
+        "answer": "A",
+        "choices": [
+          "S",
+          "A",
+          "T"
+        ],
+        "display": ""
+      },
+      {
+        "prompt": "Find the T key.",
+        "answer": "T",
+        "choices": [
+          "S",
+          "A",
+          "T"
+        ],
+        "display": ""
+      }
+    ]
+  },
+  "lines-v1": {
+    "title": "Follow the trail",
+    "skill": "Pointer control",
+    "age": "4–5",
+    "kind": "trace",
+    "items": [
+      {
+        "prompt": "Hold down at the dot and follow the path.",
+        "answer": "line",
+        "choices": [],
+        "display": ""
+      },
+      {
+        "prompt": "Hold down at the dot and follow the path.",
+        "answer": "hill",
+        "choices": [],
+        "display": ""
+      }
+    ]
+  },
+  "count1-v1": {
+    "title": "Count the seeds",
+    "skill": "Count a set",
+    "age": "4–5",
+    "kind": "choice",
+    "items": [
+      {
+        "prompt": "Touch each seed as you count. How many?",
+        "answer": "1",
+        "choices": [
+          "1",
+          "2",
+          "3"
+        ],
+        "display": "● "
+      },
+      {
+        "prompt": "Touch each seed as you count. How many?",
+        "answer": "2",
+        "choices": [
+          "1",
+          "2",
+          "3"
+        ],
+        "display": "● ● "
+      },
+      {
+        "prompt": "Touch each seed as you count. How many?",
+        "answer": "3",
+        "choices": [
+          "2",
+          "3",
+          "4"
+        ],
+        "display": "● ● ● "
+      }
+    ]
+  },
+  "count2-v1": {
+    "title": "Count the sprouts",
+    "skill": "Count a set",
+    "age": "4–5",
+    "kind": "choice",
+    "items": [
+      {
+        "prompt": "Touch each seed as you count. How many?",
+        "answer": "3",
+        "choices": [
+          "2",
+          "3",
+          "4"
+        ],
+        "display": "● ● ● "
+      },
+      {
+        "prompt": "Touch each seed as you count. How many?",
+        "answer": "4",
+        "choices": [
+          "3",
+          "4",
+          "5"
+        ],
+        "display": "● ● ● ● "
+      },
+      {
+        "prompt": "Touch each seed as you count. How many?",
+        "answer": "5",
+        "choices": [
+          "4",
+          "5",
+          "6"
+        ],
+        "display": "● ● ● ● ● "
+      }
+    ]
+  },
+  "sounds-v1": {
+    "title": "Listen for the first sound",
+    "skill": "Initial sounds",
+    "age": "5–6",
+    "kind": "choice",
+    "items": [
+      {
+        "prompt": "Say “sun”. Which letter makes its first sound?",
+        "answer": "S",
+        "choices": [
+          "S",
+          "A",
+          "T"
+        ],
+        "display": ""
+      },
+      {
+        "prompt": "Say “ant”. Which letter makes its first sound?",
+        "answer": "A",
+        "choices": [
+          "S",
+          "A",
+          "T"
+        ],
+        "display": ""
+      },
+      {
+        "prompt": "Say “top”. Which letter makes its first sound?",
+        "answer": "T",
+        "choices": [
+          "S",
+          "A",
+          "T"
+        ],
+        "display": ""
+      }
+    ]
+  },
+  "blend-v1": {
+    "title": "Build sat",
+    "skill": "Blend and spell",
+    "age": "5–6",
+    "kind": "key",
+    "items": [
+      {
+        "prompt": "Say “sat” slowly. Find the first sound’s letter.",
+        "answer": "S",
+        "choices": [
+          "S",
+          "A",
+          "T"
+        ],
+        "display": "_ _ _"
+      },
+      {
+        "prompt": "Say “sat” slowly. Find the middle sound’s letter.",
+        "answer": "A",
+        "choices": [
+          "S",
+          "A",
+          "T"
+        ],
+        "display": "s _ _"
+      },
+      {
+        "prompt": "Say “sat” slowly. Find the last sound’s letter.",
+        "answer": "T",
+        "choices": [
+          "S",
+          "A",
+          "T"
+        ],
+        "display": "s a _"
+      }
+    ]
+  },
+  "letters-v1": {
+    "title": "Trace the letters",
+    "skill": "Letter formation practice",
+    "age": "5–6",
+    "kind": "trace",
+    "items": [
+      {
+        "prompt": "Follow the dot to make the letter.",
+        "answer": "L",
+        "choices": [],
+        "display": ""
+      },
+      {
+        "prompt": "Follow the dot to make the letter.",
+        "answer": "V",
+        "choices": [],
+        "display": ""
+      },
+      {
+        "prompt": "Follow the dot to make the letter.",
+        "answer": "O",
+        "choices": [],
+        "display": ""
+      }
+    ]
+  },
+  "digits-v1": {
+    "title": "Trace the numbers",
+    "skill": "Numeral formation practice",
+    "age": "5–6",
+    "kind": "trace",
+    "items": [
+      {
+        "prompt": "Start at the dot and draw the numeral.",
+        "answer": "1",
+        "choices": [],
+        "display": ""
+      },
+      {
+        "prompt": "Start at the dot and draw the numeral.",
+        "answer": "2",
+        "choices": [],
+        "display": ""
+      }
+    ]
+  },
+  "five-v1": {
+    "title": "Make five",
+    "skill": "Compose five",
+    "age": "5–6",
+    "kind": "choice",
+    "items": [
+      {
+        "prompt": "1 seeds are planted. How many more make five?",
+        "answer": "4",
+        "choices": [
+          "2",
+          "3",
+          "4"
+        ],
+        "display": "● ○ ○ ○ ○ "
+      },
+      {
+        "prompt": "3 seeds are planted. How many more make five?",
+        "answer": "2",
+        "choices": [
+          "2",
+          "3",
+          "4"
+        ],
+        "display": "● ● ● ○ ○ "
+      },
+      {
+        "prompt": "2 seeds are planted. How many more make five?",
+        "answer": "3",
+        "choices": [
+          "2",
+          "3",
+          "4"
+        ],
+        "display": "● ● ○ ○ ○ "
+      }
+    ]
+  },
+  "book-v1": {
+    "title": "Read with Sam",
+    "skill": "Read connected text",
+    "age": "5–6",
+    "kind": "adult",
+    "items": [
+      {
+        "prompt": "Read together. Ask who sat, then let your child point to the sentence that tells you.",
+        "answer": "Read together",
+        "choices": [
+          "Read together"
+        ],
+        "display": "Sam sat. Mat sat. Sam and Mat sat."
+      }
+    ]
+  },
+  "beans-v1": {
+    "title": "Five real beans",
+    "skill": "One-to-one counting",
+    "age": "4–6",
+    "kind": "adult",
+    "items": [
+      {
+        "prompt": "With a grown-up, put one bean in each of five cups. Count together. How many beans did you use?",
+        "answer": "We tried it",
+        "choices": [
+          "We tried it"
+        ],
+        "display": ""
+      }
+    ]
+  }
+}
