@@ -163,3 +163,43 @@ class DashboardTests(TestCase):
             learner = Learner.objects.create(parent=reviewer, nickname=str(i))
             learner.assignment_set.create(lesson="keys-v1", step=1)
         self.assertEqual(self.client.get("/dashboard/?lesson=keys-v1").context["rows"][0]["retries"], 2)
+
+
+class FeedbackWorkflowTests(TestCase):
+    def setUp(self):
+        from .models import LessonFeedback
+        User = get_user_model()
+        self.parent = User.objects.create_user("writer", email="writer@example.org")
+        self.staff = User.objects.create_user("review-team", is_staff=True)
+        self.note = LessonFeedback.objects.create(parent=self.parent, lesson="keys-v1", kind="worked")
+        self.read = {"action": "read", "feedback": self.note.pk}
+        self.reply = {"action": "reply", "feedback": self.note.pk, "reply": "We kept the key hint.",
+                      "submission": "22db086f-c868-442e-bb96-2b89ebeed903"}
+
+    def test_opt_in_state_changes_and_repeat_submissions(self):
+        from django.core import mail
+        self.client.force_login(self.parent)
+        self.assertEqual(self.client.post("/dashboard/", self.reply).status_code, 403)
+        self.client.post("/feedback/preferences/", {"notify": "on"})
+        self.client.force_login(self.staff)
+        for data in [self.read, self.read, self.reply, self.reply]:
+            self.assertEqual(self.client.post("/dashboard/", data).status_code, 302)
+        self.assertEqual([m.to for m in mail.outbox], [[self.parent.email], [self.parent.email]])
+        self.assertEqual(self.note.replies.count(), 1)
+        self.client.force_login(self.parent)
+        self.assertContains(self.client.get("/feedback/"), "We kept the key hint.")
+        self.client.post("/feedback/preferences/", {})
+        self.client.force_login(self.staff)
+        self.client.post("/dashboard/", dict(self.reply, submission="d4df4a2f-d55c-4f8f-b4d1-922218f1bc00"))
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_default_off_reply_marks_read_and_is_private(self):
+        from django.core import mail
+        self.client.force_login(self.staff)
+        self.client.post("/dashboard/", self.reply)
+        self.note.refresh_from_db()
+        self.assertIsNotNone(self.note.read_at)
+        self.assertEqual(len(mail.outbox), 0)
+        outsider = get_user_model().objects.create_user("unrelated")
+        self.client.force_login(outsider)
+        self.assertNotContains(self.client.get("/feedback/"), self.reply["reply"])

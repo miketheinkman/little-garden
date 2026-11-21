@@ -1,0 +1,5 @@
+<p class="meta">{% if feedback.read_at %}Read by the team · {{ feedback.read_at|date:"M j, Y" }}{% else %}Awaiting review{% endif %}</p>
+{% for reply in feedback.replies.all %}
+<section class="team-reply"><strong>Little Garden team</strong> · {{ reply.created|date:"M j, Y" }}
+<p>{{ reply.text|linebreaksbr }}</p></section>
+{% endfor %}

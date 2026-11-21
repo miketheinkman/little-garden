@@ -2,12 +2,18 @@
 {% block content %}
 <a href="/">Family garden</a>
 <h1>Lesson feedback</h1>
+{% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
+<form method="post" action="{% url 'feedback_preferences' %}">{% csrf_token %}
+<label><input type="checkbox" name="notify" {% if notify %}checked{% endif %}> Email me when the team reads or replies to my feedback</label>
+{% if user.email %}<p>Updates go to {{ user.email }}.</p>{% else %}<p><a href="{% url 'recovery_email' %}">Add a parent email address</a> to receive updates.</p>{% endif %}
+<button>Save preference</button></form>
 {% if user.is_staff %}<p>Family submissions for the Little Garden team.</p>{% endif %}
 {% for row in rows %}
-<article>
+<article id="note-{{ row.pk }}">
   <h2>{{ row.info.title }}</h2>
   <p>{% if row.step == None %}Whole lesson{% else %}Step {{ row.step|add:1 }}{% endif %} · {{ row.get_kind_display }} · {{ row.created|date:"M j, Y" }}</p>
   {% if row.note %}<p>{{ row.note|linebreaksbr }}</p>{% endif %}
+{% include "feedback_thread.html" with feedback=row %}
 </article>
 {% empty %}<p>No feedback yet. Open a lesson preview to flag a step or leave a note.</p>{% endfor %}
 {% endblock %}

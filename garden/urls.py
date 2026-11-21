@@ -11,6 +11,7 @@ urlpatterns = [
     path("signup/", views.signup, name="signup"),
     path("login/", LoginView.as_view(template_name="account.html"), name="login"),
     path("dashboard/", dashboard, name="dashboard"),
+    path("feedback/preferences/", views.feedback_preferences, name="feedback_preferences"),
     path("feedback/", views.feedback_history, name="feedback_history"),
     path("account/email/", views.recovery_email, name="recovery_email"),
     path("password/reset/", auth.PasswordResetView.as_view(

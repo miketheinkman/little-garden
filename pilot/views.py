@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST, require_http_methods
 
-from .models import Assignment, Learner, LessonFeedback
+from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 
 LESSONS = json.loads((settings.BASE_DIR / "content/lessons.json").read_text())
 
@@ -141,10 +141,23 @@ def preview(request, pk, key, step):
 
 @login_required
 def feedback_history(request):
-    rows = LessonFeedback.objects.all()
+    rows = LessonFeedback.objects.prefetch_related("replies")
     if not request.user.is_staff:
         rows = rows.filter(parent=request.user)
-    return render(request, "feedback_history.html", {"rows": decorate(rows)})
+    enabled = FeedbackEmailPreference.objects.filter(parent=request.user, enabled=True).exists()
+    return render(request, "feedback_history.html", {"rows": decorate(rows), "notify": enabled})
+
+
+@login_required
+@require_POST
+def feedback_preferences(request):
+    enabled = request.POST.get("notify") == "on"
+    if enabled and not request.user.email:
+        messages.error(request, "Add an email address to your account before enabling notifications.")
+    else:
+        FeedbackEmailPreference.objects.update_or_create(parent=request.user, defaults={"enabled": enabled})
+        messages.success(request, "Email preference saved.")
+    return redirect("feedback_history")
 
 
 @login_required

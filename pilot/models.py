@@ -30,8 +30,26 @@ class LessonFeedback(models.Model):
     step = models.PositiveIntegerField(null=True)
     kind = models.CharField(max_length=12, choices=Kind.choices)
     note = models.CharField(max_length=1500, blank=True)
+    read_at = models.DateTimeField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created", "-pk"]
         permissions = [("review_lessons", "Access the lesson review dashboard")]
+
+
+class FeedbackReply(models.Model):
+    feedback = models.ForeignKey(LessonFeedback, related_name="replies", on_delete=models.CASCADE)
+    reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    submission = models.UUIDField()
+    text = models.CharField(max_length=2000)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created", "pk"]
+        constraints = [models.UniqueConstraint(fields=["feedback", "submission"], name="unique_feedback_reply")]
+
+
+class FeedbackEmailPreference(models.Model):
+    parent = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    enabled = models.BooleanField(default=False)
