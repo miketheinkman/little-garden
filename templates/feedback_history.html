@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<a href="/">Family garden</a>
+<h1>Lesson feedback</h1>
+{% if user.is_staff %}<p>Family submissions for the Little Garden team.</p>{% endif %}
+{% for row in rows %}
+<article>
+  <h2>{{ row.info.title }}</h2>
+  <p>{% if row.step == None %}Whole lesson{% else %}Step {{ row.step|add:1 }}{% endif %} · {{ row.get_kind_display }} · {{ row.created|date:"M j, Y" }}</p>
+  {% if row.note %}<p>{{ row.note|linebreaksbr }}</p>{% endif %}
+</article>
+{% empty %}<p>No feedback yet. Open a lesson preview to flag a step or leave a note.</p>{% endfor %}
+{% endblock %}

@@ -115,3 +115,23 @@ class LibraryTests(TestCase):
         outsider = get_user_model().objects.create_user("outside")
         self.client.force_login(outsider)
         self.assertEqual(self.client.get(self.library+"market-v1/preview/0/").status_code, 404)
+
+    def test_preview_feedback_is_scoped_and_separate_from_progress(self):
+        from .models import LessonFeedback
+        url = self.library + "keys-v1/preview/1/"
+        data = {"action": "feedback", "kind": "confusing", "note": "The prompt needs a picture."}
+        self.assertEqual(self.client.post(url, data, HTTP_ACCEPT="application/json").json(), {"saved": True})
+        feedback = LessonFeedback.objects.get()
+        self.assertEqual((feedback.step, feedback.lesson), (1, "keys-v1"))
+        self.assertContains(self.client.get("/feedback/"), data["note"])
+        end = self.library + "keys-v1/preview/3/"
+        self.assertRedirects(self.client.post(end, {"action": "feedback", "kind": "worked"}), end)
+        self.assertTrue(LessonFeedback.objects.filter(step=None, kind="worked").exists())
+        self.assertFalse(Assignment.objects.exists())
+        outsider = get_user_model().objects.create_user("other-reviewer")
+        self.client.force_login(outsider)
+        self.assertNotContains(self.client.get("/feedback/"), data["note"])
+        self.assertEqual(self.client.post(url, data).status_code, 404)
+        outsider.is_staff = True
+        outsider.save(update_fields=["is_staff"])
+        self.assertContains(self.client.get("/feedback/"), data["note"])

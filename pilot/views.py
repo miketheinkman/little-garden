@@ -7,12 +7,12 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from .forms import ParentSignupForm, RecoveryEmailForm
 from django.db.models import F, Max
-from django.http import Http404, HttpResponseBadRequest
+from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST, require_http_methods
 
-from .models import Assignment, Learner
+from .models import Assignment, Learner, LessonFeedback
 
 LESSONS = json.loads((settings.BASE_DIR / "content/lessons.json").read_text())
 
@@ -110,20 +110,41 @@ def library(request, pk):
 def preview(request, pk, key, step):
     child = get_object_or_404(Learner, parent=request.user, pk=pk)
     lesson = LESSONS.get(key)
-    if not lesson or step >= len(lesson["items"]):
+    if not lesson or step > len(lesson["items"]):
         raise Http404
+    finished = step == len(lesson["items"])
+    context = {
+        "preview": True, "child": child, "key": key, "step": step, "lesson": lesson,
+        "feedback_kinds": LessonFeedback.Kind.choices, "finished": finished,
+    }
+    if request.method == "POST" and request.POST.get("action") == "feedback":
+        kind = request.POST.get("kind")
+        note = request.POST.get("note", "").strip()
+        if kind not in LessonFeedback.Kind.values or len(note) > 1500:
+            return HttpResponseBadRequest("Choose a feedback type and use at most 1500 characters.")
+        LessonFeedback.objects.create(parent=request.user, lesson=key, step=None if finished else step,
+                                      kind=kind, note=note)
+        if request.headers.get("Accept") == "application/json":
+            return JsonResponse({"saved": True})
+        messages.success(request, "Feedback saved. Thank you for helping shape this lesson.")
+        return redirect("preview", pk, key, step)
+    if finished:
+        return render(request, "preview_done.html", context)
     item = lesson["items"][step]
-    error = ""
+    context["item"] = item
     if request.method == "POST":
         if request.POST.get("answer", "").casefold() == item["answer"].casefold():
-            if step + 1 < len(lesson["items"]):
-                return redirect("preview", pk, key, step+1)
-            return render(request, "preview_done.html", {"child": child, "lesson": lesson, "key": key})
-        error = "Take another look. You can try again."
-    return render(request, "play.html", {
-        "preview": True, "child": child, "key": key, "step": step,
-        "lesson": lesson, "item": item, "error": error,
-    })
+            return redirect("preview", pk, key, step+1)
+        context["error"] = "Take another look. You can try again."
+    return render(request, "play.html", context)
+
+
+@login_required
+def feedback_history(request):
+    rows = LessonFeedback.objects.all()
+    if not request.user.is_staff:
+        rows = rows.filter(parent=request.user)
+    return render(request, "feedback_history.html", {"rows": decorate(rows)})
 
 
 @login_required

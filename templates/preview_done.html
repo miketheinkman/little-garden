@@ -1,4 +1,4 @@
 {% extends 'base.html' %}
 {% block content %}<h1>Preview complete</h1><p>{{ lesson.title }}</p>
 {% include 'preview_controls.html' %}
-<p><a href="{% url 'preview' child.pk key 0 %}">Try the preview again</a></p>{% endblock %}
+<p><a href="{% url 'preview' child.pk key 0 %}">Try the preview again</a></p>{% include "preview_feedback.html" %}{% endblock %}

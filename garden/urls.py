@@ -9,6 +9,7 @@ urlpatterns = [
     path("mission/", TemplateView.as_view(template_name="mission.html"), name="mission"),
     path("signup/", views.signup, name="signup"),
     path("login/", LoginView.as_view(template_name="account.html"), name="login"),
+    path("feedback/", views.feedback_history, name="feedback_history"),
     path("account/email/", views.recovery_email, name="recovery_email"),
     path("password/reset/", auth.PasswordResetView.as_view(
         template_name="recovery.html", email_template_name="recovery_email.txt",

@@ -22,7 +22,7 @@ function answer(value) {
 
 if (form.dataset.kind === "key") {
   document.addEventListener("keydown", event => {
-    if (event.target.closest("a, button") && !form.contains(event.target)) return;
+    if (event.target.closest("a, button, input, textarea, select, [contenteditable]") && !form.contains(event.target)) return;
     if (!event.repeat && !event.ctrlKey && !event.metaKey && !event.altKey && /^[a-z0-9]$/i.test(event.key)) {
       event.preventDefault();
       answer(event.key);

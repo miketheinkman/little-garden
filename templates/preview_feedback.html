@@ -1,0 +1,16 @@
+{% load static %}
+<article id="feedback" aria-labelledby="feedback-heading">
+  <h2 id="feedback-heading">How did {% if finished %}this lesson{% else %}step {{ step|add:1 }}{% endif %} go?</h2>
+  <p>Your observations help the Little Garden team decide what to keep and what to revise.</p>
+  <form method="post">
+    {% csrf_token %}<input type="hidden" name="action" value="feedback">
+    <label for="feedback-note">Add a note (optional)</label>
+    <textarea id="feedback-note" name="note" maxlength="1500" rows="3" placeholder="What happened when you tried it?"></textarea>
+    <fieldset><legend>Choose a flag to save your feedback</legend>
+      {% for value, label in feedback_kinds %}<button name="kind" value="{{ value }}">{{ label }}</button> {% endfor %}
+    </fieldset>
+  </form>
+  <p role="status" id="feedback-status"></p>
+  <a href="{% url 'feedback_history' %}">Review saved feedback</a>
+</article>
+<script src="{% static 'feedback.js' %}" defer></script>

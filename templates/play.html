@@ -11,4 +11,4 @@
 <label>Garden sign <input type="text" name="answer" autocomplete="off" autocapitalize="off" spellcheck="false" required></label>
 <button>Check sign</button>
 {% elif lesson.kind == 'mouse' %}<div class="meadow"><button class="bug step{{ step }}" name="answer" value="🐞" aria-label="Ladybug">🐞</button></div>
-{% else %}{% for choice in item.choices %}<button name="answer" value="{{ choice }}">{{ choice }}</button>{% endfor %}{% endif %}</form></article><script src="{% static 'activity.js' %}" defer></script>{% endblock %}
+{% else %}{% for choice in item.choices %}<button name="answer" value="{{ choice }}">{{ choice }}</button>{% endfor %}{% endif %}</form></article>{% if preview %}{% include "preview_feedback.html" %}{% endif %}<script src="{% static 'activity.js' %}" defer></script>{% endblock %}

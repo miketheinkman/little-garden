@@ -17,3 +17,20 @@ class Assignment(models.Model):
 
     class Meta:
         ordering = ["position", "id"]
+
+
+class LessonFeedback(models.Model):
+    class Kind(models.TextChoices):
+        WORKED = "worked", "What worked"
+        CONFUSING = "confusing", "What was confusing"
+        CHANGE = "change", "What I’d change"
+
+    parent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    lesson = models.CharField(max_length=80)
+    step = models.PositiveIntegerField(null=True)
+    kind = models.CharField(max_length=12, choices=Kind.choices)
+    note = models.CharField(max_length=1500, blank=True)
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created", "-pk"]
