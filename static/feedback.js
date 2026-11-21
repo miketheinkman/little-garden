@@ -10,7 +10,7 @@ feedbackForm.addEventListener("submit", async event => {
   buttons.forEach(item => { item.disabled = true; });
   status.textContent = "Saving feedback…";
   try {
-    const response = await fetch(feedbackForm.action, {
+    const response = await fetch(window.location.href, {
       method: "POST", body: fields, headers: {Accept: "application/json"}
     });
     if (!response.ok || !(await response.json()).saved) throw new Error();
