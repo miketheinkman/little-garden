@@ -34,3 +34,4 @@ class LessonFeedback(models.Model):
 
     class Meta:
         ordering = ["-created", "-pk"]
+        permissions = [("review_lessons", "Access the lesson review dashboard")]

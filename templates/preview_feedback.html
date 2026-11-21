@@ -1,7 +1,7 @@
 {% load static %}
 <article id="feedback" aria-labelledby="feedback-heading">
   <h2 id="feedback-heading">How did {% if finished %}this lesson{% else %}step {{ step|add:1 }}{% endif %} go?</h2>
-  <p>Your observations help the Little Garden team decide what to keep and what to revise.</p>
+  <p>Your observations help the Little Garden team decide what to keep and what to revise. Reviewers can read your note; please leave out names and contact details.</p>
   <form method="post">
     {% csrf_token %}<input type="hidden" name="action" value="feedback">
     <label for="feedback-note">Add a note (optional)</label>

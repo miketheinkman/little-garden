@@ -135,3 +135,31 @@ class LibraryTests(TestCase):
         outsider.is_staff = True
         outsider.save(update_fields=["is_staff"])
         self.assertContains(self.client.get("/feedback/"), data["note"])
+
+
+class DashboardTests(TestCase):
+    def test_permissions_counts_and_privacy(self):
+        from django.contrib.auth.models import Permission
+        from django.utils import timezone
+        from .models import LessonFeedback
+
+        reviewer = get_user_model().objects.create_user("reviewer")
+        child = Learner.objects.create(parent=reviewer, nickname="PrivateNickname")
+        child.assignment_set.create(lesson="keys-v1", retries=2)
+        child.assignment_set.create(lesson="keys-v1")
+        child.assignment_set.create(lesson="keys-v1", completed=timezone.now(), step=3)
+        LessonFeedback.objects.create(parent=reviewer, lesson="keys-v1", kind="change", note="Use larger keys")
+        self.assertEqual(self.client.get("/dashboard/").status_code, 302)
+        self.client.force_login(reviewer)
+        self.assertEqual(self.client.get("/dashboard/").status_code, 403)
+        reviewer.user_permissions.add(Permission.objects.get(codename="review_lessons"))
+        response = self.client.get("/dashboard/?lesson=keys-v1")
+        row, = response.context["rows"]
+        self.assertEqual([row[k] for k in ("assigned","started","finished","retries","change")], [3,2,1,None,1])
+        self.assertContains(response, "Use larger keys")
+        self.assertNotContains(response, "PrivateNickname")
+        self.assertNotContains(self.client.get("/dashboard/?flag=worked"), "Use larger keys")
+        for i in range(4):
+            learner = Learner.objects.create(parent=reviewer, nickname=str(i))
+            learner.assignment_set.create(lesson="keys-v1", step=1)
+        self.assertEqual(self.client.get("/dashboard/?lesson=keys-v1").context["rows"][0]["retries"], 2)
