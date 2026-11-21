@@ -42,11 +42,22 @@ class VisualReview(StaticLiveServerTestCase):
     def exercise(self, page, theme):
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
-        page.goto(self.live_server_url + "/login/")
+        page.goto(self.live_server_url)
         picker = page.get_by_label("Theme", exact=True)
         picker.select_option(theme)
         page.reload()
         expect(page.locator("html")).to_have_attribute("data-theme", theme)
+        page.get_by_role("button", name="Replay opening").click()
+        self.assertGreater(page.locator(".meadow-scene").evaluate(
+            "(scene) => scene.getAnimations({subtree:true}).length"), 0)
+        self.capture(page, "welcome")
+        page.emulate_media(reduced_motion="reduce")
+        expect(page.get_by_role("button", name="Replay opening")).to_be_hidden()
+        self.assertEqual(page.locator(".meadow-scene").evaluate(
+            "(scene) => scene.getAnimations({subtree:true}).length"), 0)
+        page.get_by_role("link", name="Enter the garden").click()
+        expect(page).to_have_url(self.live_server_url + "/login/")
+        page.emulate_media(reduced_motion="no-preference")
         self.capture(page, "login")
         page.locator("#id_username").fill("reviewer")
         page.locator("#id_password").fill("garden-qa-only")

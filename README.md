@@ -60,3 +60,7 @@ Each strand’s estimate fits the latest 24 observations, weighting recent ones 
 Install the optional browser tests with `.venv/bin/pip install -r requirements-visual.txt` and `.venv/bin/python -m playwright install chromium`. Run `.venv/bin/python manage.py test` and `.venv/bin/python manage.py test qa.visual`. On Linux with Chrome already installed, you can use `PLAYWRIGHT_CHROME_PATH=/usr/bin/google-chrome .venv/bin/python manage.py test qa.visual` for the browser run.
 
 The suite exercises a disposable family’s parent, child, library, art, feedback, sign-in, and admin screens. It captures 375px and 1200px layouts in both light and dark, checks for horizontal overflow and browser exceptions, and checks theme persistence and device changes. Open the screenshots in `visual-results/` and inspect the screens changed by each feature. GitHub Actions also runs the suites on pushes and pull requests and retains the screenshot artifact for seven days.
+
+## Welcome and brand assets
+
+The signed-out home page opens an illustrated garden. Visit `/welcome/` to replay it from any account. Entry is available throughout the animation and the reduced-motion setting displays the finished scene. The mission page links to the downloadable Book Sprout brand kit, including source SVGs, light and dark wordmarks, PNG icons, a favicon, palette, attribution, and license. Original brand and opening-scene artwork is released under CC BY-SA 4.0.

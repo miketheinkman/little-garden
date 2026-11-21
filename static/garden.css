@@ -134,3 +134,5 @@ footer{border-top:1px solid var(--line);margin-top:2rem}
  .review-totals{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.4rem}.review-totals div{min-width:0;padding:.55rem;font-size:.87rem}
  .review-totals strong{font-size:1.8rem}
 }
+
+.brand img{vertical-align:middle;margin-right:.15rem}

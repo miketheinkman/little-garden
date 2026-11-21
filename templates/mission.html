@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %}{% load static %}
 {% block title %}Mission statement · Little Garden{% endblock %}
 {% block content %}
 <article class="account">
@@ -12,6 +12,7 @@
   <h2>Supporting Little Garden</h2>
   <p>We welcome optional donations to help cover hosting and the work of creating and reviewing lessons. Every family gets the same tools whether they give or not.</p>
   <p><strong>Online donations</strong> · A donation link will appear here when it’s ready.</p>
+  <p><a href="{% static 'brand/little-garden-brand.zip' %}" download>Download the Little Garden brand kit</a></p>
   {% endif %}
 </article>
 {% endblock %}

@@ -1,0 +1,21 @@
+{% load static %}<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Welcome to Little Garden</title>
+<link rel="icon" href="{% static 'brand/book-sprout.svg' %}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{% static 'brand/apple-touch-icon.png' %}">
+<script src="{% static 'theme.js' %}"></script>
+<link rel="stylesheet" href="{% static 'garden.css' %}"><link rel="stylesheet" href="{% static 'welcome.css' %}">
+</head><body class="welcome">
+<div class="story-page">
+{% include 'welcome_scene.html' %}
+<header class="story-header"><a class="brand" href="{% url 'welcome' %}"><img src="{% static 'brand/book-sprout.svg' %}" width="36" height="36" alt=""> Little Garden</a>
+<div class="theme-control"><label for="theme">Theme</label> <select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></div></header>
+<main class="invitation">
+<h1>Little <em>Garden</em></h1>
+<p>Free for everybody. Forever.</p>
+<a class="enter" href="{% if user.is_authenticated or request.session.child %}{% url 'home' %}{% else %}{% url 'login' %}{% endif %}">Enter the garden</a>
+</main>
+<div class="story-footer"><a href="{% url 'mission' %}">Our mission</a><button type="button" id="replay" hidden>↻ &nbsp;Replay opening</button></div>
+</div>
+<script src="{% static 'welcome.js' %}" defer></script></body></html>

@@ -1,0 +1,13 @@
+LITTLE GARDEN · Book Sprout
+The leaves grow out of the spine of an open book. Use the square mark for avatars, browser tabs and home-screen icons. Use the horizontal wordmark where the name needs to be legible. Choose wordmark-dark.svg for dark backgrounds.
+Leave a leaf-width of clear space around the mark. Keep the original proportions.
+
+Pine #234638
+Leaf #98C388
+Marigold #E8B650
+Terracotta #E67E5F
+Paper #FFEDC7
+
+Mission line: Free for everybody. Forever.
+Original artwork by Little Garden contributors, licensed under CC BY-SA 4.0.
+https://creativecommons.org/licenses/by-sa/4.0/

@@ -78,7 +78,7 @@ def home(request):
         child.round_count = len(progress.recent)
         return render(request, "child.html", {"child": child, "queue": queue,
                       "suggestions": [] if queue else progress.recommendations()})
-    return redirect("login")
+    return render(request, "welcome.html")
 
 
 def decorate(rows):
