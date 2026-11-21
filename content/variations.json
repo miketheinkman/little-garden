@@ -1,0 +1,152 @@
+{
+  "book-v1": [
+    [
+      {
+        "prompt": "Read together. What did Sam dig? Find the words that tell you.",
+        "display": "Sam dug a pit. A bug sat in it."
+      }
+    ],
+    [
+      {
+        "prompt": "Read together. What did Sam get wet? Point to your clue.",
+        "display": "Sam had a hat. A drip fell. His hat got wet."
+      }
+    ]
+  ],
+  "beans-v1": [
+    [
+      {
+        "prompt": "Set five beans beside five cups. Grown-up, leave one cup empty and one with two beans. Ask your child to give each cup exactly one."
+      }
+    ],
+    [
+      {
+        "prompt": "Make a circle with five cups. Grown-up, invite your child to drop one bean in each cup as you count together. Start at a different cup and count again."
+      }
+    ]
+  ],
+  "drums-v1": [
+    [
+      {
+        "prompt": "Tap one knee, clap, then tap the other knee. Invite your child to echo the sequence."
+      },
+      {
+        "prompt": "Let your child change one movement. Copy it together twice."
+      }
+    ],
+    [
+      {
+        "prompt": "Tap your shoulders twice, then clap once. Invite your child to copy you slowly."
+      },
+      {
+        "prompt": "Trade roles. Echo your child’s pattern, then ask them to lead it once more."
+      }
+    ]
+  ],
+  "story-v1": [
+    [
+      {
+        "prompt": "Read together. What might Kit do to remember summer?",
+        "display": "The last strawberry was ripe. Kit wanted to eat it. Gran wanted to paint a picture of it."
+      },
+      {
+        "prompt": "How did Kit help both wishes come true? Imagine another way.",
+        "display": "Kit held the berry still while Gran painted. Then they ate it together."
+      }
+    ],
+    [
+      {
+        "prompt": "Read together. What might the friends decide?",
+        "display": "Kit and Mo had one strawberry and two bowls. Mo had promised some fruit to Dad."
+      },
+      {
+        "prompt": "Why did the friends change their plan? Tell a new ending.",
+        "display": "Kit fetched Dad. They sat on the step and shared three little slices."
+      }
+    ]
+  ],
+  "shadow-v1": [
+    [
+      {
+        "prompt": "Point the flashlight at the wall. Hold your toy sideways and predict how its outline will change when you turn it."
+      },
+      {
+        "prompt": "Keep the light still. Turn the toy a little at a time. Describe the widest and narrowest shadows."
+      }
+    ],
+    [
+      {
+        "prompt": "Hold the light behind your toy. Predict which way the shadow will move if the light shifts sideways."
+      },
+      {
+        "prompt": "Keep your toy still and move the light left, then right. Ask your child to point out what changed."
+      }
+    ]
+  ],
+  "snail-v1": [
+    [
+      {
+        "prompt": "Who is the parcel for?",
+        "display": "Pip found a parcel marked “For Bee, by the oak.” A moth waved from a rose.",
+        "answer": "Bee",
+        "choices": [
+          "Bee",
+          "Moth",
+          "Pip"
+        ]
+      },
+      {
+        "prompt": "Why did Pip ask for a leaf?",
+        "display": "The parcel split. Three seeds rolled out. Pip asked Moth for a leaf to wrap them in.",
+        "answer": "To hold the seeds",
+        "choices": [
+          "To hold the seeds",
+          "To hide",
+          "To eat lunch"
+        ]
+      },
+      {
+        "prompt": "How can you tell Bee opened the parcel?",
+        "display": "At the oak, Bee untied the leaf. Three seeds fell into her cup.",
+        "answer": "Seeds fell into her cup",
+        "choices": [
+          "Seeds fell into her cup",
+          "Pip waved",
+          "A moth flew"
+        ]
+      }
+    ],
+    [
+      {
+        "prompt": "Where does the card belong?",
+        "display": "The card showed a pond and said “For Frog.” Pip first tried a dry log.",
+        "answer": "At the pond",
+        "choices": [
+          "At the pond",
+          "Inside the log",
+          "In a nest"
+        ]
+      },
+      {
+        "prompt": "Why did Pip climb aboard?",
+        "display": "The path ended at deep water. Duck offered Pip a ride across on her back.",
+        "answer": "To cross the water",
+        "choices": [
+          "To cross the water",
+          "To find a log",
+          "To dry off"
+        ]
+      },
+      {
+        "prompt": "Which detail shows Frog liked the card?",
+        "display": "Frog read the card twice. He smiled and pinned it beside his door.",
+        "answer": "He displayed it",
+        "choices": [
+          "He displayed it",
+          "It was wet",
+          "Duck swam away"
+        ]
+      }
+    ]
+  ]
+}

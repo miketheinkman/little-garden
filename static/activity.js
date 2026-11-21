@@ -33,6 +33,9 @@ if (form.dataset.kind === "key") {
 const trail = document.querySelector("#trail");
 if (trail) {
   const shapes = {
+    W: "M35 30L64 120L98 61L134 120L162 30", Z: "M55 25H145L55 125H145",
+    N: "M60 125V25L140 125V25", 3: "M60 38Q155 -5 122 65L94 75Q165 80 125 118Q95 140 60 119",
+    4: "M128 125V26L61 93H150", 7: "M55 27H147L85 126",
     river: "M22 112 Q70 12 114 66 T180 38", stream: "M24 25 C180 12 180 65 104 75 S30 130 178 122",
     line: "M28 75H172", hill: "M24 110Q100 -16 176 110",
     L: "M74 25V125H134", V: "M55 25L100 125L145 25",
@@ -42,7 +45,7 @@ if (trail) {
   const ink = document.querySelector("#ink");
   const dot = document.querySelector("#dot");
   const shape = trail.dataset.shape;
-  for (const path of trail.querySelectorAll("path")) path.setAttribute("d", shapes[shape]);
+  for (const path of trail.querySelectorAll("path")) path.setAttribute("d", trail.dataset.path || shapes[shape]);
   const length = ink.getTotalLength();
   let distance = 0, pointer = null;
   ink.style.strokeDasharray = length + " " + length;

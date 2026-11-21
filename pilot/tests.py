@@ -203,3 +203,48 @@ class FeedbackWorkflowTests(TestCase):
         outsider = get_user_model().objects.create_user("unrelated")
         self.client.force_login(outsider)
         self.assertNotContains(self.client.get("/feedback/"), self.reply["reply"])
+
+
+class PracticeRoundTests(TestCase):
+    def test_rounds_repeat_the_skill_and_keep_catalog_intact(self):
+        from copy import deepcopy
+        from .practice import build_round, round_count
+        original = deepcopy(LESSONS)
+        for key, base in LESSONS.items():
+            examples = []
+            for n in range(min(round_count(key), 24)):
+                lesson = build_round(key, n)
+                self.assertEqual(lesson["skill"], base["skill"])
+                self.assertEqual(len(lesson["items"]), len(base["items"]))
+                self.assertEqual(lesson, build_round(key, n))
+                for item in lesson["items"]:
+                    if item["choices"]:
+                        self.assertIn(item["answer"], item["choices"])
+                    if lesson["kind"] == "basket":
+                        self.assertIn(int(item["answer"]), range(1, 13))
+                examples.append(lesson["items"])
+            self.assertNotEqual(examples[0], examples[1], key)
+            self.assertNotEqual(examples[1], examples[2], key)
+        self.assertEqual(LESSONS, original)
+
+    def test_preview_assign_resume_repeat(self):
+        from .practice import build_round
+        parent = get_user_model().objects.create_user("practice-parent")
+        self.client.force_login(parent)
+        child = Learner.objects.create(parent=parent, nickname="Sprout")
+        key = "market-v1"
+        library = f"/children/{child.pk}/library/"
+        url = library + key + "/preview/0/?v=17"
+        seen = self.client.get(url).context["lesson"]
+        self.assertRedirects(self.client.post(url, {"answer":seen["items"][0]["answer"]}),
+                             library + key + "/preview/1/?v=17")
+        self.client.post(library, {"lesson": key, "variation":17})
+        row = child.assignment_set.get()
+        self.assertEqual(row.round_snapshot, seen)
+        self.client.post(library, {"lesson":key})
+        self.assertEqual(child.assignment_set.last().round_snapshot, build_round(key,18))
+        self.client.post(f"/children/{child.pk}/",{"action":"play"})
+        play_url = f"/play/{row.pk}/"
+        self.client.post(play_url, {"step":0,"answer":seen["items"][0]["answer"]})
+        for _ in range(2):
+            self.assertEqual(self.client.get(play_url).context["item"], seen["items"][1])

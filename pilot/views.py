@@ -1,7 +1,6 @@
-import json
 from datetime import timedelta
 
-from django.conf import settings
+from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
@@ -14,7 +13,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 
 from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 
-LESSONS = json.loads((settings.BASE_DIR / "content/lessons.json").read_text())
+from .practice import LESSONS, build_round, round_count
 
 
 def signup(request):
@@ -58,7 +57,7 @@ def home(request):
 def decorate(rows):
     rows = list(rows)
     for row in rows:
-        row.info = LESSONS[row.lesson]
+        row.info = getattr(row, "round_snapshot", None) or LESSONS[row.lesson]
     return rows
 
 
@@ -72,9 +71,27 @@ def add_child(request):
     return redirect("home")
 
 
-def assign_lesson(child, key):
+def requested_round(key, value):
+    try:
+        number = int(value)
+    except (ValueError, TypeError):
+        raise Http404
+    if not 0 <= number < round_count(key):
+        raise Http404
+    return number
+
+
+def next_round(child, key):
+    last = child.assignment_set.filter(lesson=key).order_by("-pk").values_list("variation", flat=True).first()
+    return 0 if last is None else (last+1) % round_count(key)
+
+
+def assign_lesson(child, key, variation=None):
+    if variation is None:
+        variation = next_round(child, key)
     last = child.assignment_set.aggregate(last=Max("position"))["last"] or 0
-    child.assignment_set.create(lesson=key, position=last+1)
+    child.assignment_set.create(lesson=key, position=last+1, variation=variation,
+                                round_snapshot=build_round(key, variation))
 
 
 @login_required
@@ -85,19 +102,23 @@ def library(request, pk):
         key = request.POST.get("lesson")
         if key not in LESSONS:
             return HttpResponseBadRequest("Choose a lesson from the library.")
-        assign_lesson(child, key)
+        variation = requested_round(key, request.POST["variation"]) if "variation" in request.POST else None
+        assign_lesson(child, key, variation)
         messages.success(request, f"{LESSONS[key]['title']} added to {child.nickname}’s queue.")
         return redirect(request.get_full_path())
 
     category = request.GET.get("category", "")
     help_mode = request.GET.get("participation", "")
+    upcoming = {}
+    for key, number in child.assignment_set.order_by("pk").values_list("lesson", "variation"):
+        upcoming[key] = (number+1) % round_count(key)
     groups = {}
     for key, lesson in LESSONS.items():
         if category and lesson["category"] != category:
             continue
         if help_mode and lesson["participation"] != help_mode:
             continue
-        groups.setdefault(lesson["category"], []).append((key, lesson))
+        groups.setdefault(lesson["category"], []).append((key, lesson, upcoming.get(key, 0)))
     return render(request, "library.html", {
         "child": child, "groups": groups, "category": category, "help_mode": help_mode,
         "categories": sorted({lesson["category"] for lesson in LESSONS.values()}),
@@ -112,10 +133,17 @@ def preview(request, pk, key, step):
     lesson = LESSONS.get(key)
     if not lesson or step > len(lesson["items"]):
         raise Http404
+    number = requested_round(key, request.GET.get("v", 0))
+    lesson = build_round(key, number)
+    def preview_url(target):
+        url = reverse("preview", args=[pk, key, target])
+        return f"{url}?v={number}" if number else url
+
     finished = step == len(lesson["items"])
     context = {
         "preview": True, "child": child, "key": key, "step": step, "lesson": lesson,
-        "feedback_kinds": LessonFeedback.Kind.choices, "finished": finished,
+        "feedback_kinds": LessonFeedback.Kind.choices, "finished": finished, "variation": number,
+        "next_variant": (number+1) % round_count(key),
     }
     if request.method == "POST" and request.POST.get("action") == "feedback":
         kind = request.POST.get("kind")
@@ -123,18 +151,18 @@ def preview(request, pk, key, step):
         if kind not in LessonFeedback.Kind.values or len(note) > 1500:
             return HttpResponseBadRequest("Choose a feedback type and use at most 1500 characters.")
         LessonFeedback.objects.create(parent=request.user, lesson=key, step=None if finished else step,
-                                      kind=kind, note=note)
+                                      kind=kind, note=note, variation=number)
         if request.headers.get("Accept") == "application/json":
             return JsonResponse({"saved": True})
         messages.success(request, "Feedback saved. Thank you for helping shape this lesson.")
-        return redirect("preview", pk, key, step)
+        return redirect(preview_url(step))
     if finished:
         return render(request, "preview_done.html", context)
     item = lesson["items"][step]
     context["item"] = item
     if request.method == "POST":
         if request.POST.get("answer", "").casefold() == item["answer"].casefold():
-            return redirect("preview", pk, key, step+1)
+            return redirect(preview_url(step+1))
         context["error"] = "Take another look. You can try again."
     return render(request, "play.html", context)
 
@@ -186,7 +214,7 @@ def play(request, pk):
     row = get_object_or_404(Assignment, pk=pk, learner_id=request.session.get("child"))
     if row.completed:
         return redirect("home")
-    lesson = LESSONS[row.lesson]
+    lesson = row.round_snapshot or LESSONS[row.lesson]
     item = lesson["items"][row.step]
     error = ""
     if request.method == "POST":
