@@ -107,7 +107,7 @@ class LibraryTests(TestCase):
             for step, item in enumerate(lesson["items"]):
                 url = f"{self.library}{key}/preview/{step}/"
                 self.assertContains(self.client.get(url), item["prompt"], html=True)
-                response = self.client.post(url, {"answer": item["answer"]}, follow=True)
+                response = self.client.post(url, {"answer": item["answer"], "pixels": "0"*16+"1"+"0"*751}, follow=True)
             self.assertContains(response, "Preview complete")
         self.assertFalse(Assignment.objects.exists())
 
@@ -248,3 +248,34 @@ class PracticeRoundTests(TestCase):
         self.client.post(play_url, {"step":0,"answer":seen["items"][0]["answer"]})
         for _ in range(2):
             self.assertEqual(self.client.get(play_url).context["item"], seen["items"][1])
+
+
+class DrawingTests(TestCase):
+    def test_art_measures_and_blank_or_forged_input(self):
+        from .art import art_item, evaluate
+        mask = art_item({"shape":"leaf"})["mask"]
+        self.assertIn("Shape filled: 100%. Color outside the outline: 0%",evaluate("color",mask,mask))
+        self.assertIn("Shape filled: 0%. Color outside the outline: 100%",evaluate("color",mask,"1"+"0"*767))
+        self.assertIsNone(evaluate("color",mask,"0"*768))
+        self.assertIsNone(evaluate("color",mask,"9"*768))
+        mask = art_item({"shape":"butterfly"})["mask"]
+        reflected = "".join(mask[i-i%32+31-i%32] if i%32>=16 else "0" for i in range(768))
+        self.assertIn("100%",evaluate("mirror",mask,reflected))
+        self.assertIsNone(evaluate("mirror",mask,"1"*768))
+        self.assertNotIn("%",evaluate("draw",mask,reflected))
+
+    def test_finished_artwork_is_visible_to_parent(self):
+        from .art import art_item
+        parent = get_user_model().objects.create_user("artist-parent")
+        child = Learner.objects.create(parent=parent, nickname="Artist")
+        row = child.assignment_set.create(lesson="color-v1")
+        self.client.force_login(parent)
+        self.client.post(f"/children/{child.pk}/",{"action":"play"})
+        url = f"/play/{row.pk}/"
+        self.assertContains(self.client.get(url),'id="board"')
+        mask = art_item({"shape":"leaf"})["mask"]
+        self.client.post(url,{"step":0,"pixels":mask})
+        row.refresh_from_db()
+        self.assertEqual(row.artwork["pixels"],mask)
+        self.client.force_login(parent)
+        self.assertContains(self.client.get("/"),"View finished picture")

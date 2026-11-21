@@ -768,5 +768,56 @@
         "display": "Monday ☁️☁️ · Tuesday ☁️☁️☁️☁️ · Thursday ☁️☁️☁️"
       }
     ]
+  },
+  "color-v1": {
+    "title": "Color the garden",
+    "skill": "Fill an outlined area",
+    "age": "4–6",
+    "kind": "color",
+    "category": "Art & drawing",
+    "participation": "Independent",
+    "items": [
+      {
+        "shape": "leaf",
+        "prompt": "Color the leaf in any colors you like.",
+        "answer": "drawing",
+        "choices": [],
+        "display": ""
+      }
+    ]
+  },
+  "mirror-v1": {
+    "title": "Mirror meadow",
+    "skill": "Reflect a shape across a line",
+    "age": "6–8",
+    "kind": "mirror",
+    "category": "Art & drawing",
+    "participation": "Independent",
+    "items": [
+      {
+        "shape": "butterfly",
+        "prompt": "Finish the butterfly. Copy the left wing on the right side of the dotted line.",
+        "answer": "drawing",
+        "choices": [],
+        "display": ""
+      }
+    ]
+  },
+  "draw-v1": {
+    "title": "What could it be?",
+    "skill": "Invent a picture from a starter",
+    "age": "4–8",
+    "kind": "draw",
+    "category": "Art & drawing",
+    "participation": "Independent",
+    "items": [
+      {
+        "shape": "wheels",
+        "prompt": "Two wheels are waiting. Draw what they could carry.",
+        "answer": "drawing",
+        "choices": [],
+        "display": ""
+      }
+    ]
   }
 }

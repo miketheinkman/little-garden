@@ -148,5 +148,65 @@
         ]
       }
     ]
+  ],
+  "color-v1": [
+    [
+      {
+        "shape": "apple",
+        "prompt": "Fill the apple and its stem with color.",
+        "answer": "drawing",
+        "choices": [],
+        "display": ""
+      }
+    ],
+    [
+      {
+        "shape": "kite",
+        "prompt": "Color the kite from tip to tip.",
+        "answer": "drawing",
+        "choices": [],
+        "display": ""
+      }
+    ]
+  ],
+  "mirror-v1": [
+    [
+      {
+        "shape": "pine",
+        "prompt": "Draw the missing half of the pine tree across the dotted line.",
+        "answer": "drawing",
+        "choices": [],
+        "display": ""
+      }
+    ],
+    [
+      {
+        "shape": "heart",
+        "prompt": "Complete the heart by reflecting its left side onto the right.",
+        "answer": "drawing",
+        "choices": [],
+        "display": ""
+      }
+    ]
+  ],
+  "draw-v1": [
+    [
+      {
+        "shape": "eyes",
+        "prompt": "Two eyes are peeking out. Who do they belong to?",
+        "answer": "drawing",
+        "choices": [],
+        "display": ""
+      }
+    ],
+    [
+      {
+        "shape": "stem",
+        "prompt": "A stem is growing. Draw what blooms on top or lives nearby.",
+        "answer": "drawing",
+        "choices": [],
+        "display": ""
+      }
+    ]
   ]
 }

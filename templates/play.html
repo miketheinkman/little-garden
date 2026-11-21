@@ -1,7 +1,9 @@
 {% extends 'base.html' %}{% load static %}{% block content %}{% if preview %}{% include 'preview_controls.html' %}{% else %}<a href="/">My lessons</a>{% endif %}<h1>{{ lesson.title }}</h1><article>{% if lesson.participation == 'Parent required' %}<p><strong>Parent required</strong> · {{ lesson.prep }}</p>{% endif %}<p>Step {{ step|add:1 }} of {{ lesson.items|length }}</p>{% if preview %}<nav aria-label="Preview steps">Jump to step {% for page in lesson.items %}{% if forloop.counter0 == step %}<strong aria-current="step">{{ forloop.counter }}</strong>{% else %}<a href="{% url 'preview' child.pk key forloop.counter0 %}?v={{ variation }}">{{ forloop.counter }}</a>{% endif %} {% endfor %}</nav>{% endif %}<h2 id="prompt">{{ item.prompt }}</h2><button type="button" id="listen" class="link" hidden>Hear directions</button>
 {% if item.display %}<p class="display">{{ item.display }}</p>{% endif %}{% if error %}<p role="alert">{{ error }}</p>{% endif %}
 <form method="post" id="activity" data-kind="{{ lesson.kind }}">{% csrf_token %}<input type="hidden" name="step" value="{{ step }}">
-{% if lesson.kind == 'trace' %}<svg id="trail" viewBox="0 0 200 150" aria-label="Trace {{ item.answer }} by following the gold dot" data-shape="{{ item.answer }}" data-path="{{ item.path }}"><path id="guide"/><path id="ink"/><circle id="dot" r="6"/></svg>
+{% if item.mask %}
+{% include "drawing_board.html" with palette=item.palette %}
+{% elif lesson.kind == 'trace' %}<svg id="trail" viewBox="0 0 200 150" aria-label="Trace {{ item.answer }} by following the gold dot" data-shape="{{ item.answer }}" data-path="{{ item.path }}"><path id="guide"/><path id="ink"/><circle id="dot" r="6"/></svg>
 {% elif lesson.kind == 'basket' %}
 <p class="basket" aria-live="polite" id="berries">Empty basket</p>
 <button type="button" id="add-berry">Add a berry</button>

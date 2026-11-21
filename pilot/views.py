@@ -13,7 +13,18 @@ from django.views.decorators.http import require_POST, require_http_methods
 
 from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 
+from .art import art_item, evaluate
 from .practice import LESSONS, build_round, round_count
+
+
+def lesson_response(request, lesson, item):
+    if "shape" in item:
+        pixels = request.POST.get("pixels", "")
+        feedback = evaluate(lesson["kind"], item["mask"], pixels)
+        if feedback is None:
+            return False, None
+        return True, {"pixels": pixels, "feedback": feedback, "mask": item["mask"], "kind": lesson["kind"]}
+    return request.POST.get("answer", "").casefold() == item["answer"].casefold(), None
 
 
 def signup(request):
@@ -159,9 +170,14 @@ def preview(request, pk, key, step):
     if finished:
         return render(request, "preview_done.html", context)
     item = lesson["items"][step]
+    if "shape" in item:
+        item = art_item(item)
     context["item"] = item
     if request.method == "POST":
-        if request.POST.get("answer", "").casefold() == item["answer"].casefold():
+        accepted, artwork = lesson_response(request, lesson, item)
+        if accepted:
+            if artwork:
+                messages.success(request, artwork["feedback"])
             return redirect(preview_url(step+1))
         context["error"] = "Take another look. You can try again."
     return render(request, "play.html", context)
@@ -216,16 +232,19 @@ def play(request, pk):
         return redirect("home")
     lesson = row.round_snapshot or LESSONS[row.lesson]
     item = lesson["items"][row.step]
+    if "shape" in item:
+        item = art_item(item)
     error = ""
     if request.method == "POST":
         current = Assignment.objects.filter(pk=pk, step=row.step, completed=None)
         if request.POST.get("step") != str(row.step):
             return redirect("play", pk)
-        if request.POST.get("answer", "").casefold() == item["answer"].casefold():
+        accepted, artwork = lesson_response(request, lesson, item)
+        if accepted:
             done = row.step+1 == len(lesson["items"])
-            updated = current.update(step=F("step")+1, completed=timezone.now() if done else None)
+            updated = current.update(step=F("step")+1, completed=timezone.now() if done else None, artwork=artwork)
             if done and updated:
-                messages.success(request, f"Finished {lesson['title']}! Well done.")
+                messages.success(request, artwork["feedback"] if artwork else f"Finished {lesson['title']}! Well done.")
             return redirect("home") if done else redirect("play", pk)
         current.update(retries=F("retries")+1)
         error = "Take another look. You can try again."
