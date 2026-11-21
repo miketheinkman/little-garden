@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="account">
+  <h1>{{ heading }}</h1>
+  {% if form %}
+    <form method="post">{% csrf_token %}{{ form.as_p }}<button>{{ button }}</button></form>
+  {% elif note %}
+    <p>{{ note }}</p>
+  {% else %}
+    <p>This reset link is invalid or expired.</p><a href="{% url 'password_reset' %}">Request another link</a>
+  {% endif %}
+  <p><a href="{% url 'login' %}">Parent sign in</a></p>
+</section>
+{% endblock %}

@@ -138,3 +138,20 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+PASSWORD_RESET_TIMEOUT = 3600
+EMAIL_HOST = os.environ.get("GARDEN_SMTP_HOST", "")
+EMAIL_PORT = int(os.environ.get("GARDEN_SMTP_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("GARDEN_SMTP_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("GARDEN_SMTP_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("GARDEN_SMTP_STARTTLS", "1") == "1"
+EMAIL_TIMEOUT = 10
+DEFAULT_FROM_EMAIL = os.environ.get("GARDEN_FROM_EMAIL", "garden@localhost")
+EMAIL_FILE_PATH = BASE_DIR / ".private-mail"
+EMAIL_BACKEND = (
+    "django.core.mail.backends.smtp.EmailBackend" if EMAIL_HOST
+    else "django.core.mail.backends.filebased.EmailBackend"
+)
+if not EMAIL_HOST:
+    EMAIL_FILE_PATH.mkdir(mode=0o700, exist_ok=True)
+    EMAIL_FILE_PATH.chmod(0o700)

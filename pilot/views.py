@@ -5,7 +5,7 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import UserCreationForm
+from .forms import ParentSignupForm, RecoveryEmailForm
 from django.db.models import F, Max
 from django.http import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
@@ -18,12 +18,26 @@ LESSONS = json.loads((settings.BASE_DIR / "content/lessons.json").read_text())
 
 
 def signup(request):
-    form = UserCreationForm(request.POST or None)
+    form = ParentSignupForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         request.session.flush()
         login(request, form.save())
         return redirect("home")
-    return render(request, "account.html", {"form": form, "title": "Create a parent account"})
+    return render(request, "account.html", {"form": form, "heading": "Create a parent account"})
+
+
+@login_required
+def recovery_email(request):
+    form = RecoveryEmailForm(request.POST or None, initial={"email": request.user.email})
+    if request.method == "POST" and form.is_valid():
+        if request.user.check_password(form.cleaned_data["password"]):
+            request.user.email = form.cleaned_data["email"]
+            request.user.save(update_fields=["email"])
+            return redirect("home")
+        form.add_error("password", "Check your current password and try again.")
+    return render(request, "recovery.html", {
+        "form": form, "heading": "Recovery email", "button": "Save email",
+    })
 
 
 def home(request):

@@ -34,3 +34,9 @@ Run checks with `.venv/bin/python manage.py test`. Curriculum lives in `content/
 Application code, templates, styles, and scripts are licensed under [AGPL-3.0-only](LICENSE). Original curriculum and media under `content/` are licensed under [CC BY-SA 4.0](LICENSES/CC-BY-SA-4.0.txt). Attribute original lessons to Little Garden contributors, identify changes, and include the license when redistributing them. Dependencies keep their own licenses. These public grants cover project materials; private family records are outside their scope.
 
 Third parties may host the project commercially under the applicable licenses. The official service’s donation policy is independent of those permissions.
+
+## Parent password recovery
+
+New parents enter a recovery email at signup. Existing parents can add one from Family garden while signed in. Use **Forgot password?** at parent sign-in to request a single-use link, valid for one hour. For a legacy parent who has lost the password and has no recovery email, the Linux host owner can use Django’s interactive `manage.py changepassword USERNAME` command from the project environment.
+
+For inbox delivery, configure your SMTP provider on the server using `GARDEN_SMTP_HOST`, `GARDEN_SMTP_PORT` (default 587), `GARDEN_SMTP_USER`, `GARDEN_SMTP_PASSWORD`, and `GARDEN_FROM_EMAIL`, then restart the app. STARTTLS is enabled by default. Without SMTP, reset messages are written to the host-private, Git-ignored `.private-mail/` folder. Keep it private and clear expired messages. A LAN reset URL works from the home network while the host is running.

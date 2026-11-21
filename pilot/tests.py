@@ -52,3 +52,36 @@ class FamilyPilotTests(TestCase):
         for row in self.child.assignment_set.all():
             response = self.client.get(f"/play/{row.pk}/")
             self.assertContains(response, LESSONS[row.lesson]["items"][0]["prompt"], html=True)
+
+
+class RecoveryTests(TestCase):
+    def test_reset_and_single_use(self):
+        from django.core import mail
+        import re
+        parent = get_user_model().objects.create_user("fern", email="fern@example.org", password="before-342!")
+        self.assertContains(self.client.get("/login/"), "Forgot password?")
+        response = self.client.post("/password/reset/", {"email": parent.email})
+        self.assertRedirects(response, "/password/requested/")
+        path = re.search(r"http://testserver(/\S+)", mail.outbox[0].body)[1]
+        form = self.client.get(path, follow=True)
+        self.assertContains(form, "Save password")
+        response = self.client.post(form.request["PATH_INFO"], {
+            "new_password1": "after-recovery-549!", "new_password2": "after-recovery-549!",
+        })
+        self.assertRedirects(response, "/password/updated/")
+        self.assertTrue(self.client.login(username="fern", password="after-recovery-549!"))
+        self.assertContains(self.client.get(path, follow=True), "invalid or expired")
+        self.assertRedirects(self.client.post("/password/reset/", {"email": "unknown@example.org"}), "/password/requested/")
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_signup_stores_email_and_change_requires_password(self):
+        self.client.post("/signup/", {"username": "spruce", "email": "spruce@example.org",
+                                     "password1": "Green-tree-435!", "password2": "Green-tree-435!"})
+        parent = get_user_model().objects.get(username="spruce")
+        self.assertEqual(parent.email, "spruce@example.org")
+        fields = {"email": "updated@example.org", "password": "wrong"}
+        self.assertContains(self.client.post("/account/email/", fields), "Check your current password")
+        fields["password"] = "Green-tree-435!"
+        self.assertRedirects(self.client.post("/account/email/", fields), "/")
+        parent.refresh_from_db()
+        self.assertEqual(parent.email, fields["email"])
