@@ -34,5 +34,6 @@ urlpatterns = [
     path("children/<int:pk>/library/", views.library, name="library"),
     path("children/add/", views.add_child, name="add_child"),
     path("children/<int:pk>/", views.manage, name="manage"),
+    path("suggestions/start/", views.start_suggestion, name="start_suggestion"),
     path("play/<int:pk>/", views.play, name="play"),
 ]

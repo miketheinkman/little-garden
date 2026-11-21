@@ -208,5 +208,197 @@
         "display": ""
       }
     ]
+  ],
+  "number-check-v1": [
+    [
+      {
+        "prompt": "How many dots?",
+        "display": "● ●",
+        "answer": "2",
+        "choices": [
+          "2",
+          "1",
+          "3"
+        ],
+        "level": 1
+      },
+      {
+        "prompt": "How many more make five?",
+        "display": "● ○ ○ ○ ○",
+        "answer": "4",
+        "choices": [
+          "1",
+          "3",
+          "4"
+        ],
+        "level": 3
+      },
+      {
+        "prompt": "How many seeds are here?",
+        "display": "3 bags of ten + 2 loose",
+        "answer": "32",
+        "choices": [
+          "12",
+          "32",
+          "23"
+        ],
+        "level": 5
+      }
+    ],
+    [
+      {
+        "prompt": "Count the sprouts.",
+        "display": "🌱 🌱 🌱 🌱",
+        "answer": "4",
+        "choices": [
+          "4",
+          "3",
+          "5"
+        ],
+        "level": 1
+      },
+      {
+        "prompt": "Four seeds are planted. How many more fill five spots?",
+        "display": "● ● ● ● ○",
+        "answer": "1",
+        "choices": [
+          "4",
+          "2",
+          "1"
+        ],
+        "level": 3
+      },
+      {
+        "prompt": "How many seeds are here?",
+        "display": "4 bags of ten + 3 loose",
+        "answer": "43",
+        "choices": [
+          "13",
+          "43",
+          "34"
+        ],
+        "level": 5
+      }
+    ]
+  ],
+  "key-check-v1": [
+    [
+      {
+        "prompt": "Type the letter shown.",
+        "display": "P",
+        "answer": "P",
+        "choices": [],
+        "level": 1
+      },
+      {
+        "prompt": "Type this word.",
+        "display": "mud",
+        "answer": "mud",
+        "choices": [],
+        "level": 2
+      },
+      {
+        "prompt": "Copy the sign with its space.",
+        "display": "bee hut",
+        "answer": "bee hut",
+        "choices": [],
+        "level": 3
+      }
+    ],
+    [
+      {
+        "prompt": "Type the letter shown.",
+        "display": "R",
+        "answer": "R",
+        "choices": [],
+        "level": 1
+      },
+      {
+        "prompt": "Type this word.",
+        "display": "log",
+        "answer": "log",
+        "choices": [],
+        "level": 2
+      },
+      {
+        "prompt": "Copy the sign with its space.",
+        "display": "oak box",
+        "answer": "oak box",
+        "choices": [],
+        "level": 3
+      }
+    ]
+  ],
+  "sound-check-v1": [
+    [
+      {
+        "prompt": "Which letter starts “fan”?",
+        "display": "",
+        "answer": "F",
+        "choices": [
+          "F",
+          "N",
+          "S"
+        ],
+        "level": 1
+      },
+      {
+        "prompt": "Which letter is the middle sound in “sit”?",
+        "display": "",
+        "answer": "I",
+        "choices": [
+          "A",
+          "T",
+          "I"
+        ],
+        "level": 2
+      },
+      {
+        "prompt": "Which pair makes the first sound in “chin”?",
+        "display": "",
+        "answer": "CH",
+        "choices": [
+          "TH",
+          "CH",
+          "SH"
+        ],
+        "level": 3
+      }
+    ],
+    [
+      {
+        "prompt": "Which letter starts “dog”?",
+        "display": "",
+        "answer": "D",
+        "choices": [
+          "D",
+          "G",
+          "T"
+        ],
+        "level": 1
+      },
+      {
+        "prompt": "Which letter is the middle sound in “cat”?",
+        "display": "",
+        "answer": "A",
+        "choices": [
+          "C",
+          "T",
+          "A"
+        ],
+        "level": 2
+      },
+      {
+        "prompt": "Which pair makes the first sound in “thin”?",
+        "display": "",
+        "answer": "TH",
+        "choices": [
+          "CH",
+          "TH",
+          "SH"
+        ],
+        "level": 3
+      }
+    ]
   ]
 }

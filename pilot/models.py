@@ -57,3 +57,15 @@ class FeedbackReply(models.Model):
 class FeedbackEmailPreference(models.Model):
     parent = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     enabled = models.BooleanField(default=False)
+
+
+class SkillSample(models.Model):
+    assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name="samples")
+    step = models.PositiveIntegerField()
+    strand = models.CharField(max_length=60)
+    level = models.PositiveSmallIntegerField()
+    score = models.PositiveSmallIntegerField()
+    measured = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["assignment", "step"], name="one_skill_sample_per_step")]

@@ -47,3 +47,11 @@ def evaluate(kind, mask, pixels):
         outside = round(100*len(marks-target)/len(marks))
         return f"Shape filled: {covered}%. Color outside the outline: {outside}% of painted space."
     return "Finished an original drawing."
+
+
+def match_score(kind, mask, pixels):
+    marks = {i for i, value in enumerate(pixels) if value != "0"}
+    target = {i for i, value in enumerate(mask) if value == "1"}
+    if kind == "mirror":
+        target = {i-i%WIDTH + WIDTH-1-i%WIDTH for i in target if i%WIDTH < WIDTH//2}
+    return round(100*len(marks & target)/len(marks | target))

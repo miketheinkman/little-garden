@@ -25,7 +25,9 @@
       }
     ],
     "category": "Keyboard & mouse",
-    "participation": "Independent"
+    "participation": "Independent",
+    "strand": "Pointer control",
+    "level": 1
   },
   "keys-v1": {
     "title": "Meet the letter keys",
@@ -65,7 +67,9 @@
       }
     ],
     "category": "Keyboard & mouse",
-    "participation": "Independent"
+    "participation": "Independent",
+    "strand": "Keyboard use",
+    "level": 1
   },
   "lines-v1": {
     "title": "Follow the trail",
@@ -87,7 +91,9 @@
       }
     ],
     "category": "Movement & coordination",
-    "participation": "Independent"
+    "participation": "Independent",
+    "strand": "Pointer control",
+    "level": 2
   },
   "count1-v1": {
     "title": "Count the seeds",
@@ -127,7 +133,9 @@
       }
     ],
     "category": "Numbers & patterns",
-    "participation": "Independent"
+    "participation": "Independent",
+    "strand": "Number sense",
+    "level": 1
   },
   "count2-v1": {
     "title": "Count the sprouts",
@@ -167,7 +175,9 @@
       }
     ],
     "category": "Numbers & patterns",
-    "participation": "Independent"
+    "participation": "Independent",
+    "strand": "Number sense",
+    "level": 2
   },
   "sounds-v1": {
     "title": "Listen for the first sound",
@@ -207,7 +217,9 @@
       }
     ],
     "category": "Reading & language",
-    "participation": "Independent"
+    "participation": "Independent",
+    "strand": "Letter sounds",
+    "level": 1
   },
   "blend-v1": {
     "title": "Build sat",
@@ -247,7 +259,9 @@
       }
     ],
     "category": "Reading & language",
-    "participation": "Independent"
+    "participation": "Independent",
+    "strand": "Letter sounds",
+    "level": 2
   },
   "letters-v1": {
     "title": "Trace the letters",
@@ -275,7 +289,9 @@
       }
     ],
     "category": "Movement & coordination",
-    "participation": "Independent"
+    "participation": "Independent",
+    "strand": "Pointer control",
+    "level": 3
   },
   "digits-v1": {
     "title": "Trace the numbers",
@@ -297,7 +313,9 @@
       }
     ],
     "category": "Movement & coordination",
-    "participation": "Independent"
+    "participation": "Independent",
+    "strand": "Pointer control",
+    "level": 3
   },
   "five-v1": {
     "title": "Make five",
@@ -337,7 +355,9 @@
       }
     ],
     "category": "Numbers & patterns",
-    "participation": "Independent"
+    "participation": "Independent",
+    "strand": "Number sense",
+    "level": 3
   },
   "book-v1": {
     "title": "Read with Sam",
@@ -356,7 +376,9 @@
     ],
     "category": "Reading & language",
     "participation": "Parent required",
-    "prep": "Read the passage together and ask your child to point to a clue."
+    "prep": "Read the passage together and ask your child to point to a clue.",
+    "strand": "Reading comprehension",
+    "level": 2
   },
   "beans-v1": {
     "title": "Five real beans",
@@ -375,7 +397,9 @@
     ],
     "category": "Numbers & patterns",
     "participation": "Parent required",
-    "prep": "Bring five beans and five cups. Help your child pair and count them."
+    "prep": "Bring five beans and five cups. Help your child pair and count them.",
+    "strand": "Number sense",
+    "level": 1
   },
   "berry-basket-v1": {
     "title": "Fill the berry basket",
@@ -404,7 +428,9 @@
         "choices": [],
         "display": ""
       }
-    ]
+    ],
+    "strand": "Number sense",
+    "level": 2
   },
   "market-v1": {
     "title": "Garden market",
@@ -433,7 +459,9 @@
         "choices": [],
         "display": ""
       }
-    ]
+    ],
+    "strand": "Number sense",
+    "level": 4
   },
   "pattern-v1": {
     "title": "Petal patterns",
@@ -471,7 +499,9 @@
         ],
         "display": "🌻 🌻 🌿 🌻 …"
       }
-    ]
+    ],
+    "strand": "Visual reasoning",
+    "level": 2
   },
   "tens-v1": {
     "title": "Seed shop bundles",
@@ -512,7 +542,9 @@
         ],
         "display": "2 full bags + 4 loose seeds"
       }
-    ]
+    ],
+    "strand": "Number sense",
+    "level": 5
   },
   "number-keys-v1": {
     "title": "Number key scavenger hunt",
@@ -553,7 +585,9 @@
         ],
         "display": "7"
       }
-    ]
+    ],
+    "strand": "Keyboard use",
+    "level": 1
   },
   "signs-v1": {
     "title": "Type the garden signs",
@@ -582,7 +616,9 @@
         "choices": [],
         "display": "seed shop"
       }
-    ]
+    ],
+    "strand": "Keyboard use",
+    "level": 3
   },
   "river-v1": {
     "title": "Otter’s river trail",
@@ -605,7 +641,9 @@
         "choices": [],
         "display": ""
       }
-    ]
+    ],
+    "strand": "Pointer control",
+    "level": 3
   },
   "drums-v1": {
     "title": "Echo drum studio",
@@ -632,7 +670,9 @@
         ],
         "display": ""
       }
-    ]
+    ],
+    "strand": "Creative expression",
+    "level": 2
   },
   "snail-v1": {
     "title": "The snail mail mix-up",
@@ -673,7 +713,9 @@
         ],
         "display": "At last Pip reached the pot. Dot opened the letter and grinned."
       }
-    ]
+    ],
+    "strand": "Reading comprehension",
+    "level": 3
   },
   "story-v1": {
     "title": "The last strawberry",
@@ -700,7 +742,9 @@
         ],
         "display": "Kit picked the berry. She cut it in two. Two red smiles sat side by side."
       }
-    ]
+    ],
+    "strand": "Reading comprehension",
+    "level": 2
   },
   "shadow-v1": {
     "title": "Shadow detectives",
@@ -727,7 +771,9 @@
         ],
         "display": ""
       }
-    ]
+    ],
+    "strand": "Scientific observation",
+    "level": 3
   },
   "weather-v1": {
     "title": "Cloud-watch log",
@@ -767,7 +813,9 @@
         ],
         "display": "Monday ☁️☁️ · Tuesday ☁️☁️☁️☁️ · Thursday ☁️☁️☁️"
       }
-    ]
+    ],
+    "strand": "Visual reasoning",
+    "level": 4
   },
   "color-v1": {
     "title": "Color the garden",
@@ -784,7 +832,9 @@
         "choices": [],
         "display": ""
       }
-    ]
+    ],
+    "strand": "Pointer control",
+    "level": 2
   },
   "mirror-v1": {
     "title": "Mirror meadow",
@@ -801,7 +851,9 @@
         "choices": [],
         "display": ""
       }
-    ]
+    ],
+    "strand": "Visual reasoning",
+    "level": 3
   },
   "draw-v1": {
     "title": "What could it be?",
@@ -817,6 +869,134 @@
         "answer": "drawing",
         "choices": [],
         "display": ""
+      }
+    ],
+    "strand": "Creative expression",
+    "level": 1
+  },
+  "number-check-v1": {
+    "title": "Number check-in",
+    "skill": "Sample three levels of number sense",
+    "strand": "Number sense",
+    "level": 1,
+    "checkin": true,
+    "age": "4–8",
+    "kind": "choice",
+    "category": "Placement check-ins",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "How many seeds?",
+        "display": "● ● ●",
+        "answer": "3",
+        "choices": [
+          "3",
+          "2",
+          "4"
+        ],
+        "level": 1
+      },
+      {
+        "prompt": "Five seeds fit in a tray. Two are planted. How many more fit?",
+        "display": "● ● ○ ○ ○",
+        "answer": "3",
+        "choices": [
+          "2",
+          "5",
+          "3"
+        ],
+        "level": 3
+      },
+      {
+        "prompt": "How many seeds are here?",
+        "display": "2 bags of ten + 4 loose",
+        "answer": "24",
+        "choices": [
+          "42",
+          "24",
+          "14"
+        ],
+        "level": 5
+      }
+    ]
+  },
+  "key-check-v1": {
+    "title": "Keyboard check-in",
+    "skill": "Sample three levels of keyboard use",
+    "strand": "Keyboard use",
+    "level": 1,
+    "checkin": true,
+    "age": "4–8",
+    "kind": "type",
+    "category": "Placement check-ins",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Type the letter shown.",
+        "display": "M",
+        "answer": "M",
+        "choices": [],
+        "level": 1
+      },
+      {
+        "prompt": "Type this word.",
+        "display": "sun",
+        "answer": "sun",
+        "choices": [],
+        "level": 2
+      },
+      {
+        "prompt": "Copy the sign with its space.",
+        "display": "red pot",
+        "answer": "red pot",
+        "choices": [],
+        "level": 3
+      }
+    ]
+  },
+  "sound-check-v1": {
+    "title": "Word sounds check-in",
+    "skill": "Sample three levels of letter sounds",
+    "strand": "Letter sounds",
+    "level": 1,
+    "checkin": true,
+    "age": "4–8",
+    "kind": "choice",
+    "category": "Placement check-ins",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Which letter starts “map”?",
+        "display": "",
+        "answer": "M",
+        "choices": [
+          "M",
+          "P",
+          "S"
+        ],
+        "level": 1
+      },
+      {
+        "prompt": "Which letter is the middle sound in “sun”?",
+        "display": "",
+        "answer": "U",
+        "choices": [
+          "S",
+          "N",
+          "U"
+        ],
+        "level": 2
+      },
+      {
+        "prompt": "Which pair makes the first sound in “ship”?",
+        "display": "",
+        "answer": "SH",
+        "choices": [
+          "TH",
+          "SH",
+          "CH"
+        ],
+        "level": 3
       }
     ]
   }

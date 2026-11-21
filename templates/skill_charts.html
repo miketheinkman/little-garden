@@ -1,0 +1,14 @@
+<p><strong>{{ child.round_count }} finished round{{ child.round_count|pluralize }}</strong> in your garden.</p>
+{% if child.charts %}<div class="skill-charts">
+{% for chart in child.charts %}<figure>
+<figcaption><strong>{{ chart.strand }}</strong><br>Practice tier {{ chart.current|floatformat:"-2" }} of 5</figcaption>
+<svg viewBox="0 0 310 116" role="img" aria-label="{{ chart.strand }} practice tier, oldest to newest, across the last {{ chart.points|length }} scored rounds">
+<path d="M28 20H300 M28 60H300 M28 100H300" fill="none" stroke="#c3cebd"/>
+<g fill="#405a46" font-size="12"><text x="8" y="24">5</text><text x="8" y="64">3</text><text x="8" y="104">1</text></g>
+<polyline points="{{ chart.coordinates }}" fill="none" stroke="#397351" stroke-width="3"/>
+{% for p in chart.points %}<circle cx="{{ p.x }}" cy="{{ p.y }}" r="4" fill="#315d43"><title>{{ p.date|date:"M j" }} · Tier {{ p.level }}</title></circle>{% endfor %}
+</svg>
+<small>{{ chart.first|date:"M j" }} – {{ chart.last|date:"M j" }} · {{ chart.count }} scored step{{ chart.count|pluralize }} across {{ chart.rounds }} round{{ chart.rounds|pluralize }}</small>
+<details><summary>Chart values</summary><ol>{% for p in chart.points %}<li>{{ p.date|date:"M j, Y" }} · Tier {{ p.level|floatformat:"-2" }}</li>{% endfor %}</ol></details>
+</figure>{% endfor %}</div>
+{% else %}<p>Your first scored step starts a skill chart here.</p>{% endif %}

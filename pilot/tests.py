@@ -279,3 +279,88 @@ class DrawingTests(TestCase):
         self.assertEqual(row.artwork["pixels"],mask)
         self.client.force_login(parent)
         self.assertContains(self.client.get("/"),"View finished picture")
+
+
+class ProgressionTests(TestCase):
+    def setUp(self):
+        self.parent = get_user_model().objects.create_user("placement-parent")
+        self.child = Learner.objects.create(parent=self.parent, nickname="Bee")
+
+    def open_child(self):
+        self.client.force_login(self.parent)
+        self.client.post(f"/children/{self.child.pk}/", {"action": "play"})
+
+    def test_first_try_retry_and_duplicate_are_one_observation(self):
+        from .models import SkillSample
+        row = self.child.assignment_set.create(lesson="keys-v1")
+        self.open_child()
+        url = f"/play/{row.pk}/"
+        for answer in ["X","X","S","S"]:
+            self.client.post(url, {"step":0,"answer":answer})
+        sample = SkillSample.objects.get()
+        self.assertEqual((sample.score,sample.strand,sample.level),(0,"Keyboard use",1))
+        self.client.post(url, {"step":1,"answer":"A"})
+        self.assertEqual(SkillSample.objects.filter(score=100).count(),1)
+
+    def test_checkin_advances_on_miss_and_parent_sees_results(self):
+        from .progression import Progress
+        row = self.child.assignment_set.create(lesson="number-check-v1")
+        self.open_child()
+        for i,answer in enumerate(["2","3","24"]):
+            self.client.post(f"/play/{row.pk}/", {"step":i,"answer":answer})
+        self.assertEqual(list(row.samples.order_by("step").values_list("level","score")),[(1,0),(3,100),(5,100)])
+        p = Progress(self.child)
+        self.assertGreater(p.estimates["Number sense"],2)
+        self.client.force_login(self.parent)
+        self.assertContains(self.client.get("/"),"67% across 3 scored steps")
+
+    def test_empty_queue_guard_and_sibling_isolation(self):
+        from .progression import Progress
+        self.open_child()
+        picks = Progress(self.child).recommendations()
+        self.assertEqual(len(picks),3)
+        self.assertContains(self.client.get("/"),picks[0]["title"])
+        self.client.post("/suggestions/start/",{"lesson":picks[0]["key"]})
+        self.client.post("/suggestions/start/",{"lesson":picks[1]["key"]})
+        self.assertEqual(self.child.assignment_set.count(),1)
+        sibling = Learner.objects.create(parent=self.parent,nickname="Sapling")
+        self.assertEqual(sibling.assignment_set.count(),0)
+
+    def test_tiers_trends_and_fluent_round_rest(self):
+        from .models import SkillSample
+        from .progression import Progress, band
+        from django.utils import timezone
+        self.assertEqual([band(level,3) for level in range(1,6)],[
+            "Below level","Slightly below level","On level","Slightly above level","Above level"])
+        self.assertTrue(all(1<=lesson["level"]<=5 and lesson["strand"] for lesson in LESSONS.values()))
+        for scores in [[0,100,0],[100]*3,[100]*3]:
+            row = self.child.assignment_set.create(lesson="count1-v1",step=3,completed=timezone.now())
+            for step,score in enumerate(scores):
+                SkillSample.objects.create(assignment=row,step=step,strand="Number sense",level=1,score=score)
+        progress = Progress(self.child)
+        self.assertEqual(progress.timeline()[1]["change"],67)
+        chart, = progress.charts()
+        self.assertEqual(len(chart["points"]), 3)
+        self.assertGreater(chart["points"][-1]["level"], chart["points"][0]["level"])
+        self.open_child()
+        self.assertContains(self.client.get("/"), "My progress")
+        self.assertContains(self.client.get("/"), "9 scored steps across 3 rounds")
+        self.assertNotIn("count1-v1",[s["key"] for s in progress.recommendations()])
+        self.assertEqual(progress.label(LESSONS["keys-v1"]),"Placement pending")
+
+    def test_weak_strand_is_prioritized_and_checkins_come_due(self):
+        from datetime import timedelta
+        from django.utils import timezone
+        from .progression import Progress
+        from .models import SkillSample
+        for key, score in [("count1-v1", 0), ("keys-v1", 100)]:
+            row = self.child.assignment_set.create(lesson=key, step=3, completed=timezone.now())
+            for step in range(3):
+                SkillSample.objects.create(assignment=row, step=step, strand=LESSONS[key]["strand"], level=1, score=score)
+        progress = Progress(self.child)
+        picks = progress.recommendations()
+        self.assertEqual(LESSONS[picks[0]["key"]]["strand"], "Number sense")
+        self.assertEqual(len({p["key"] for p in picks}), len(picks))
+        self.child.assignment_set.create(lesson="number-check-v1", completed=timezone.now()-timedelta(days=29))
+        checks = Progress(self.child).checkins()
+        self.assertEqual(next(c["reason"] for c in checks if c["key"]=="number-check-v1"), "Recheck suggested")
