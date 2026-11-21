@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Mission statement · Little Garden{% endblock %}
+{% block content %}
+<article class="account">
+  <h1>Our mission</h1>
+  <p>Every family deserves good tools for learning at home. We’re building Little Garden so a child can practice a tricky letter as often as they like, and a parent can see what clicked and choose what to try tomorrow.</p>
+  <h2>Free for every family</h2>
+  <p>Every lesson, learner profile, planning tool, and progress report on the official Little Garden app is free. A family with three children has the same access for each child as a family with one.</p>
+  {% if user.is_authenticated or not request.session.child %}
+  <h2>Supporting Little Garden</h2>
+  <p>We welcome optional donations to help cover hosting and the work of creating and reviewing lessons. Every family gets the same tools whether they give or not.</p>
+  <p><strong>Online donations</strong> · A donation link will appear here when it’s ready.</p>
+  {% endif %}
+</article>
+{% endblock %}

@@ -1,10 +1,12 @@
 from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth import views as auth
 from django.urls import path
+from django.views.generic import TemplateView
 from pilot import views
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("mission/", TemplateView.as_view(template_name="mission.html"), name="mission"),
     path("signup/", views.signup, name="signup"),
     path("login/", LoginView.as_view(template_name="account.html"), name="login"),
     path("account/email/", views.recovery_email, name="recovery_email"),
