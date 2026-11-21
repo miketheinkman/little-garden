@@ -1,0 +1,4 @@
+<a href="{% url 'library' child.pk %}">Back to lesson library</a>
+<p><strong>Parent preview</strong> · {{ lesson.participation }} · Ages {{ lesson.age }}</p>
+<form method="post" action="{% url 'library' child.pk %}">{% csrf_token %}
+<button name="lesson" value="{{ key }}">Add to {{ child.nickname }}’s queue</button></form>

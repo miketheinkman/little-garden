@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Lesson library · Little Garden{% endblock %}
+{% block content %}
+<a href="/">Family garden</a>
+<h1>Lesson library</h1>
+<p>Choose activities for <strong>{{ child.nickname }}</strong>. Independent lessons can be finished on screen. Parent-required lessons include a job for a grown-up.</p>
+<form method="get" class="inline">
+  <label>Subject <select name="category"><option value="">All subjects</option>{% for c in categories %}<option {% if category == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
+  <label>Adult involvement <select name="participation"><option value="">Either</option>{% for mode in modes %}<option {% if help_mode == mode %}selected{% endif %}>{{ mode }}</option>{% endfor %}</select></label>
+  <button>Filter lessons</button>
+</form>
+{% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
+{% for subject, entries in groups.items %}
+<section><h2>{{ subject }}</h2><div class="shelf">
+{% for key, lesson in entries %}
+<article><p class="meta">{{ lesson.participation }} · Ages {{ lesson.age }}</p><h3>{{ lesson.title }}</h3><p>{{ lesson.skill }}</p>
+{% if lesson.prep %}<p>{{ lesson.prep }}</p>{% endif %}
+<a href="{% url 'preview' child.pk key 0 %}">Preview lesson</a><form method="post">{% csrf_token %}<button name="lesson" value="{{ key }}" aria-label="Add {{ lesson.title }} to {{ child.nickname }}’s queue">Add to queue</button></form></article>
+{% endfor %}</div></section>
+{% empty %}<p>No lessons match both filters. <a href="{% url 'library' child.pk %}">Show all lessons</a></p>{% endfor %}
+{% endblock %}

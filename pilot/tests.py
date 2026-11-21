@@ -85,3 +85,33 @@ class RecoveryTests(TestCase):
         self.assertRedirects(self.client.post("/account/email/", fields), "/")
         parent.refresh_from_db()
         self.assertEqual(parent.email, fields["email"])
+
+
+class LibraryTests(TestCase):
+    def setUp(self):
+        parent = get_user_model().objects.create_user("library-parent")
+        self.client.force_login(parent)
+        self.child = Learner.objects.create(parent=parent, nickname="Fern")
+        self.library = f"/children/{self.child.pk}/library/"
+
+    def test_filter_and_assign(self):
+        url = self.library + "?category=Science+%26+discovery&participation=Parent+required"
+        response = self.client.get(url)
+        self.assertContains(response, "Shadow detectives")
+        self.assertNotContains(response, "Cloud-watch log")
+        self.assertRedirects(self.client.post(url, {"lesson": "shadow-v1"}), url)
+        self.assertEqual(self.child.assignment_set.get().lesson, "shadow-v1")
+
+    def test_previews_can_be_completed_without_learner_records(self):
+        for key, lesson in LESSONS.items():
+            for step, item in enumerate(lesson["items"]):
+                url = f"{self.library}{key}/preview/{step}/"
+                self.assertContains(self.client.get(url), item["prompt"], html=True)
+                response = self.client.post(url, {"answer": item["answer"]}, follow=True)
+            self.assertContains(response, "Preview complete")
+        self.assertFalse(Assignment.objects.exists())
+
+    def test_preview_is_household_scoped(self):
+        outsider = get_user_model().objects.create_user("outside")
+        self.client.force_login(outsider)
+        self.assertEqual(self.client.get(self.library+"market-v1/preview/0/").status_code, 404)

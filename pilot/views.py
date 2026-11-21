@@ -7,10 +7,10 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from .forms import ParentSignupForm, RecoveryEmailForm
 from django.db.models import F, Max
-from django.http import HttpResponseBadRequest
+from django.http import Http404, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 
 from .models import Assignment, Learner
 
@@ -72,6 +72,60 @@ def add_child(request):
     return redirect("home")
 
 
+def assign_lesson(child, key):
+    last = child.assignment_set.aggregate(last=Max("position"))["last"] or 0
+    child.assignment_set.create(lesson=key, position=last+1)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def library(request, pk):
+    child = get_object_or_404(Learner, parent=request.user, pk=pk)
+    if request.method == "POST":
+        key = request.POST.get("lesson")
+        if key not in LESSONS:
+            return HttpResponseBadRequest("Choose a lesson from the library.")
+        assign_lesson(child, key)
+        messages.success(request, f"{LESSONS[key]['title']} added to {child.nickname}’s queue.")
+        return redirect(request.get_full_path())
+
+    category = request.GET.get("category", "")
+    help_mode = request.GET.get("participation", "")
+    groups = {}
+    for key, lesson in LESSONS.items():
+        if category and lesson["category"] != category:
+            continue
+        if help_mode and lesson["participation"] != help_mode:
+            continue
+        groups.setdefault(lesson["category"], []).append((key, lesson))
+    return render(request, "library.html", {
+        "child": child, "groups": groups, "category": category, "help_mode": help_mode,
+        "categories": sorted({lesson["category"] for lesson in LESSONS.values()}),
+        "modes": ["Independent", "Parent required"],
+    })
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def preview(request, pk, key, step):
+    child = get_object_or_404(Learner, parent=request.user, pk=pk)
+    lesson = LESSONS.get(key)
+    if not lesson or step >= len(lesson["items"]):
+        raise Http404
+    item = lesson["items"][step]
+    error = ""
+    if request.method == "POST":
+        if request.POST.get("answer", "").casefold() == item["answer"].casefold():
+            if step + 1 < len(lesson["items"]):
+                return redirect("preview", pk, key, step+1)
+            return render(request, "preview_done.html", {"child": child, "lesson": lesson, "key": key})
+        error = "Take another look. You can try again."
+    return render(request, "play.html", {
+        "preview": True, "child": child, "key": key, "step": step,
+        "lesson": lesson, "item": item, "error": error,
+    })
+
+
 @login_required
 @require_POST
 def manage(request, pk):
@@ -81,8 +135,7 @@ def manage(request, pk):
         request.session.flush()
         request.session["child"] = child.pk
     elif action == "assign" and request.POST.get("lesson") in LESSONS:
-        last = child.assignment_set.aggregate(last=Max("position"))["last"] or 0
-        child.assignment_set.create(lesson=request.POST["lesson"], position=last+1)
+        assign_lesson(child, request.POST["lesson"])
     elif action == "first":
         row = get_object_or_404(child.assignment_set, pk=request.POST["row"], completed=None)
         first = child.assignment_set.filter(completed=None).first()
@@ -114,4 +167,4 @@ def play(request, pk):
             return redirect("home") if done else redirect("play", pk)
         current.update(retries=F("retries")+1)
         error = "Take another look. You can try again."
-    return render(request, "play.html", {"row": row,"lesson": lesson,"item": item,"error": error})
+    return render(request, "play.html", {"step": row.step,"lesson": lesson,"item": item,"error": error})

@@ -26,6 +26,8 @@ urlpatterns = [
         template_name="recovery.html", extra_context={"heading": "Password updated", "note": "Sign in with your new password."},
     ), name="password_reset_complete"),
     path("logout/", LogoutView.as_view(), name="logout"),
+    path("children/<int:pk>/library/<slug:key>/preview/<int:step>/", views.preview, name="preview"),
+    path("children/<int:pk>/library/", views.library, name="library"),
     path("children/add/", views.add_child, name="add_child"),
     path("children/<int:pk>/", views.manage, name="manage"),
     path("play/<int:pk>/", views.play, name="play"),

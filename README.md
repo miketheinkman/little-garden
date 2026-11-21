@@ -17,7 +17,7 @@ Open http://127.0.0.1:8000/ and create a parent account. Add a learner nickname,
 
 ## Pilot scope
 
-Twelve draft lessons for approximately ages 4–6 cover pointer control, physical and onscreen keys, tracing, counting, phonics, a short shared text, and a hands-on counting activity. Parent reports summarize completion and retries. Shared reading and offline activities use family confirmation. These records describe participation and do not establish mastery.
+Twenty-four draft lessons for approximately ages 4–8 are grouped by subject and adult involvement. Open a learner’s lesson library to filter, preview any step, and assign an activity. Preview attempts leave learner progress untouched. Activities include steering a winding trail, filling a berry basket, typing garden signs, reading short scenes, and investigating shadows together. Parent reports summarize completion and retries. Shared reading and offline activities use family confirmation. These records describe participation and do not establish mastery.
 
 Django renders household, planner, and learner screens. Small browser activities handle keyboard input, pointer paths, and optional spoken instructions. The local pilot uses SQLite. Keep the database, local secret, and backups private. The development server is intended for local use.
 

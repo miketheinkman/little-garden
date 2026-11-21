@@ -23,7 +23,9 @@
         "choices": [],
         "display": ""
       }
-    ]
+    ],
+    "category": "Keyboard & mouse",
+    "participation": "Independent"
   },
   "keys-v1": {
     "title": "Meet the letter keys",
@@ -61,7 +63,9 @@
         ],
         "display": ""
       }
-    ]
+    ],
+    "category": "Keyboard & mouse",
+    "participation": "Independent"
   },
   "lines-v1": {
     "title": "Follow the trail",
@@ -81,7 +85,9 @@
         "choices": [],
         "display": ""
       }
-    ]
+    ],
+    "category": "Movement & coordination",
+    "participation": "Independent"
   },
   "count1-v1": {
     "title": "Count the seeds",
@@ -119,7 +125,9 @@
         ],
         "display": "● ● ● "
       }
-    ]
+    ],
+    "category": "Numbers & patterns",
+    "participation": "Independent"
   },
   "count2-v1": {
     "title": "Count the sprouts",
@@ -157,7 +165,9 @@
         ],
         "display": "● ● ● ● ● "
       }
-    ]
+    ],
+    "category": "Numbers & patterns",
+    "participation": "Independent"
   },
   "sounds-v1": {
     "title": "Listen for the first sound",
@@ -195,7 +205,9 @@
         ],
         "display": ""
       }
-    ]
+    ],
+    "category": "Reading & language",
+    "participation": "Independent"
   },
   "blend-v1": {
     "title": "Build sat",
@@ -233,7 +245,9 @@
         ],
         "display": "s a _"
       }
-    ]
+    ],
+    "category": "Reading & language",
+    "participation": "Independent"
   },
   "letters-v1": {
     "title": "Trace the letters",
@@ -259,7 +273,9 @@
         "choices": [],
         "display": ""
       }
-    ]
+    ],
+    "category": "Movement & coordination",
+    "participation": "Independent"
   },
   "digits-v1": {
     "title": "Trace the numbers",
@@ -279,7 +295,9 @@
         "choices": [],
         "display": ""
       }
-    ]
+    ],
+    "category": "Movement & coordination",
+    "participation": "Independent"
   },
   "five-v1": {
     "title": "Make five",
@@ -317,7 +335,9 @@
         ],
         "display": "● ● ○ ○ ○ "
       }
-    ]
+    ],
+    "category": "Numbers & patterns",
+    "participation": "Independent"
   },
   "book-v1": {
     "title": "Read with Sam",
@@ -333,7 +353,10 @@
         ],
         "display": "Sam sat. Mat sat. Sam and Mat sat."
       }
-    ]
+    ],
+    "category": "Reading & language",
+    "participation": "Parent required",
+    "prep": "Read the passage together and ask your child to point to a clue."
   },
   "beans-v1": {
     "title": "Five real beans",
@@ -348,6 +371,401 @@
           "We tried it"
         ],
         "display": ""
+      }
+    ],
+    "category": "Numbers & patterns",
+    "participation": "Parent required",
+    "prep": "Bring five beans and five cups. Help your child pair and count them."
+  },
+  "berry-basket-v1": {
+    "title": "Fill the berry basket",
+    "category": "Numbers & patterns",
+    "age": "4–5",
+    "kind": "basket",
+    "skill": "Build a set of a given size",
+    "participation": "Independent",
+    "prep": "",
+    "items": [
+      {
+        "prompt": "Put 2 berries in the basket. Then check your basket.",
+        "answer": "2",
+        "choices": [],
+        "display": ""
+      },
+      {
+        "prompt": "Put 4 berries in the basket. Then check your basket.",
+        "answer": "4",
+        "choices": [],
+        "display": ""
+      },
+      {
+        "prompt": "Put 3 berries in the basket. Then check your basket.",
+        "answer": "3",
+        "choices": [],
+        "display": ""
+      }
+    ]
+  },
+  "market-v1": {
+    "title": "Garden market",
+    "category": "Numbers & patterns",
+    "age": "6–7",
+    "kind": "basket",
+    "skill": "Combine two groups to fill an order",
+    "participation": "Independent",
+    "prep": "",
+    "items": [
+      {
+        "prompt": "Pack two berries for Jay and three for Kit. How many go in the basket?",
+        "answer": "5",
+        "choices": [],
+        "display": ""
+      },
+      {
+        "prompt": "Kit needs four berries. Jay needs two. Fill their basket.",
+        "answer": "6",
+        "choices": [],
+        "display": ""
+      },
+      {
+        "prompt": "Three friends each want two berries. Pack their order.",
+        "answer": "6",
+        "choices": [],
+        "display": ""
+      }
+    ]
+  },
+  "pattern-v1": {
+    "title": "Petal patterns",
+    "category": "Numbers & patterns",
+    "age": "4–6",
+    "kind": "choice",
+    "skill": "Extend a repeating pattern",
+    "participation": "Independent",
+    "prep": "",
+    "items": [
+      {
+        "prompt": "Which picture comes next?",
+        "answer": "🌻",
+        "choices": [
+          "🌿",
+          "🌻"
+        ],
+        "display": "🌻 🌿 🌻 🌿 …"
+      },
+      {
+        "prompt": "Two leaves, then a flower. What comes next?",
+        "answer": "🌿",
+        "choices": [
+          "🌻",
+          "🌿"
+        ],
+        "display": "🌿 🌿 🌻 🌿 …"
+      },
+      {
+        "prompt": "Look for the group that repeats. What comes next?",
+        "answer": "🌻",
+        "choices": [
+          "🌻",
+          "🌿"
+        ],
+        "display": "🌻 🌻 🌿 🌻 …"
+      }
+    ]
+  },
+  "tens-v1": {
+    "title": "Seed shop bundles",
+    "category": "Numbers & patterns",
+    "age": "7–8",
+    "kind": "choice",
+    "skill": "Trade ten ones for one ten",
+    "participation": "Independent",
+    "prep": "",
+    "items": [
+      {
+        "prompt": "Each bag holds ten seeds. How many seeds are here?",
+        "answer": "23",
+        "choices": [
+          "13",
+          "23",
+          "32"
+        ],
+        "display": "2 bags + 3 loose seeds"
+      },
+      {
+        "prompt": "Ten loose seeds fill a new bag. How many full bags now?",
+        "answer": "4",
+        "choices": [
+          "3",
+          "10",
+          "4"
+        ],
+        "display": "3 full bags + 10 loose seeds"
+      },
+      {
+        "prompt": "Open one bag of ten. How many loose seeds will you have?",
+        "answer": "14",
+        "choices": [
+          "14",
+          "4",
+          "24"
+        ],
+        "display": "2 full bags + 4 loose seeds"
+      }
+    ]
+  },
+  "number-keys-v1": {
+    "title": "Number key scavenger hunt",
+    "category": "Keyboard & mouse",
+    "age": "4–6",
+    "kind": "key",
+    "skill": "Find numeral keys",
+    "participation": "Independent",
+    "prep": "",
+    "items": [
+      {
+        "prompt": "Find the number 5 on your keyboard, or tap it below.",
+        "answer": "5",
+        "choices": [
+          "5",
+          "2",
+          "7"
+        ],
+        "display": "5"
+      },
+      {
+        "prompt": "Find the number 2 on your keyboard, or tap it below.",
+        "answer": "2",
+        "choices": [
+          "5",
+          "2",
+          "7"
+        ],
+        "display": "2"
+      },
+      {
+        "prompt": "Find the number 7 on your keyboard, or tap it below.",
+        "answer": "7",
+        "choices": [
+          "5",
+          "2",
+          "7"
+        ],
+        "display": "7"
+      }
+    ]
+  },
+  "signs-v1": {
+    "title": "Type the garden signs",
+    "category": "Keyboard & mouse",
+    "age": "6–8",
+    "kind": "type",
+    "skill": "Type short labels with spaces",
+    "participation": "Independent",
+    "prep": "",
+    "items": [
+      {
+        "prompt": "Copy the garden sign. Use the space bar between words.",
+        "answer": "red pot",
+        "choices": [],
+        "display": "red pot"
+      },
+      {
+        "prompt": "Copy the garden sign. Use the space bar between words.",
+        "answer": "bee hut",
+        "choices": [],
+        "display": "bee hut"
+      },
+      {
+        "prompt": "Copy the garden sign. Use the space bar between words.",
+        "answer": "seed shop",
+        "choices": [],
+        "display": "seed shop"
+      }
+    ]
+  },
+  "river-v1": {
+    "title": "Otter’s river trail",
+    "category": "Movement & coordination",
+    "age": "4–6",
+    "kind": "trace",
+    "skill": "Steer through bends with a mouse or finger",
+    "participation": "Independent",
+    "prep": "",
+    "items": [
+      {
+        "prompt": "Start at the gold dot. Glide along the river bend.",
+        "answer": "river",
+        "choices": [],
+        "display": ""
+      },
+      {
+        "prompt": "Stay on the winding stream as it turns back.",
+        "answer": "stream",
+        "choices": [],
+        "display": ""
+      }
+    ]
+  },
+  "drums-v1": {
+    "title": "Echo drum studio",
+    "category": "Movement & coordination",
+    "age": "4–6",
+    "kind": "adult",
+    "skill": "Copy and invent a movement pattern",
+    "participation": "Parent required",
+    "prep": "Sit facing each other and take turns leading the rhythm.",
+    "items": [
+      {
+        "prompt": "Grown-up, clap twice and tap your knees once. Invite your child to echo you.",
+        "answer": "We tried it",
+        "choices": [
+          "We tried it"
+        ],
+        "display": ""
+      },
+      {
+        "prompt": "Take turns leading. Have your child invent three movements for you to copy.",
+        "answer": "We tried it",
+        "choices": [
+          "We tried it"
+        ],
+        "display": ""
+      }
+    ]
+  },
+  "snail-v1": {
+    "title": "The snail mail mix-up",
+    "category": "Reading & language",
+    "age": "6–8",
+    "kind": "choice",
+    "skill": "Use story details to make an inference",
+    "participation": "Independent",
+    "prep": "",
+    "items": [
+      {
+        "prompt": "Where should Pip take the letter?",
+        "answer": "The red pot",
+        "choices": [
+          "The gate",
+          "The red pot",
+          "The pond"
+        ],
+        "display": "Pip found a letter. It said, “To Dot, under the red pot.” The gate was much closer."
+      },
+      {
+        "prompt": "Why did Pip crawl under the leaf?",
+        "answer": "To stay dry",
+        "choices": [
+          "To find Dot",
+          "To eat",
+          "To stay dry"
+        ],
+        "display": "Rain tapped on Pip’s shell. Pip slid under a wide leaf and held the letter close."
+      },
+      {
+        "prompt": "Which clue tells you Dot got the letter?",
+        "answer": "Dot opened it",
+        "choices": [
+          "It rained",
+          "Dot opened it",
+          "Pip rested"
+        ],
+        "display": "At last Pip reached the pot. Dot opened the letter and grinned."
+      }
+    ]
+  },
+  "story-v1": {
+    "title": "The last strawberry",
+    "category": "Reading & language",
+    "age": "5–7",
+    "kind": "adult",
+    "skill": "Predict an ending and explain a character’s choice",
+    "participation": "Parent required",
+    "prep": "Read the two scenes aloud and listen to your child invent an ending.",
+    "items": [
+      {
+        "prompt": "Read the first part together. Ask what Kit might do next.",
+        "answer": "We shared a prediction",
+        "choices": [
+          "We shared a prediction"
+        ],
+        "display": "One berry hung on the vine. Kit reached for it. Then a small hand reached up beside hers."
+      },
+      {
+        "prompt": "Read the ending. Ask what Kit did to make room for a friend. Let your child tell a different ending.",
+        "answer": "We told our ending",
+        "choices": [
+          "We told our ending"
+        ],
+        "display": "Kit picked the berry. She cut it in two. Two red smiles sat side by side."
+      }
+    ]
+  },
+  "shadow-v1": {
+    "title": "Shadow detectives",
+    "category": "Science & discovery",
+    "age": "6–8",
+    "kind": "adult",
+    "skill": "Predict and observe how a shadow changes",
+    "participation": "Parent required",
+    "prep": "Gather a flashlight and toy. Hold the light steady while your child moves the toy.",
+    "items": [
+      {
+        "prompt": "Shine a flashlight toward a wall. Put a toy between them. Predict what happens if the toy moves closer to the light.",
+        "answer": "We compared",
+        "choices": [
+          "We compared"
+        ],
+        "display": ""
+      },
+      {
+        "prompt": "Keep the light still. Move the toy closer to the light, then closer to the wall. Compare the shadow sizes with your prediction.",
+        "answer": "We compared",
+        "choices": [
+          "We compared"
+        ],
+        "display": ""
+      }
+    ]
+  },
+  "weather-v1": {
+    "title": "Cloud-watch log",
+    "category": "Science & discovery",
+    "age": "7–8",
+    "kind": "choice",
+    "skill": "Read observations and compare counts",
+    "participation": "Independent",
+    "prep": "",
+    "items": [
+      {
+        "prompt": "Which day had the most clouds in our picture log?",
+        "answer": "Tuesday",
+        "choices": [
+          "Monday",
+          "Tuesday",
+          "Wednesday"
+        ],
+        "display": "Monday ☁️☁️ · Tuesday ☁️☁️☁️☁️ · Wednesday ☁️"
+      },
+      {
+        "prompt": "How many more cloud marks did Tuesday have than Monday?",
+        "answer": "2",
+        "choices": [
+          "4",
+          "1",
+          "2"
+        ],
+        "display": "Monday ☁️☁️ · Tuesday ☁️☁️☁️☁️"
+      },
+      {
+        "prompt": "Thursday had three marks. Which day had fewer than Thursday?",
+        "answer": "Monday",
+        "choices": [
+          "Tuesday",
+          "Monday"
+        ],
+        "display": "Monday ☁️☁️ · Tuesday ☁️☁️☁️☁️ · Thursday ☁️☁️☁️"
       }
     ]
   }

@@ -22,7 +22,8 @@ function answer(value) {
 
 if (form.dataset.kind === "key") {
   document.addEventListener("keydown", event => {
-    if (!event.repeat && !event.ctrlKey && !event.metaKey && !event.altKey && /^[a-z]$/i.test(event.key)) {
+    if (event.target.closest("a, button") && !form.contains(event.target)) return;
+    if (!event.repeat && !event.ctrlKey && !event.metaKey && !event.altKey && /^[a-z0-9]$/i.test(event.key)) {
       event.preventDefault();
       answer(event.key);
     }
@@ -32,6 +33,7 @@ if (form.dataset.kind === "key") {
 const trail = document.querySelector("#trail");
 if (trail) {
   const shapes = {
+    river: "M22 112 Q70 12 114 66 T180 38", stream: "M24 25 C180 12 180 65 104 75 S30 130 178 122",
     line: "M28 75H172", hill: "M24 110Q100 -16 176 110",
     L: "M74 25V125H134", V: "M55 25L100 125L145 25",
     O: "M100 22C33 22 33 128 100 128C167 128 167 22 100 22",
@@ -74,4 +76,21 @@ if (trail) {
     if (length - distance < 3) { pointer = null; answer(shape); }
   };
   trail.onpointerup = trail.onpointercancel = () => { pointer = null; };
+}
+
+if (form.dataset.kind === "basket") {
+  let count = 0;
+  const add = document.querySelector("#add-berry");
+  const take = document.querySelector("#take-berry");
+  function update(change) {
+    count += change;
+    const berries = document.querySelector("#berries");
+    berries.textContent = count ? "🍓 ".repeat(count) : "Empty basket";
+    berries.setAttribute("aria-label", count + " berries in basket");
+    document.querySelector("#check-basket").value = count;
+    take.disabled = count === 0;
+    add.disabled = count === 12;
+  }
+  add.onclick = () => update(1);
+  take.onclick = () => update(-1);
 }
