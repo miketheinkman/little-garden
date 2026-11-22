@@ -2,54 +2,39 @@ function startActivity(form, signal) {
   const directions = document.querySelector("#directions-audio");
   const word = document.querySelector(".word-station audio");
   const status = document.querySelector("#audio-status") || document.createElement("span");
-  const synth = window.speechSynthesis;
   let playback = 0;
 
   function stopPlayback() {
     playback++;
     directions?.pause();
     word?.pause();
-    synth?.cancel();
   }
 
-  function connectAudio(button, audio, text) {
+  function connectAudio(button, audio) {
     button.hidden = false;
     if (audio) audio.controls = false;
     button.onclick = async () => {
       stopPlayback();
       const attempt = playback;
       status.hidden = true;
-      const stillHere = () => attempt === playback && form.isConnected && !signal.aborted;
-      function revealText() {
-        if (!stillHere()) return;
-        if (word && audio === word) word.closest(".word-station").querySelector("details").open = true;
-        status.textContent = audio === word ? "Audio unavailable. The word is shown below." : "Audio unavailable. Read the directions above.";
-        status.hidden = false;
-      }
       try {
         if (!audio) throw new Error("This saved page has no recording.");
         if (audio.error) audio.load();
         audio.currentTime = 0;
         await audio.play();
       } catch {
-        if (!stillHere()) return;
-        // Also covers old saved rounds whose prompt has since left the catalog.
-        if (!synth || !window.SpeechSynthesisUtterance) { revealText(); return; }
-        try {
-          const message = new SpeechSynthesisUtterance(text);
-          message.rate = .93;
-          message.pitch = 1.13;
-          message.onerror = revealText;
-          synth.speak(message);
-        } catch { revealText(); }
+        if (attempt !== playback || !form.isConnected || signal.aborted) return;
+        if (word && audio === word) word.closest(".word-station").querySelector("details").open = true;
+        status.textContent = audio === word ? "Audio unavailable. The word is shown below." : "Audio unavailable. Read the directions above.";
+        status.hidden = false;
       }
     };
   }
 
-  connectAudio(document.querySelector("#listen"), directions, document.querySelector("#prompt").textContent);
+  connectAudio(document.querySelector("#listen"), directions);
   if (word) {
     const button = document.querySelector("[data-hear-word]");
-    connectAudio(button, word, button.dataset.hearWord);
+    connectAudio(button, word);
   }
   signal.addEventListener("abort", stopPlayback, {once: true});
   window.addEventListener("pagehide", stopPlayback, {signal});

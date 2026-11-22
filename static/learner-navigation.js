@@ -1,4 +1,6 @@
 // Keep the learner's live connection while replacing the server-rendered lesson.
+const activityScript = 'script[src*="/activity.js?"]';
+const loadedActivity = document.querySelector(activityScript)?.getAttribute("src");
 let learnerRequest;
 async function openLearnerPage(url, options = {}) {
   learnerRequest?.abort();
@@ -9,13 +11,14 @@ async function openLearnerPage(url, options = {}) {
   const next = new DOMParser().parseFromString(await response.text(), "text/html");
   if (request.signal.aborted) return;
   const badge = next.querySelector("#live-presence");
-  if (!badge || badge.dataset.url !== document.querySelector("#live-presence").dataset.url) {
+  // A new release may need different controls than the scripts already running in this tab.
+  const nextActivity = next.querySelector(activityScript)?.getAttribute("src");
+  if (!badge || nextActivity !== loadedActivity || badge.dataset.url !== document.querySelector("#live-presence").dataset.url) {
     location.assign(response.url);
     return;
   }
   const main = next.querySelector("main");
   main.querySelectorAll("script").forEach(script => script.remove());
-  if (window.speechSynthesis?.speaking) window.speechSynthesis.cancel();
   document.querySelector("main").replaceWith(main);
   if (response.url !== location.href) history.pushState(null, "", response.url);
   startLesson();

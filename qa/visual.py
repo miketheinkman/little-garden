@@ -1,5 +1,6 @@
 """Run with manage.py test qa.visual. Django creates a disposable test database."""
 import os
+import re
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
@@ -51,6 +52,31 @@ class VisualReview(StaticLiveServerTestCase):
                     kept.refresh_from_db()
                     self.assertEqual(kept.skipped, 2)
                     self.assertGreater(kept.samples.get(step=0).ms_per_key, 0)
+
+    def test_open_lesson_refreshes_an_older_player(self):
+        child = Learner.objects.get(pk=self.child_id)
+        row = assign_lesson(child, "sounds-v1", 0)
+        device = Client()
+        device.force_login(child.parent)
+        device.post(reverse("manage", args=[child.pk]), {"action": "play"})
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            page = browser.new_page()
+            page.context.add_cookies([{"name": "sessionid", "value": device.cookies["sessionid"].value,
+                                       "url": self.live_server_url}])
+            def old_page(route):
+                response = route.fetch()
+                body = re.sub(r'activity\.js\?v=[^"]+', "activity.js?v=prior-release", response.text(), count=1)
+                route.fulfill(response=response, body=body)
+            page.route(self.live_server_url + "/", old_page, times=1)
+            page.goto(self.live_server_url)
+            page.evaluate("window.previousPlayer = true")
+            page.get_by_role("link", name="Start lesson").click()
+            expect(page).to_have_url(self.live_server_url + reverse("play", args=[row.pk]))
+            self.assertFalse(page.evaluate("Boolean(window.previousPlayer)"))
+            page.get_by_role("button", name="Hear directions").click()
+            page.wait_for_function("document.querySelector('#directions-audio').currentTime > 0")
+            browser.close()
 
     def test_new_lessons_and_library_queue(self):
         parent = get_user_model().objects.get(username="reviewer")
@@ -171,7 +197,10 @@ class VisualReview(StaticLiveServerTestCase):
                     for ctx, session in zip(contexts, (household, device)):
                         ctx.add_cookies([{"name": "sessionid", "value": session.cookies["sessionid"].value,
                                           "url": self.live_server_url}])
-                    contexts[1].add_init_script('Object.defineProperty(window, "speechSynthesis", {value: undefined})')
+                    contexts[1].add_init_script("""window.deviceVoiceCalls = 0;
+                        Object.defineProperty(window, "speechSynthesis", {value: {
+                          cancel() {}, speak() { window.deviceVoiceCalls++; }
+                        }});""")
                     viewer, kid = [ctx.new_page() for ctx in contexts]
                     errors = []
                     for page in (viewer, kid):
@@ -210,6 +239,7 @@ class VisualReview(StaticLiveServerTestCase):
                                 kid.get_by_role("button", name="Hear the word").click()
                                 expect(kid.locator("#audio-status")).to_be_visible()
                                 expect(kid.locator(".word-station details p")).to_be_visible()
+                                self.assertEqual(kid.evaluate("window.deviceVoiceCalls"), 0)
                                 self.capture(kid, "piper-word-offline")
                                 kid.unroute("**/phonics/words/*.ogg*")
                                 kid.get_by_role("button", name="Hear the word").click()
