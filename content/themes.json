@@ -1,0 +1,956 @@
+{
+  "garden": {
+    "label": "Little Garden",
+    "place": "garden",
+    "site": "garden bed",
+    "actor": {
+      "name": "ladybug",
+      "icon": "🐞"
+    },
+    "unit": {
+      "name": "seed",
+      "icon": "🌱"
+    },
+    "other": {
+      "name": "flower",
+      "icon": "🌼"
+    },
+    "friend": {
+      "name": "rabbit",
+      "icon": "🐇"
+    },
+    "box": "basket",
+    "one": "berry",
+    "many": "berries",
+    "goal": {
+      "name": "leaf",
+      "icon": "🍃"
+    },
+    "line": "soil line",
+    "straight": "carrot",
+    "bent": "worm",
+    "labels": [
+      "red pot",
+      "bee hut",
+      "sun hat",
+      "oak log"
+    ],
+    "names": [
+      "Fern",
+      "Rose",
+      "Basil",
+      "Iris"
+    ],
+    "vowels": {
+      "a": "cat",
+      "e": "hen",
+      "i": "pig",
+      "o": "pot",
+      "u": "sun"
+    },
+    "digraphs": {
+      "sh": "ship",
+      "ch": "chat",
+      "th": "thin"
+    },
+    "beats": {
+      "1": "seed",
+      "2": "rabbit",
+      "3": "butterfly"
+    },
+    "rhyme": [
+      "frog",
+      "log",
+      "🪵"
+    ],
+    "art": [
+      "leaf",
+      "apple"
+    ],
+    "prop": {
+      "name": "apple",
+      "icon": "🍎"
+    },
+    "living": {
+      "name": "fern",
+      "icon": "🌿"
+    },
+    "inert": {
+      "name": "rock",
+      "icon": "🪨"
+    },
+    "cargo_icon": "🍓",
+    "magic": [
+      "cape",
+      "kite",
+      "cube",
+      "cane"
+    ],
+    "sentences": [
+      {
+        "text": "Bees visit flowers",
+        "scene": "🐝 🌻"
+      },
+      {
+        "text": "Bugs climb stems",
+        "scene": "🐞 🌱"
+      },
+      {
+        "text": "The rabbit eats carrots",
+        "scene": "🐇 🥕"
+      },
+      {
+        "text": "The snail carries mail",
+        "scene": "🐌 ✉️"
+      }
+    ]
+  },
+  "construction": {
+    "label": "Construction & Big Trucks",
+    "place": "building site",
+    "site": "work yard",
+    "actor": {
+      "name": "dump truck",
+      "icon": "🚚"
+    },
+    "unit": {
+      "name": "brick",
+      "icon": "🧱"
+    },
+    "other": {
+      "name": "cone",
+      "icon": "🚧"
+    },
+    "friend": {
+      "name": "builder",
+      "icon": "👷"
+    },
+    "box": "toolbox",
+    "one": "bolt",
+    "many": "bolts",
+    "goal": {
+      "name": "crane",
+      "icon": "🏗️"
+    },
+    "line": "chalk line",
+    "straight": "beam",
+    "bent": "cable",
+    "labels": [
+      "red cab",
+      "big rig",
+      "tool box",
+      "road map"
+    ],
+    "names": [
+      "Mack",
+      "Rex",
+      "Ada",
+      "Kit"
+    ],
+    "vowels": {
+      "a": "cab",
+      "e": "peg",
+      "i": "dig",
+      "o": "rod",
+      "u": "nut"
+    },
+    "digraphs": {
+      "sh": "shed",
+      "ch": "chip",
+      "th": "thick"
+    },
+    "beats": {
+      "1": "truck",
+      "2": "hammer",
+      "3": "bulldozer"
+    },
+    "rhyme": [
+      "sock",
+      "rock",
+      "🪨"
+    ],
+    "art": [
+      "truck",
+      "cone"
+    ],
+    "prop": {
+      "name": "hard hat",
+      "icon": "⛑️"
+    },
+    "living": {
+      "name": "moss",
+      "icon": "🌿"
+    },
+    "inert": {
+      "name": "brick",
+      "icon": "🧱"
+    },
+    "cargo_icon": "🔩",
+    "magic": [
+      "tube",
+      "pane",
+      "cube",
+      "tape"
+    ],
+    "sentences": [
+      {
+        "text": "Trucks carry bricks",
+        "scene": "🚚 🧱"
+      },
+      {
+        "text": "Builders wear hats",
+        "scene": "👷 ⛑️"
+      },
+      {
+        "text": "The crane lifts steel",
+        "scene": "🏗️ 🏢"
+      },
+      {
+        "text": "The truck moves dirt",
+        "scene": "🚚 🟤"
+      }
+    ]
+  },
+  "space": {
+    "label": "Outer Space & Rockets",
+    "place": "space station",
+    "site": "moon base",
+    "actor": {
+      "name": "rocket",
+      "icon": "🚀"
+    },
+    "unit": {
+      "name": "star",
+      "icon": "⭐"
+    },
+    "other": {
+      "name": "planet",
+      "icon": "🪐"
+    },
+    "friend": {
+      "name": "robot",
+      "icon": "🤖"
+    },
+    "box": "cargo bay",
+    "one": "moon rock",
+    "many": "moon rocks",
+    "goal": {
+      "name": "satellite",
+      "icon": "🛰️"
+    },
+    "line": "orbit line",
+    "straight": "panel",
+    "bent": "cable",
+    "labels": [
+      "moon map",
+      "red sun",
+      "jet pod",
+      "star lab"
+    ],
+    "names": [
+      "Nova",
+      "Luna",
+      "Mars",
+      "Vega"
+    ],
+    "vowels": {
+      "a": "pad",
+      "e": "jet",
+      "i": "rim",
+      "o": "pod",
+      "u": "sun"
+    },
+    "digraphs": {
+      "sh": "ship",
+      "ch": "check",
+      "th": "thin"
+    },
+    "beats": {
+      "1": "moon",
+      "2": "rocket",
+      "3": "asteroid"
+    },
+    "rhyme": [
+      "far",
+      "star",
+      "⭐"
+    ],
+    "art": [
+      "rocket",
+      "star"
+    ],
+    "prop": {
+      "name": "helmet",
+      "icon": "🪖"
+    },
+    "living": {
+      "name": "seedling",
+      "icon": "🌱"
+    },
+    "inert": {
+      "name": "meteorite",
+      "icon": "🪨"
+    },
+    "cargo_icon": "🪨",
+    "magic": [
+      "cape",
+      "cube",
+      "tube",
+      "note"
+    ],
+    "sentences": [
+      {
+        "text": "Rockets reach space",
+        "scene": "🚀 ⭐"
+      },
+      {
+        "text": "Robots collect rocks",
+        "scene": "🤖 🪨"
+      },
+      {
+        "text": "The moon circles Earth",
+        "scene": "🌙 🌎"
+      },
+      {
+        "text": "The astronaut collects rocks",
+        "scene": "🧑‍🚀 🪨"
+      }
+    ]
+  },
+  "ocean": {
+    "label": "Ocean & Tidepools",
+    "place": "tidepool",
+    "site": "coral cove",
+    "actor": {
+      "name": "crab",
+      "icon": "🦀"
+    },
+    "unit": {
+      "name": "shell",
+      "icon": "🐚"
+    },
+    "other": {
+      "name": "pebble",
+      "icon": "🪨"
+    },
+    "friend": {
+      "name": "diver",
+      "icon": "🤿"
+    },
+    "box": "treasure chest",
+    "one": "seashell",
+    "many": "seashells",
+    "goal": {
+      "name": "fish",
+      "icon": "🐟"
+    },
+    "line": "sand line",
+    "straight": "plank",
+    "bent": "rope",
+    "labels": [
+      "sea bed",
+      "fin tip",
+      "red fin",
+      "wet net"
+    ],
+    "names": [
+      "Coral",
+      "Pearl",
+      "Sandy",
+      "Finn"
+    ],
+    "vowels": {
+      "a": "map",
+      "e": "net",
+      "i": "fin",
+      "o": "cod",
+      "u": "sun"
+    },
+    "digraphs": {
+      "sh": "shell",
+      "ch": "chum",
+      "th": "thin"
+    },
+    "beats": {
+      "1": "wave",
+      "2": "coral",
+      "3": "octopus"
+    },
+    "rhyme": [
+      "wish",
+      "fish",
+      "🐟"
+    ],
+    "art": [
+      "submarine",
+      "shell"
+    ],
+    "prop": {
+      "name": "treasure chest",
+      "icon": "🧰"
+    },
+    "living": {
+      "name": "crab",
+      "icon": "🦀"
+    },
+    "inert": {
+      "name": "pebble",
+      "icon": "🪨"
+    },
+    "cargo_icon": "🐚",
+    "magic": [
+      "kite",
+      "tube",
+      "note",
+      "cape"
+    ],
+    "sentences": [
+      {
+        "text": "Crabs find shells",
+        "scene": "🦀 🐚"
+      },
+      {
+        "text": "Fish swim together",
+        "scene": "🐟 🐟"
+      },
+      {
+        "text": "The diver sees fish",
+        "scene": "🤿 🐟"
+      },
+      {
+        "text": "The crab carries treasure",
+        "scene": "🦀 💎"
+      }
+    ]
+  },
+  "trains": {
+    "label": "Trains & Tracks",
+    "place": "railway",
+    "site": "train station",
+    "actor": {
+      "name": "engine",
+      "icon": "🚂"
+    },
+    "unit": {
+      "name": "ticket",
+      "icon": "🎟️"
+    },
+    "other": {
+      "name": "crate",
+      "icon": "📦"
+    },
+    "friend": {
+      "name": "conductor",
+      "icon": "🧑‍✈️"
+    },
+    "box": "boxcar",
+    "one": "ticket",
+    "many": "tickets",
+    "goal": {
+      "name": "signal",
+      "icon": "🚦"
+    },
+    "line": "track line",
+    "straight": "rail",
+    "bent": "cable",
+    "labels": [
+      "red cab",
+      "rail map",
+      "box car",
+      "new cap"
+    ],
+    "names": [
+      "Ruby",
+      "Pip",
+      "Max",
+      "Tess"
+    ],
+    "vowels": {
+      "a": "cab",
+      "e": "red",
+      "i": "pin",
+      "o": "box",
+      "u": "bus"
+    },
+    "digraphs": {
+      "sh": "shed",
+      "ch": "check",
+      "th": "thick"
+    },
+    "beats": {
+      "1": "track",
+      "2": "ticket",
+      "3": "conductor"
+    },
+    "rhyme": [
+      "rain",
+      "train",
+      "🚂"
+    ],
+    "art": [
+      "engine",
+      "tunnel"
+    ],
+    "prop": {
+      "name": "signal light",
+      "icon": "🚦"
+    },
+    "living": {
+      "name": "sparrow",
+      "icon": "🐦"
+    },
+    "inert": {
+      "name": "railcar",
+      "icon": "🚃"
+    },
+    "cargo_icon": "🎟️",
+    "magic": [
+      "ride",
+      "note",
+      "pane",
+      "tube"
+    ],
+    "sentences": [
+      {
+        "text": "Trains carry crates",
+        "scene": "🚂 📦"
+      },
+      {
+        "text": "Signals guide trains",
+        "scene": "🚦 🚂"
+      },
+      {
+        "text": "The train carries apples",
+        "scene": "🚂 🍎"
+      },
+      {
+        "text": "The conductor checks tickets",
+        "scene": "🧑‍✈️ 🎟️"
+      }
+    ]
+  },
+  "woodland": {
+    "label": "Woodland & Campfire",
+    "place": "woodland",
+    "site": "forest camp",
+    "actor": {
+      "name": "owl",
+      "icon": "🦉"
+    },
+    "unit": {
+      "name": "acorn",
+      "icon": "🌰"
+    },
+    "other": {
+      "name": "leaf",
+      "icon": "🍁"
+    },
+    "friend": {
+      "name": "camper",
+      "icon": "🏕️"
+    },
+    "box": "pack",
+    "one": "acorn",
+    "many": "acorns",
+    "goal": {
+      "name": "lantern",
+      "icon": "🏮"
+    },
+    "line": "trail line",
+    "straight": "log",
+    "bent": "twig",
+    "labels": [
+      "oak log",
+      "red fox",
+      "nut bag",
+      "sun hat"
+    ],
+    "names": [
+      "Aspen",
+      "Wren",
+      "Reed",
+      "Hazel"
+    ],
+    "vowels": {
+      "a": "sap",
+      "e": "den",
+      "i": "kit",
+      "o": "log",
+      "u": "nut"
+    },
+    "digraphs": {
+      "sh": "shade",
+      "ch": "chip",
+      "th": "thorn"
+    },
+    "beats": {
+      "1": "fox",
+      "2": "acorn",
+      "3": "evergreen"
+    },
+    "rhyme": [
+      "box",
+      "fox",
+      "🦊"
+    ],
+    "art": [
+      "tent",
+      "pine"
+    ],
+    "prop": {
+      "name": "lantern",
+      "icon": "🏮"
+    },
+    "living": {
+      "name": "owl",
+      "icon": "🦉"
+    },
+    "inert": {
+      "name": "stone",
+      "icon": "🪨"
+    },
+    "cargo_icon": "🌰",
+    "magic": [
+      "pine",
+      "kite",
+      "cane",
+      "note"
+    ],
+    "sentences": [
+      {
+        "text": "Owls hunt mice",
+        "scene": "🦉 🐁"
+      },
+      {
+        "text": "Campers pitch tents",
+        "scene": "🏕️ ⛺"
+      },
+      {
+        "text": "The squirrel gathers acorns",
+        "scene": "🐿️ 🌰"
+      },
+      {
+        "text": "The owl visits camp",
+        "scene": "🦉 ⛺"
+      }
+    ]
+  },
+  "bakery": {
+    "label": "Bakery & Kitchen",
+    "place": "bakery",
+    "site": "bake shop",
+    "actor": {
+      "name": "baker",
+      "icon": "🧑‍🍳"
+    },
+    "unit": {
+      "name": "cookie",
+      "icon": "🍪"
+    },
+    "other": {
+      "name": "muffin",
+      "icon": "🧁"
+    },
+    "friend": {
+      "name": "chef",
+      "icon": "👩‍🍳"
+    },
+    "box": "mixing bowl",
+    "one": "cookie",
+    "many": "cookies",
+    "goal": {
+      "name": "oven mitt",
+      "icon": "🧤"
+    },
+    "line": "icing line",
+    "straight": "breadstick",
+    "bent": "twist",
+    "labels": [
+      "hot bun",
+      "jam pot",
+      "egg cup",
+      "nut bar"
+    ],
+    "names": [
+      "Olive",
+      "Coco",
+      "Ben",
+      "Pat"
+    ],
+    "vowels": {
+      "a": "pan",
+      "e": "hen",
+      "i": "tin",
+      "o": "pot",
+      "u": "bun"
+    },
+    "digraphs": {
+      "sh": "shop",
+      "ch": "chop",
+      "th": "thick"
+    },
+    "beats": {
+      "1": "bun",
+      "2": "muffin",
+      "3": "cinnamon"
+    },
+    "rhyme": [
+      "lake",
+      "cake",
+      "🍰"
+    ],
+    "art": [
+      "cake",
+      "cookie"
+    ],
+    "prop": {
+      "name": "spoon",
+      "icon": "🥄"
+    },
+    "living": {
+      "name": "hen",
+      "icon": "🐔"
+    },
+    "inert": {
+      "name": "bowl",
+      "icon": "🥣"
+    },
+    "cargo_icon": "🍪",
+    "magic": [
+      "cube",
+      "tube",
+      "note",
+      "cane"
+    ],
+    "sentences": [
+      {
+        "text": "Bakers mix eggs",
+        "scene": "🧑‍🍳 🥚"
+      },
+      {
+        "text": "Muffins cool slowly",
+        "scene": "🧁 🧁"
+      },
+      {
+        "text": "The baker stirs batter",
+        "scene": "🧑‍🍳 🥣"
+      },
+      {
+        "text": "The chef decorates cakes",
+        "scene": "👩‍🍳 🎂"
+      }
+    ]
+  },
+  "dinosaurs": {
+    "label": "Dinosaurs & Fossils",
+    "place": "fossil dig",
+    "site": "dig camp",
+    "actor": {
+      "name": "dinosaur",
+      "icon": "🦕"
+    },
+    "unit": {
+      "name": "fossil",
+      "icon": "🦴"
+    },
+    "other": {
+      "name": "egg",
+      "icon": "🥚"
+    },
+    "friend": {
+      "name": "explorer",
+      "icon": "🧑‍🔬"
+    },
+    "box": "sample box",
+    "one": "fossil",
+    "many": "fossils",
+    "goal": {
+      "name": "magnifier",
+      "icon": "🔍"
+    },
+    "line": "dig line",
+    "straight": "bone",
+    "bent": "twig",
+    "labels": [
+      "dig pit",
+      "mud map",
+      "egg bed",
+      "sun cap"
+    ],
+    "names": [
+      "Rex",
+      "Spike",
+      "Amber",
+      "Dot"
+    ],
+    "vowels": {
+      "a": "map",
+      "e": "leg",
+      "i": "pit",
+      "o": "top",
+      "u": "mud"
+    },
+    "digraphs": {
+      "sh": "shell",
+      "ch": "chip",
+      "th": "thick"
+    },
+    "beats": {
+      "1": "bone",
+      "2": "fossil",
+      "3": "dinosaur"
+    },
+    "rhyme": [
+      "peg",
+      "egg",
+      "🥚"
+    ],
+    "art": [
+      "egg",
+      "footprint"
+    ],
+    "prop": {
+      "name": "brush",
+      "icon": "🖌️"
+    },
+    "living": {
+      "name": "fern",
+      "icon": "🌿"
+    },
+    "inert": {
+      "name": "fossil",
+      "icon": "🦴"
+    },
+    "cargo_icon": "🦴",
+    "magic": [
+      "pine",
+      "cube",
+      "note",
+      "tape"
+    ],
+    "sentences": [
+      {
+        "text": "Explorers find fossils",
+        "scene": "🧑‍🔬 🦴"
+      },
+      {
+        "text": "Dinosaurs eat ferns",
+        "scene": "🦕 🌿"
+      },
+      {
+        "text": "The explorer brushes fossils",
+        "scene": "🖌️ 🦴"
+      },
+      {
+        "text": "The dinosaur lays eggs",
+        "scene": "🦕 🥚"
+      }
+    ]
+  },
+  "farm": {
+    "label": "Farm & Barn",
+    "place": "farm",
+    "site": "red barn",
+    "actor": {
+      "name": "tractor",
+      "icon": "🚜"
+    },
+    "unit": {
+      "name": "apple",
+      "icon": "🍎"
+    },
+    "other": {
+      "name": "hay bale",
+      "icon": "🌾"
+    },
+    "friend": {
+      "name": "farmer",
+      "icon": "🧑‍🌾"
+    },
+    "box": "pail",
+    "one": "apple",
+    "many": "apples",
+    "goal": {
+      "name": "chicken",
+      "icon": "🐔"
+    },
+    "line": "furrow",
+    "straight": "fence rail",
+    "bent": "rope",
+    "labels": [
+      "hay bed",
+      "pig pen",
+      "red hen",
+      "mud pit"
+    ],
+    "names": [
+      "Bess",
+      "Clover",
+      "Pip",
+      "Nell"
+    ],
+    "vowels": {
+      "a": "ram",
+      "e": "hen",
+      "i": "pig",
+      "o": "hog",
+      "u": "mud"
+    },
+    "digraphs": {
+      "sh": "shed",
+      "ch": "chick",
+      "th": "thin"
+    },
+    "beats": {
+      "1": "barn",
+      "2": "tractor",
+      "3": "potato"
+    },
+    "rhyme": [
+      "ten",
+      "hen",
+      "🐔"
+    ],
+    "art": [
+      "barn",
+      "apple"
+    ],
+    "prop": {
+      "name": "milk pail",
+      "icon": "🪣"
+    },
+    "living": {
+      "name": "cow",
+      "icon": "🐄"
+    },
+    "inert": {
+      "name": "bucket",
+      "icon": "🪣"
+    },
+    "cargo_icon": "🍎",
+    "magic": [
+      "mane",
+      "cane",
+      "pine",
+      "tube"
+    ],
+    "sentences": [
+      {
+        "text": "Farmers pick apples",
+        "scene": "🧑‍🌾 🍎"
+      },
+      {
+        "text": "Chickens lay eggs",
+        "scene": "🐔 🥚"
+      },
+      {
+        "text": "The tractor carries hay",
+        "scene": "🚜 🌾"
+      },
+      {
+        "text": "The cow eats grass",
+        "scene": "🐄 🌱"
+      }
+    ]
+  }
+}

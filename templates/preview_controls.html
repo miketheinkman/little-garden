@@ -3,6 +3,9 @@
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
 <div class="preview-tools"><p><strong>Parent preview</strong> · {{ lesson.participation }} · Ages {{ lesson.age }}</p>
 <p>Round {{ variation|add:1 }} · {% if variation %}<a href="{% url 'preview' child.pk key 0 %}?v={{ variation|add:-1 }}">Previous round</a> · {% endif %} <a href="{% url 'preview' child.pk key 0 %}?v={{ next_variant }}">Try another round</a></p>
-<form method="post" action="{% url 'library' child.pk %}">{% csrf_token %}
-<input type="hidden" name="variation" value="{{ variation }}"><button name="lesson" value="{{ key }}">Add to {{ child.nickname }}’s queue</button></form>
+{% if already_queued %}<span>In {{ child.nickname }}’s queue</span>{% else %}<form data-queue-form method="post" action="{% url 'library' child.pk %}">{% csrf_token %}
+<input type="hidden" name="variation" value="{{ variation }}"><input type="hidden" name="lesson" value="{{ key }}"><button>Add to {{ child.nickname }}’s queue</button></form>{% endif %}
 </div>
+
+{% load static %}<p data-queue-status role="status" class="queue-notice"></p>
+<script defer src="{% static 'lesson-queue.js' %}"></script>

@@ -5,7 +5,7 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from .forms import ParentSignupForm, RecoveryEmailForm
-from django.db import transaction
+from django.db import connection, transaction
 from django.db.models import F, Max
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -14,10 +14,11 @@ from django.views.decorators.http import require_POST, require_http_methods
 
 from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 
+from .themes import THEMES, THEME_CHOICES, assignment_lesson, summary, themed_round
 from .art import art_item, evaluate
 from .coview import recent_response
 from .models import SkillSample
-from .progression import Progress, item_score
+from .progression import FIT_LABELS, Progress, item_score, record_tier
 from .practice import CURRENT_LESSONS, CURRENT_VERSION, FIVE_PROMPT_ROUNDS, LESSONS, build_round, round_count
 
 
@@ -28,18 +29,26 @@ def lesson_response(request, lesson, item):
         if feedback is None:
             return False, None
         return True, {"pixels": pixels, "feedback": feedback, "mask": item["mask"], "kind": lesson["kind"]}
-    return request.POST.get("answer", "").casefold() == item["answer"].casefold(), None
+    submitted = request.POST.get("answer", "")
+    if "carrots" in item and request.POST.get("shares"):
+        shares = request.POST["shares"].split(",")
+        allowed = [str(item["carrots"] // item["rabbits"])] * item["rabbits"]
+        if shares not in (["0"] * item["rabbits"], allowed):
+            return False, None
+    if lesson.get("tool") == "shift":
+        return submitted == item["answer"], None
+    return submitted.casefold() in {answer.casefold() for answer in [item["answer"], *item.get("also_accept", [])]}, None
 
 
 def success_result(lesson):
     return "finished" if lesson["kind"] in {"draw", "color", "mirror", "adult"} else "correct"
 
 
-def answer_transition(request, destination, lesson, accepted=False):
+def answer_transition(request, destination, lesson, accepted=False, tier_gain=None):
     if request.headers.get("Accept") != "application/json":
         return redirect(destination)
     result = success_result(lesson) if accepted else "advance"
-    return JsonResponse({"result": result, "next": destination})
+    return JsonResponse({"result": result, "next": destination, **({"tier_gain": tier_gain} if tier_gain else {})})
 
 
 def signup(request):
@@ -69,34 +78,35 @@ def home(request):
     if request.user.is_authenticated:
         learners = list(Learner.objects.filter(parent=request.user))
         for child in learners:
-            child.queue = decorate(child.assignment_set.filter(completed=None, removed_at=None))
+            child.queue = decorate(child.assignment_set.filter(completed=None, removed_at=None), child)
             progress = Progress(child)
             for row in child.queue:
                 row.fit_label = progress.label(LESSONS[row.lesson])
                 row.level = LESSONS[row.lesson]["level"]
             child.suggestions = [] if child.queue else progress.recommendations()
-            child.checkins = progress.checkins()
+            active = {CURRENT_VERSION.get(row.lesson, row.lesson) for row in child.queue}
+            child.checkins = [check for check in progress.checkins() if check["key"] not in active]
             child.charts = progress.charts()
             child.round_count = len(progress.recent)
             child.timeline = progress.timeline()
             child.record = decorate(child.assignment_set.filter(
                 completed__gte=timezone.now()-timedelta(days=7)).order_by("-completed"))
-        return render(request, "parent.html", {"learners": learners, "lessons": LESSONS})
+        return render(request, "parent.html", {"learners": learners, "lessons": LESSONS, "theme_choices": THEME_CHOICES})
     child = Learner.objects.filter(pk=request.session.get("child")).first()
     if child:
-        queue = decorate(child.assignment_set.filter(completed=None, removed_at=None))
+        queue = decorate(child.assignment_set.filter(completed=None, removed_at=None), child)
         progress = Progress(child)
         child.charts = progress.charts()
         child.round_count = len(progress.recent)
-        return render(request, "child.html", {"child": child, "queue": queue,
+        return render(request, "child.html", {"child": child, "world": THEMES[child.lesson_theme], "queue": queue,
                       "suggestions": [] if queue else progress.recommendations()})
     return render(request, "welcome.html")
 
 
-def decorate(rows):
+def decorate(rows, child=None):
     rows = list(rows)
     for row in rows:
-        row.info = getattr(row, "round_snapshot", None) or LESSONS[row.lesson]
+        row.info = assignment_lesson(row, child.lesson_theme if child else None) if isinstance(row, Assignment) else LESSONS[row.lesson]
     return rows
 
 
@@ -136,36 +146,72 @@ def assign_lesson(child, key, variation=None):
                                 round_snapshot=build_round(key, variation))
 
 
+def active_lesson_keys(child):
+    keys = child.assignment_set.filter(completed=None, removed_at=None).values_list("lesson", flat=True)
+    return {CURRENT_VERSION.get(key, key) for key in keys}
+
+
+@transaction.atomic
+def queue_available(child, keys, variation=None):
+    # Serialize single and bulk adds before reading the queue, including on SQLite.
+    Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))
+    active = active_lesson_keys(child)
+    added = []
+    for key in keys:
+        current = CURRENT_VERSION.get(key, key)
+        if current not in active:
+            assign_lesson(child, key, variation)
+            active.add(current)
+            added.append(key)
+    return added, active
+
+
 @login_required
 @require_http_methods(["GET", "POST"])
 def library(request, pk):
     child = get_object_or_404(Learner, parent=request.user, pk=pk)
-    if request.method == "POST":
-        key = request.POST.get("lesson")
-        if key not in LESSONS:
-            return HttpResponseBadRequest("Choose a lesson from the library.")
-        variation = requested_round(key, request.POST["variation"]) if "variation" in request.POST else None
-        assign_lesson(child, key, variation)
-        messages.success(request, f"{LESSONS[key]['title']} added to {child.nickname}’s queue.")
-        return redirect(request.get_full_path())
-
     category = request.GET.get("category", "")
     help_mode = request.GET.get("participation", "")
+    tier = request.GET.get("tier", "")
+    fit_label = request.GET.get("fit", "")
+    progress = Progress(child)
+    matching = {key: lesson for key, lesson in CURRENT_LESSONS.items()
+                if (not category or lesson["category"] == category)
+                and (not help_mode or lesson["participation"] == help_mode)
+                and (not tier or tier == ("checkin" if lesson.get("checkin") else str(lesson["level"])))
+                and (not fit_label or progress.label(lesson) == fit_label)}
+    if request.method == "POST":
+        if request.POST.get("action") == "all":
+            added, active = queue_available(child, matching)
+            note = f"Added {len(added)} lesson{'s' if len(added) != 1 else ''} to {child.nickname}’s queue."
+        else:
+            key = request.POST.get("lesson")
+            if key not in LESSONS:
+                return HttpResponseBadRequest("Choose a lesson from the library.")
+            variation = requested_round(key, request.POST["variation"]) if "variation" in request.POST else None
+            added, active = queue_available(child, [key], variation)
+            title = summary(key, LESSONS[key], child.lesson_theme)["title"]
+            note = (f"{title} added to {child.nickname}’s queue." if added else
+                    f"{title} is already in {child.nickname}’s queue.")
+        if request.headers.get("Accept") == "application/json":
+            return JsonResponse({"active": sorted(active), "message": note})
+        messages.success(request, note)
+        return redirect(request.get_full_path())
+
+    active = active_lesson_keys(child)
     upcoming = {}
     for key, number in child.assignment_set.order_by("pk").values_list("lesson", "variation"):
         key = CURRENT_VERSION.get(key, key)
         upcoming[key] = (number+1) % round_count(key)
-    progress = Progress(child)
     groups = {}
-    for key, lesson in CURRENT_LESSONS.items():
-        if category and lesson["category"] != category:
-            continue
-        if help_mode and lesson["participation"] != help_mode:
-            continue
-        groups.setdefault(lesson["category"], []).append((key, lesson, upcoming.get(key, 0), progress.label(lesson)))
+    for key, lesson in matching.items():
+        if key not in active:
+            groups.setdefault(lesson["category"], []).append((key, summary(key, lesson, child.lesson_theme), upcoming.get(key, 0), progress.label(lesson)))
     return render(request, "library.html", {
+        "tier": tier, "tiers": ["1", "2", "3", "4", "5"], "fit_label": fit_label, "fits": FIT_LABELS,
         "child": child, "groups": groups, "category": category, "help_mode": help_mode,
-        "categories": sorted({lesson["category"] for lesson in LESSONS.values()}),
+        "world": THEMES[child.lesson_theme], "available": len(matching.keys() - active), "matches": bool(matching),
+        "categories": sorted({lesson["category"] for lesson in CURRENT_LESSONS.values()}),
         "modes": ["Independent", "Parent required"],
     })
 
@@ -178,7 +224,7 @@ def preview(request, pk, key, step):
     if not lesson or step > len(lesson["items"]):
         raise Http404
     number = requested_round(key, request.GET.get("v", 0))
-    lesson = build_round(key, number)
+    lesson = themed_round(key, build_round(key, number), child.lesson_theme, number)
     def preview_url(target):
         url = reverse("preview", args=[pk, key, target])
         return f"{url}?v={number}" if number else url
@@ -188,6 +234,7 @@ def preview(request, pk, key, step):
         "preview": True, "child": child, "key": key, "step": step, "lesson": lesson,
         "feedback_kinds": LessonFeedback.Kind.choices, "finished": finished, "variation": number,
         "next_variant": (number+1) % round_count(key),
+        "already_queued": CURRENT_VERSION.get(key, key) in active_lesson_keys(child),
     }
     if request.method == "POST" and request.POST.get("action") == "feedback":
         kind = request.POST.get("kind")
@@ -249,8 +296,15 @@ def manage(request, pk):
     if action == "play":
         request.session.flush()
         request.session["child"] = child.pk
+    elif action == "theme":
+        theme = request.POST.get("theme")
+        if theme not in THEMES:
+            return HttpResponseBadRequest("Choose a lesson theme.")
+        child.lesson_theme = theme
+        child.save(update_fields=["lesson_theme"])
+        messages.success(request, f"{child.nickname}’s lesson theme is {THEMES[theme]['label']}.")
     elif action == "assign" and request.POST.get("lesson") in LESSONS:
-        assign_lesson(child, request.POST["lesson"])
+        queue_available(child, [request.POST["lesson"]])
     elif action == "remove":
         try:
             row_id = int(request.POST.get("row", ""))
@@ -300,10 +354,21 @@ def key_pace(request, catalog, item):
 def play(request, pk):
     if request.user.is_authenticated:
         return redirect("home")
-    row = get_object_or_404(Assignment, pk=pk, learner_id=request.session.get("child"))
+    row = get_object_or_404(Assignment.objects.select_related("learner"), pk=pk, learner_id=request.session.get("child"))
     if row.completed or row.removed_at:
         return redirect("home")
-    lesson = row.round_snapshot or LESSONS[row.lesson]
+    raw = row.round_snapshot or LESSONS[row.lesson]
+    if "_opened_theme" not in raw:
+        # Pin the first rendered theme so a parent changing it cannot change an answer mid-round.
+        theme = "garden" if row.step or row.retries or request.method == "POST" else row.learner.lesson_theme
+        snapshot = dict(raw, _opened_theme=theme)
+        if Assignment.objects.filter(pk=row.pk, round_snapshot=row.round_snapshot).update(round_snapshot=snapshot):
+            row.round_snapshot = snapshot
+        else:
+            row.refresh_from_db()
+            if row.completed or row.removed_at:
+                return redirect("home")
+    lesson = assignment_lesson(row)
     item = lesson["items"][row.step]
     if "shape" in item:
         item = art_item(item)
@@ -320,7 +385,10 @@ def play(request, pk):
             return redirect("play", pk)
         advance = skip or accepted or checkin
         done = advance and row.step+1 == len(lesson["items"])
+        tier_gain = None
         with transaction.atomic():
+            if connection.features.has_select_for_update:
+                Learner.objects.select_for_update().get(pk=row.learner_id)
             changes = {"retries": F("retries") + int(not accepted and not skip)}
             if skip:
                 changes["skipped"] = F("skipped") + 1
@@ -331,12 +399,16 @@ def play(request, pk):
             updated = current.update(**changes)
             score = item_score(lesson["kind"], artwork)
             if updated and not skip and score is not None:
-                SkillSample.objects.get_or_create(
+                sample, created = SkillSample.objects.get_or_create(
                     assignment=row, step=row.step, defaults={
                         "strand": catalog["strand"], "level": item.get("level",catalog["level"]),
                         "score": score if accepted else 0,
                         "ms_per_key": key_pace(request, catalog, item) if accepted else None,
                     })
+                if created:
+                    milestone = record_tier(sample, row.learner_id)
+                    if accepted:
+                        tier_gain = milestone
         if updated:
             if skip:
                 action = "Skipped"
@@ -345,12 +417,12 @@ def play(request, pk):
             else:
                 action = "Finished" if advance else "Tried again"
             celebration = success_result(lesson) if accepted and request.headers.get("Accept") == "application/json" else None
-            transaction.on_commit(lambda: recent_response(row, lesson["title"], action, celebration, request.POST), robust=True)
+            transaction.on_commit(lambda: recent_response(row, lesson["title"], action, celebration, request.POST, tier_gain), robust=True)
         if done and updated:
             messages.success(request, artwork["feedback"] if artwork else f"Finished {lesson['title']}! Well done.")
         if advance or not updated:
             destination = reverse("home") if done else reverse("play", args=[pk])
-            return answer_transition(request, destination, lesson, bool(updated and accepted))
+            return answer_transition(request, destination, lesson, bool(updated and accepted), tier_gain)
         if request.headers.get("Accept") == "application/json":
             return JsonResponse({"result": "retry"})
         error = "Take another look. You can try again."

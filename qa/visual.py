@@ -10,6 +10,7 @@ from django.utils import timezone
 from playwright.sync_api import expect, sync_playwright
 
 from pilot.models import Learner, SkillSample
+from pilot.practice import LESSONS
 from pilot.views import assign_lesson
 
 
@@ -50,6 +51,305 @@ class VisualReview(StaticLiveServerTestCase):
                     kept.refresh_from_db()
                     self.assertEqual(kept.skipped, 2)
                     self.assertGreater(kept.samples.get(step=0).ms_per_key, 0)
+
+    def test_new_lessons_and_library_queue(self):
+        parent = get_user_model().objects.get(username="reviewer")
+        login = Client()
+        login.force_login(parent)
+        for size, width in (("desktop", 1200), ("phone", 375)):
+            for theme in ("light", "dark"):
+                self.variant = f"{size}-{theme}"
+                child = Learner.objects.create(parent=parent, nickname="Pip")
+                device = Client()
+                device.force_login(parent)
+                device.post(reverse("manage", args=[child.pk]), {"action": "play"})
+                for key in ("middle-sound-v1", "digraphs-v1", "ten-v1"):
+                    assign_lesson(child, key, 0)
+                with sync_playwright() as pw:
+                    browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+                    with self.subTest(size=size, theme=theme), browser.new_context(
+                        viewport={"width": width, "height": 820}, color_scheme=theme
+                    ) as family, browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as learner:
+                        for ctx, signed_in in ((family, login), (learner, device)):
+                            ctx.add_cookies([{"name": "sessionid", "value": signed_in.cookies["sessionid"].value,
+                                              "url": self.live_server_url}])
+                        learner.add_init_script("""Object.defineProperty(window, "speechSynthesis", {value: undefined})""")
+                        page, kid = family.new_page(), learner.new_page()
+                        library = self.live_server_url + reverse("library", args=[child.pk])
+                        page.goto(library)
+                        card = page.locator('[data-lesson="lowercase-v1"]')
+                        page.evaluate("window.sameLibrary = true")
+                        card.get_by_role("button").click()
+                        expect(card).to_have_count(0)
+                        self.assertTrue(page.evaluate("window.sameLibrary && scrollY > 0"))
+                        page.screenshot(path=self.out / f"{self.variant}-library-after-add.png")
+                        page.get_by_label("Subject").select_option("Numbers & patterns")
+                        page.get_by_label("Adult involvement").select_option("Parent required")
+                        page.get_by_role("button", name="Filter lessons").click()
+                        page.get_by_role("button", name="Add all (2)").click()
+                        expect(page.locator("[data-empty]")).to_be_visible()
+                        self.capture(page, "library-filter-queued")
+                        kid.goto(self.live_server_url)
+                        expect(kid.get_by_role("link", name="Start lesson")).to_have_count(6)
+                        page.goto(library + "case-match-v1/preview/0/")
+                        page.get_by_role("button", name="Add to Pip’s queue").click()
+                        expect(page.locator(".preview-tools")).to_contain_text("added to Pip’s queue")
+                        expect(page.get_by_role("heading", name="Match big & small letters")).to_be_visible()
+                        page.goto(self.live_server_url + reverse("coview"))
+                        page.get_by_label("Show", exact=True).select_option(str(child.pk))
+                        tile = page.locator(f'[data-child="{child.pk}"]')
+                        for key in ("case-match-v1", "middle-sound-v1", "digraphs-v1", "lowercase-v1", "ten-v1", "harvest-v1"):
+                            kid.goto(self.live_server_url)
+                            kid.locator("article").filter(has=kid.get_by_role("heading", name=LESSONS[key]["title"], exact=True)).get_by_role("link").click()
+                            item = LESSONS[key]["items"][0]
+                            expect(tile.locator("h3")).to_have_text(item["prompt"], timeout=10000)
+                            if key in ("middle-sound-v1", "digraphs-v1"):
+                                kid.get_by_role("button", name="Hear the word").click()
+                                kid.wait_for_function("document.querySelector('audio').currentTime > 0")
+                                expect(tile).to_contain_text("Spoken word · " + item["word"])
+                            if key == "ten-v1":
+                                cells = kid.locator(".ten-frame span")
+                                expect(cells).to_have_count(10)
+                                expect(tile.locator(".ten-frame .planted")).to_have_count(item["seeds"])
+                                tops = cells.evaluate_all("cells => cells.map(cell => cell.offsetTop)")
+                                self.assertEqual(len(set(tops[:5])), 1)
+                                self.assertEqual(len(set(tops[5:])), 1)
+                                self.assertGreater(tops[5], tops[0])
+                                kid.locator('#activity button[value="4"]').click()
+                                expect(kid.locator(".retry-note")).to_be_visible()
+                            if key == "harvest-v1":
+                                for _ in range(3):
+                                    for n in (1, 2):
+                                        kid.get_by_role("button", name=f"Give a carrot to rabbit {n}").click()
+                                expect(tile.locator(".rabbit-pen output").first).to_have_text("3")
+                            kid.locator("article").screenshot(path=self.out / f"{self.variant}-{key}.png")
+                            self.assertFalse(kid.evaluate("document.documentElement.scrollWidth > innerWidth"))
+                            if key == "lowercase-v1":
+                                expect(tile.locator(".soil-lines line")).to_have_count(3)
+                                points = kid.locator("#guide").evaluate("""p => {
+                                  const len = p.getTotalLength(), n = Math.ceil(len / 5);
+                                  return Array.from({length:n+1}, (_,i) => {
+                                    const at = p.getPointAtLength(len*i/n).matrixTransform(p.getScreenCTM());
+                                    return [at.x, at.y];
+                                  });
+                                }""")
+                                kid.mouse.move(*points[0])
+                                kid.mouse.down()
+                                for point in points[1:]:
+                                    kid.mouse.move(*point)
+                                kid.mouse.up()
+                            else:
+                                kid.locator('#activity button[name="answer"]').filter(has_text=item["answer"]).first.click()
+                            expect(kid.locator(".answer-party")).to_be_visible()
+                            expect(kid.get_by_text("Step 2 of " + str(len(LESSONS[key]["items"])), exact=True)).to_be_visible()
+                    browser.close()
+
+    def test_keyboard_word_number_and_discovery_lessons(self):
+        parent = get_user_model().objects.get(username="reviewer")
+        household = Client()
+        household.force_login(parent)
+        for size, width in (("desktop", 1200), ("phone", 375)):
+            for theme in ("light", "dark"):
+                self.variant = f"{size}-{theme}"
+                child = Learner.objects.create(parent=parent, nickname="Rowan")
+                keys = ("shift", "arrow-maze", "backspace", "left-right", "scissors", "rhymes", "syllables",
+                        "magic-e", "sentence", "more", "twos", "measure", "coins", "clock", "sink-float", "living")
+                rows = {name: assign_lesson(child, name + "-v1", 0) for name in keys}
+                device = Client()
+                device.force_login(parent)
+                device.post(reverse("manage", args=[child.pk]), {"action": "play"})
+                with self.subTest(size=size, theme=theme), sync_playwright() as pw:
+                    browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+                    contexts = [browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme)
+                                for _ in range(2)]
+                    for ctx, session in zip(contexts, (household, device)):
+                        ctx.add_cookies([{"name": "sessionid", "value": session.cookies["sessionid"].value,
+                                          "url": self.live_server_url}])
+                    contexts[1].add_init_script("""window.spoken = [];
+                        Object.defineProperty(window, "speechSynthesis", {value: {
+                          cancel() {}, speak(msg) {window.spoken.push([msg.text, msg.voice, msg.rate, msg.pitch])}
+                        }});""")
+                    viewer, kid = [ctx.new_page() for ctx in contexts]
+                    errors = []
+                    for page in (viewer, kid):
+                        page.on("pageerror", lambda error: errors.append(str(error)))
+                    viewer.goto(self.live_server_url + reverse("coview"))
+                    viewer.get_by_label("Show", exact=True).select_option(str(child.pk))
+                    tile = viewer.locator(f'[data-child="{child.pk}"]')
+                    for name, row in rows.items():
+                        kid.goto(self.live_server_url + reverse("play", args=[row.pk]))
+                        item = row.round_snapshot["items"][0]
+                        board = kid.locator(".garden-tool")
+                        if name == "shift":
+                            kid.keyboard.press("f")
+                            expect(kid.locator(".retry-note")).to_be_visible()
+                            kid.keyboard.down("Shift")
+                            expect(board.get_by_role("button", name="Shift ⇧")).to_have_attribute("aria-pressed", "true")
+                        elif name == "arrow-maze":
+                            kid.keyboard.press("ArrowDown")
+                            expect(board.locator("[data-maze] span").first).to_have_text("🐞")
+                            for direction in ["ArrowRight", "ArrowRight", "ArrowDown", "ArrowDown", "ArrowRight"]:
+                                kid.keyboard.press(direction)
+                        elif name == "backspace":
+                            kid.keyboard.press("Backspace")
+                            expect(board.locator("output")).to_have_text(item["answer"])
+                        elif name in ("rhymes", "syllables"):
+                            kid.get_by_role("button", name="Hear directions").click()
+                            kid.get_by_role("button", name="Hear the word").click()
+                            directions, word = kid.evaluate("window.spoken")
+                            self.assertEqual(directions[0], item["prompt"])
+                            self.assertEqual(word[0], item["word"])
+                            self.assertEqual(directions[1:], word[1:])
+                            if name == "syllables":
+                                board.get_by_role("button", name="Tap the drum").click()
+                        elif name == "magic-e":
+                            expect(board.locator(".picture-choices")).to_be_hidden()
+                            board.get_by_role("button", name="Add e").click()
+                            expect(board.locator(".garden-sign")).to_have_text("cape")
+                        elif name == "sentence":
+                            for word in item["answer"].split():
+                                board.get_by_role("button", name=word, exact=True).click()
+                            expect(board.locator("output")).to_have_text(item["answer"])
+                        elif name == "twos":
+                            for button in board.locator("[data-pair]").all():
+                                button.click()
+                        elif name == "measure":
+                            for _ in range(item["length"]):
+                                board.get_by_role("button", name="Lay one acorn").click()
+                        elif name == "coins":
+                            board.locator('[data-coin="5"]').click()
+                            board.locator('[data-coin="1"]').click()
+                            expect(tile.locator(".coin-counter output")).to_have_text("5¢ + 1¢", timeout=10000)
+                        elif name == "clock":
+                            expect(board.locator(".lesson-clock text")).to_have_count(12)
+                        kid.locator("article").screenshot(path=self.out / f"{self.variant}-practice-{name}.png")
+                        self.assertFalse(kid.evaluate("document.documentElement.scrollWidth > innerWidth"))
+                        if name == "shift":
+                            kid.keyboard.press("F")
+                            kid.keyboard.up("Shift")
+                        elif name == "arrow-maze":
+                            kid.keyboard.press("ArrowRight")
+                        else:
+                            kid.locator(f'#activity button[name="answer"][value="{item["answer"]}"]').click()
+                        expect(kid.locator(".answer-party")).to_be_visible()
+                    self.assertEqual(errors, [])
+                    browser.close()
+                self.assertEqual(child.assignment_set.filter(step=1).count(), len(keys))
+
+    def test_themed_lessons(self):
+        from pilot.themes import THEMES
+        from pilot.practice import build_round
+        parent = get_user_model().objects.get(username="reviewer")
+        login = Client()
+        login.force_login(parent)
+        dot_round = next(n for n in range(1, 200) if build_round("lowercase-v1", n)["items"][0]["answer"] == "i")
+        for size, width in (("desktop", 1200), ("phone", 375)):
+            for theme in ("light", "dark"):
+                child = Learner.objects.create(parent=parent, nickname="Juniper")
+                row = assign_lesson(child, "berry-basket-v1", 0)
+                device = Client()
+                device.force_login(parent)
+                device.post(reverse("manage", args=[child.pk]), {"action":"play"})
+                self.variant = f"{size}-{theme}"
+                with self.subTest(size=size, theme=theme), sync_playwright() as pw:
+                    browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+                    contexts = [browser.new_context(viewport={"width":width,"height":820},color_scheme=theme) for _ in range(2)]
+                    for ctx, session in zip(contexts, (login, device)):
+                        ctx.add_cookies([{"name":"sessionid","value":session.cookies["sessionid"].value,"url":self.live_server_url}])
+                    page, kid = [ctx.new_page() for ctx in contexts]
+                    for slug in ["construction","ocean","trains","woodland","bakery","dinosaurs","farm","space"]:
+                        page.goto(self.live_server_url)
+                        panel = page.locator("article").filter(has=page.get_by_role("link",name="Browse lesson library")).filter(
+                            has=page.locator(f'form[action="/children/{child.pk}/"]'))
+                        panel.get_by_role("combobox").select_option(slug)
+                        panel.get_by_role("button", name="Save lesson theme").click()
+                        expect(panel.get_by_role("combobox")).to_have_value(slug)
+                        panel.get_by_role("link", name="Browse lesson library").click()
+                        expect(page.locator("main")).to_contain_text(THEMES[slug]["label"])
+                        page.locator('[data-lesson="ten-v1"]').get_by_role("link",name="Preview lesson").click()
+                        expect(page.locator(".lesson-setting")).to_contain_text(THEMES[slug]["label"])
+                        expect(page.locator(".themed-cell")).to_have_count(5)
+                        page.locator("article").filter(has=page.locator("#activity")).screenshot(path=self.out / f"{self.variant}-world-{slug}.png")
+                        self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"))
+                    page.goto(self.live_server_url)
+                    panel.get_by_text("Skill placement and progress", exact=True).click()
+                    panel.get_by_role("button", name="Keyboard check-in", exact=True).click()
+                    expect(panel.locator("[data-current-queue]")).to_contain_text("Keyboard check-in")
+                    expect(panel.locator("[data-available-checkins]")).not_to_contain_text("Keyboard check-in")
+                    expect(panel.locator("details").first).to_have_attribute("open", "")
+                    page.goto(self.live_server_url + reverse("coview"))
+                    page.get_by_label("Show", exact=True).select_option(str(child.pk))
+                    tile = page.locator(f'[data-child="{child.pk}"]')
+                    kid.goto(self.live_server_url + reverse("play", args=[row.pk]))
+                    kid.get_by_role("button",name="Add one moon rock").click()
+                    expect(tile.locator("[data-basket]")).to_have_text("🪨")
+                    expect(tile.locator(".lesson-setting")).to_contain_text("Outer Space & Rockets")
+                    kid.get_by_role("button",name="Add one moon rock").click()
+                    kid.get_by_role("button",name="Check cargo bay").click()
+                    expect(kid.locator(".answer-party")).to_be_visible()
+                    page.goto(self.live_server_url + reverse("preview", args=[child.pk,"lowercase-v1",0]) + f"?v={dot_round}")
+                    guide = page.locator("#guide")
+                    guide.scroll_into_view_if_needed()
+                    points = guide.evaluate("""p => Array.from({length:19}, (_,i) => {
+                      const at = p.getPointAtLength(i*p.getTotalLength()/18).matrixTransform(p.getScreenCTM());
+                      return [at.x, at.y]; })""")
+                    page.mouse.move(*points[0]); page.mouse.down()
+                    for point in points[1:]:
+                        page.mouse.move(*point)
+                    page.mouse.up()
+                    expect(page.locator("[data-stroke-help]")).to_contain_text("Stroke 2")
+                    page.locator("#dot").click()
+                    expect(page.locator(".answer-party")).to_be_visible()
+                    browser.close()
+
+    def test_fit_filters_and_tier_climb(self):
+        parent = get_user_model().objects.get(username="reviewer")
+        family = Client()
+        family.force_login(parent)
+        for size, width in (("desktop", 1200), ("phone", 375)):
+            for theme in ("light", "dark"):
+                self.variant = f"{size}-{theme}"
+                child = Learner.objects.create(parent=parent, nickname="Ivy")
+                first = child.assignment_set.create(lesson="count1-v1", completed=timezone.now())
+                first.samples.create(step=0, strand="Number sense", level=1, score=100)
+                device = Client()
+                device.force_login(parent)
+                device.post(reverse("manage", args=[child.pk]), {"action": "play"})
+                with sync_playwright() as pw:
+                    browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+                    with self.subTest(size=size, theme=theme), browser.new_context(
+                        viewport={"width": width, "height": 820}, color_scheme=theme
+                    ) as family_ctx, browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as kid_ctx:
+                        for ctx, session in ((family_ctx, family), (kid_ctx, device)):
+                            ctx.add_cookies([{"name": "sessionid", "value": session.cookies["sessionid"].value,
+                                              "url": self.live_server_url}])
+                        page, kid = family_ctx.new_page(), kid_ctx.new_page()
+                        page.goto(self.live_server_url + reverse("library", args=[child.pk]))
+                        page.get_by_label("Lesson tier").select_option("4")
+                        page.get_by_label("Fit for Ivy").select_option("Above level")
+                        page.get_by_role("button", name="Filter lessons").click()
+                        page.get_by_text("How lesson tiers and fit work").click()
+                        expect(page.locator('[data-lesson="ten-v1"]')).to_be_visible()
+                        self.capture(page, "tier-filters")
+                        page.get_by_role("button", name="Add all (", exact=False).click()
+                        expect(page.locator("[data-empty]")).to_be_visible()
+                        kid.goto(self.live_server_url)
+                        kid.locator("article").filter(has=kid.get_by_role("heading", name="Make ten", exact=True)).get_by_role("link").click()
+                        page.goto(self.live_server_url + reverse("coview"))
+                        page.get_by_label("Show", exact=True).select_option(str(child.pk))
+                        tile = page.locator(f'[data-child="{child.pk}"]')
+                        expect(tile.locator("h3")).to_be_visible(timeout=10000)
+                        reduced = theme == "dark"
+                        if reduced:
+                            kid.emulate_media(reduced_motion="reduce")
+                        kid.locator('#activity button[value="' + LESSONS["ten-v1"]["items"][0]["answer"] + '"]').click()
+                        climb = kid.locator('[data-variant="beanstalk"]')
+                        expect(climb).to_contain_text("Up to tier 4!")
+                        self.assertEqual(bool(climb.locator(".climber").evaluate("el => el.getAnimations().length")), not reduced)
+                        kid.screenshot(path=self.out / f"{self.variant}-tier-climb.png")
+                        expect(tile.locator('[data-variant="beanstalk"]')).to_contain_text("Number sense")
+                        expect(kid.get_by_text("Step 2 of 3", exact=True)).to_be_visible()
+                    browser.close()
 
     def test_family_co_view(self):
         from django.core.cache import caches

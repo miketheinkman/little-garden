@@ -6,14 +6,21 @@
   let timer, controller;
 
   function draw(scene, state) {
+    const tool = scene.querySelector(".garden-tool");
+    if (tool) paintGardenTool(tool, state.tool || "");
+    const harvest = scene.querySelector(".harvest");
+    if (harvest) paintHarvest(harvest, state.shares || "");
     const art = scene.querySelector(".live-art");
     if (art) renderPicture(art, state.pixels || "0".repeat(768), null);
     const trace = scene.querySelector(".live-trail");
     if (trace) {
       const ink = trace.querySelector(".live-ink");
-      for (const path of trace.querySelectorAll("path")) path.setAttribute("d", trace.dataset.path || traceShapes[trace.dataset.shape]);
+      const strokes = traceStrokes(trace);
+      const positionInStrokes = (state.percent || 0) / 100 * strokes.length;
+      const index = Math.min(strokes.length - 1, Math.floor(positionInStrokes));
+      setTraceStroke(trace, strokes, index);
       const length = ink.getTotalLength();
-      const distance = length * (state.percent || 0) / 100;
+      const distance = length * (positionInStrokes - index);
       ink.style.strokeDasharray = length;
       ink.style.strokeDashoffset = length - distance;
       const position = ink.getPointAtLength(distance);
@@ -23,7 +30,7 @@
     const typed = scene.querySelector("[data-typed]");
     if (typed) typed.textContent = state.typed || "";
     const basket = scene.querySelector("[data-basket]");
-    if (basket) basket.textContent = state.count ? "🍓 ".repeat(state.count) : "Empty basket";
+    if (basket) basket.textContent = state.count ? (basket.dataset.icon + " ").repeat(state.count) : "Empty " + basket.dataset.box;
     const pointer = scene.querySelector(".live-pointer");
     if (pointer) {
       pointer.hidden = state.x == null || state.y == null;
@@ -48,11 +55,12 @@
       tile.sceneHTML = html;
     }
     if (frame?.state) draw(scene, frame.state);
+    else if (scene.querySelector(".garden-tool")) paintGardenTool(scene.querySelector(".garden-tool"));
     const slot = scene.querySelector("[data-success-seed]");
     const result = frame?.celebration || "";
     if (slot && result !== (slot.dataset.result || "")) {
       slot.dataset.result = result;
-      slot.replaceChildren(...(result ? [gardenAnswerNote(result, Number(slot.dataset.successSeed))] : []));
+      slot.replaceChildren(...(result ? [gardenAnswerNote(result, Number(slot.dataset.successSeed), frame.tier_gain)] : []));
     }
     const response = tile.querySelector(".live-response");
     response.textContent = frame?.response || "";
@@ -80,7 +88,7 @@
     const state = frame && direct && tile.direct.scene === frame.scene ? tile.direct : frame?.state;
     const result = frame?.celebration || state?.celebration;
     if (result && frame.scene !== tile.seen && !tile.nextSuccess) {
-      tile.nextSuccess = {...frame, state, celebration: result};
+      tile.nextSuccess = {...frame, state, celebration: result, tier_gain: frame.tier_gain || state?.tier_gain};
     }
     if (!tile.playing && tile.nextSuccess) {
       tile.playing = tile.nextSuccess;
@@ -122,8 +130,11 @@
         const bound = (v, max) => Math.max(0, Math.min(max, parseInt(v, 10) || 0));
         tile.direct = {
           scene: data.scene,
+          tool: typeof data.tool === "string" && data.tool.length <= 120 ? data.tool : "",
+          shares: typeof data.shares === "string" && data.shares.length <= 8 ? data.shares : "",
           typed: typeof data.typed === "string" ? data.typed.slice(0, 80) : "",
           pixels: typeof data.pixels === "string" && /^[0-5]{768}$/.test(data.pixels) ? data.pixels : "",
+          tier_gain: data.tier_gain,
           celebration: ["correct", "finished"].includes(data.celebration) ? data.celebration : "",
           retry: data.retry === "1", count: bound(data.count, 12), percent: bound(data.percent, 100),
           x: data.x == null ? null : bound(data.x, 100), y: data.y == null ? null : bound(data.y, 100)

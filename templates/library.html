@@ -1,21 +1,32 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %}{% load static %}
 {% block title %}Lesson library · Little Garden{% endblock %}
 {% block content %}
 <a href="/">Family garden</a>
 <h1>Lesson library</h1>
 <p>Choose activities for <strong>{{ child.nickname }}</strong>. Independent lessons can be finished on screen. Parent-required lessons include a job for a grown-up.</p>
-<form method="get" class="inline">
+{% if child.lesson_theme != "garden" %}<p>{{ world.actor.icon }} {{ world.label }}</p>{% endif %}
+{% include "tier_key.html" %}
+<form method="get" class="inline library-filters">
   <label>Subject <select name="category"><option value="">All subjects</option>{% for c in categories %}<option {% if category == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
   <label>Adult involvement <select name="participation"><option value="">Either</option>{% for mode in modes %}<option {% if help_mode == mode %}selected{% endif %}>{{ mode }}</option>{% endfor %}</select></label>
+  <label>Lesson tier <select name="tier"><option value="">All tiers</option>{% for t in tiers %}<option value="{{ t }}" {% if tier == t %}selected{% endif %}>Tier {{ t }}</option>{% endfor %}<option value="checkin" {% if tier == 'checkin' %}selected{% endif %}>Multi-tier check-ins</option></select></label>
+  <label>Fit for {{ child.nickname }} <select name="fit"><option value="">Any fit</option>{% for f in fits %}<option {% if fit_label == f %}selected{% endif %}>{{ f }}</option>{% endfor %}</select></label>
   <button>Filter lessons</button>
 </form>
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
+<div id="available-lessons">
+<form class="bulk-queue" method="post" data-queue-form {% if not available %}hidden{% endif %}>{% csrf_token %}
+<input type="hidden" name="action" value="all"><button>Add all (<span data-available>{{ available }}</span>)</button></form>
 {% for subject, entries in groups.items %}
 <section><h2>{{ subject }}</h2><div class="shelf">
 {% for key, lesson, variation, fit in entries %}
-<article><h3>{{ lesson.title }}</h3><p class="meta">{{ fit }}{% if not lesson.checkin %} · Tier {{ lesson.level }}{% endif %} · {{ lesson.participation }} · Ages {{ lesson.age }} · {{ lesson.items|length }} step{{ lesson.items|length|pluralize }}</p><p>{{ lesson.skill }}</p>
+<article data-lesson="{{ key }}"><h3>{{ lesson.title }}</h3><p class="meta">{{ fit }}{% if not lesson.checkin %} · Tier {{ lesson.level }}{% endif %} · {{ lesson.strand }} · {{ lesson.participation }} · Ages {{ lesson.age }} · {{ lesson.items|length }} step{{ lesson.items|length|pluralize }}</p><p>{{ lesson.skill }}</p>
 {% if lesson.prep %}<p>{{ lesson.prep }}</p>{% endif %}
-<div class="card-actions"><a href="{% url 'preview' child.pk key 0 %}?v={{ variation }}">Preview lesson</a><form method="post">{% csrf_token %}<button name="lesson" value="{{ key }}" aria-label="Add {{ lesson.title }} to {{ child.nickname }}’s queue">Add to queue</button></form></div></article>
+<div class="card-actions"><a href="{% url 'preview' child.pk key 0 %}?v={{ variation }}">Preview lesson</a><form method="post" data-queue-form>{% csrf_token %}<input type="hidden" name="lesson" value="{{ key }}"><button aria-label="Add {{ lesson.title }} to {{ child.nickname }}’s queue">Add to queue</button></form></div></article>
 {% endfor %}</div></section>
-{% empty %}<p>No lessons match both filters. <a href="{% url 'library' child.pk %}">Show all lessons</a></p>{% endfor %}
+{% endfor %}
+<p data-empty tabindex="-1" {% if available %}hidden{% endif %}>{% if matches %}All lessons in this selection are in {{ child.nickname }}’s queue. <a href="/">View the queue</a>{% else %}No lessons match these filters.{% endif %}{% if category or help_mode or tier or fit_label %} <a href="{% url 'library' child.pk %}">Show all lessons</a>{% endif %}</p>
+</div>
+<p data-queue-status role="status" class="queue-notice"></p>
+<script defer src="{% static 'lesson-queue.js' %}"></script>
 {% endblock %}

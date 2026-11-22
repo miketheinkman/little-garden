@@ -1,0 +1,17 @@
+{% load static %}
+{% if item.keycap %}
+<p class="key-example"><kbd>{{ item.keycap }}</kbd></p>
+{% elif item.seeds %}
+<div class="ten-frame" role="img" aria-label="Ten-frame with {{ item.seeds }} {{ lesson.world.many|default:"planted seeds" }} in two rows of five">
+  {% for cell in '1234567890' %}<span{% if forloop.counter <= item.seeds %} class="planted{% if lesson.world %} themed-cell{% endif %}"{% endif %}>{% if lesson.world and forloop.counter <= item.seeds %}{{ lesson.world.cargo_icon }}{% endif %}</span>{% endfor %}
+</div>
+{% elif item.word %}
+{% if mirror %}<p class="display">Spoken word · {{ item.word }}</p>{% else %}
+<div class="word-station">
+  {% with asset='phonics/'|add:item.word|add:'.wav' %}
+  <audio controls preload="none" aria-label="Hear the word"><source src="{% static asset %}" type="audio/wav"></audio>
+  {% endwith %}
+  <button type="button" data-hear-word="{{ item.word }}" hidden>Hear the word</button>
+  <details><summary>Show the word</summary><p>{{ item.word }}</p></details>
+</div>{% endif %}
+{% elif item.display %}<p class="display">{{ item.display }}</p>{% endif %}

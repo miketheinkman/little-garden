@@ -1,16 +1,17 @@
-{% if child.suggestions %}
+<div data-suggested-lessons>{% if child.suggestions %}
 <h3>Suggested next lessons</h3>
-{% for pick in child.suggestions %}<form class="inline" method="post" action="{% url 'manage' child.pk %}">{% csrf_token %}
+{% for pick in child.suggestions %}<form data-dashboard-add class="inline" method="post" action="{% url 'manage' child.pk %}">{% csrf_token %}
 <input type="hidden" name="action" value="assign"><button name="lesson" value="{{ pick.key }}">Add {{ pick.title }}</button>
 <span>{{ pick.band }} · {{ pick.reason }}</span></form>{% endfor %}
-{% endif %}
+{% endif %}</div>
 <details><summary>Skill placement and progress</summary>
-<p>Practice tiers run from 1 (foundation) to 5 (advanced for this library). Estimates are provisional and specific to each skill. Each scored step counts once. Answer-based lessons use first tries; coloring and reflection use shape overlap.</p>
+{% include "tier_key.html" %}
+<p>Each scored step counts once. Answer-based lessons use first tries. Coloring and reflection use shape overlap.</p>
 {% include "skill_charts.html" %}
-<h3>Assign a check-in</h3>
-{% for check in child.checkins %}<form class="inline" method="post" action="{% url 'manage' child.pk %}">{% csrf_token %}
+<div data-available-checkins><h3>Assign a check-in</h3>
+{% for check in child.checkins %}<form data-dashboard-add class="inline" method="post" action="{% url 'manage' child.pk %}">{% csrf_token %}
 <input name="action" type="hidden" value="assign"><button name="lesson" value="{{ check.key }}">{{ check.title }}</button><span>{{ check.reason }}</span></form>{% endfor %}
-<h3>Evidence over time</h3>
+</div><h3>Evidence over time</h3>
 <p>Compare the same skill and tier across dates. Skipped questions add no score. For typed answers, seconds per key measures focused time to submit divided by the answer length. After three timed first-try successes, pace can modestly adjust keyboard placement.</p>
 {% for point in child.timeline %}<p>{{ point.date|date:"M j, Y" }} · <b>{{ point.title }}</b> · {{ point.strand }} · Tier {{ point.levels }} · {{ point.score }}% across {{ point.count }} scored step{{ point.count|pluralize }}{% if point.seconds != None %} · {{ point.seconds }} s/key (median){% endif %}{% if point.change != None %} · {% if point.change > 0 %}+{% endif %}{{ point.change }} percentage points since the previous comparable round{% endif %}</p>{% empty %}<p>New scored attempts will appear here. Earlier completions remain in the learning record.</p>{% endfor %}
 </details>

@@ -71,9 +71,14 @@
     if (!form || !watching) return data;
     if (document.querySelector('#native-retry, #answer-feedback .retry-note')) data.retry = "1";
     const party = document.querySelector("#answer-feedback .answer-party");
-    if (party) data.celebration = party.dataset.result;
+    if (party) {
+      data.celebration = party.dataset.result;
+      if (party.dataset.tier) data.tier_gain = {tier: Number(party.dataset.tier), strand: party.dataset.strand};
+    }
+    if (form.elements.tool_state) data.tool = form.elements.tool_state.value;
     switch (form.dataset.kind) {
       case "draw": case "mirror": case "color": data.pixels = form.elements.pixels.value; break;
+      case "adult": if (form.elements.shares) data.shares = form.elements.shares.value; break;
       case "type": data.typed = form.elements.answer.value.slice(0, 80); break;
       case "trace": data.percent = document.querySelector("#trail").dataset.percent || 0; break;
       case "basket": data.count = document.querySelector("#check-basket").value; break;

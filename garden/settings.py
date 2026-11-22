@@ -166,3 +166,5 @@ CACHES = {
         "LOCATION": (Path(os.environ.get("XDG_RUNTIME_DIR", BASE_DIR)) if LOCAL_PILOT else BASE_DIR) / ".little-garden-live",
     },
 }
+
+TEST_RUNNER = "qa.runner.GardenTestRunner"

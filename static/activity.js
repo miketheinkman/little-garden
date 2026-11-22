@@ -1,15 +1,46 @@
 function startActivity(form, signal) {
   const listen = document.querySelector("#listen");
-  if (window.speechSynthesis) {
-    listen.hidden = false;
-    listen.onclick = () => {
-      speechSynthesis.cancel();
-      const message = new SpeechSynthesisUtterance(document.querySelector("#prompt").textContent);
+  const audio = document.querySelector(".word-station audio");
+  const synth = window.speechSynthesis;
+  let utterance;
+
+  function speak(text, fallback) {
+    utterance = null;
+    audio?.pause();
+    if (!synth || !window.SpeechSynthesisUtterance) { fallback?.(); return; }
+    try {
+      synth.cancel();
+      const message = new SpeechSynthesisUtterance(text);
+      utterance = message;
       message.rate = 0.93;
       message.pitch = 1.13;
-      speechSynthesis.speak(message);
-    };
+      message.onerror = event => {
+        if (utterance === message && form.isConnected && !["interrupted", "canceled"].includes(event.error)) fallback?.();
+      };
+      synth.speak(message);
+    } catch { fallback?.(); }
   }
+
+  if (synth && window.SpeechSynthesisUtterance) {
+    listen.hidden = false;
+    listen.onclick = () => speak(document.querySelector("#prompt").textContent);
+  }
+  if (audio) {
+    const playWord = document.querySelector("[data-hear-word]");
+    playWord.hidden = false;
+    audio.controls = false;
+    playWord.onclick = () => speak(playWord.dataset.hearWord, () => {
+      audio.currentTime = 0;
+      audio.play().catch(() => { audio.closest(".word-station").querySelector("details").open = true; });
+    });
+  }
+  signal.addEventListener("abort", () => {
+    utterance = null;
+    synth?.cancel();
+    audio?.pause();
+  }, {once: true});
+  const harvest = form.querySelector(".harvest");
+  if (harvest) startHarvest(harvest, form);
 
   function answer(value) {
     if (form.inert) return;
@@ -21,6 +52,9 @@ function startActivity(form, signal) {
     form.append(field);
     form.requestSubmit();
   }
+
+  const tool = form.querySelector(".garden-tool");
+  if (tool) startGardenTool(tool, form, answer, signal);
 
   if (form.dataset.kind === "key") {
     document.addEventListener("keydown", event => {
@@ -38,12 +72,14 @@ function startActivity(form, signal) {
     const ink = document.querySelector("#ink");
     const dot = document.querySelector("#dot");
     const shape = trail.dataset.shape;
-    for (const path of trail.querySelectorAll("path")) path.setAttribute("d", trail.dataset.path || traceShapes[shape]);
-    const length = ink.getTotalLength();
+    const strokes = traceStrokes(trail);
+    let stroke = 0;
+    setTraceStroke(trail, strokes, stroke);
+    let length = ink.getTotalLength();
     let distance = 0, pointer = null;
     ink.style.strokeDasharray = length + " " + length;
     function paint() {
-      trail.dataset.percent = Math.round(100 * distance / length);
+      trail.dataset.percent = Math.round(100 * (stroke + distance / length) / strokes.length);
       const at = ink.getPointAtLength(distance);
       dot.setAttribute("cx", at.x);
       dot.setAttribute("cy", at.y);
@@ -54,11 +90,23 @@ function startActivity(form, signal) {
       const p = new DOMPoint(event.clientX, event.clientY).matrixTransform(trail.getScreenCTM().inverse());
       return Math.hypot(at.x - p.x, at.y - p.y);
     }
+    function finishStroke() {
+      pointer = null;
+      if (stroke + 1 === strokes.length) { answer(shape); return; }
+      setTraceStroke(trail, strokes, ++stroke);
+      length = ink.getTotalLength();
+      ink.style.strokeDasharray = length + " " + length;
+      distance = 0;
+      paint();
+      document.querySelector("[data-stroke-help]").textContent =
+        "Stroke " + (stroke + 1) + " of " + strokes.length + ". Lift and start at the gold dot.";
+    }
     paint();
     trail.onpointerdown = event => {
       if (gap(event, distance) <= 14) {
         pointer = event.pointerId;
         trail.setPointerCapture(pointer);
+        if (length < 3) finishStroke();
       }
     };
     trail.onpointermove = event => {
@@ -70,7 +118,7 @@ function startActivity(form, signal) {
       }
       distance = best;
       paint();
-      if (length - distance < 3) { pointer = null; answer(shape); }
+      if (length - distance < 3) finishStroke();
     };
     trail.onpointerup = trail.onpointercancel = () => { pointer = null; };
   }
@@ -82,8 +130,8 @@ function startActivity(form, signal) {
     function update(change) {
       count += change;
       const berries = document.querySelector("#berries");
-      berries.textContent = count ? "🍓 ".repeat(count) : "Empty basket";
-      berries.setAttribute("aria-label", count + " berries in basket");
+      berries.textContent = count ? (berries.dataset.icon + " ").repeat(count) : "Empty " + berries.dataset.box;
+      berries.setAttribute("aria-label", count + " in the " + berries.dataset.box);
       document.querySelector("#check-basket").value = count;
       take.disabled = count === 0;
       add.disabled = count === 12;

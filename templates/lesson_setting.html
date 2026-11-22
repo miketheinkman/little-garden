@@ -1,0 +1,4 @@
+{% if lesson.world %}<div class="lesson-setting setting-{{ lesson.world_key }}">
+<div><strong>{{ lesson.world.label }}</strong><span>At the {{ lesson.world.site }}</span></div>
+<div class="setting-illustration" aria-hidden="true"><i>{{ lesson.world.other.icon }}</i><b>{{ lesson.world.actor.icon }}</b><i>{{ lesson.world.goal.icon }}</i></div>
+</div>{% endif %}

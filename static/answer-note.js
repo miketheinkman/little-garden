@@ -5,12 +5,33 @@ const gardenCelebrations = [
   {name: "butterfly", icon: "🦋", praise: "That’s it!", colors: ["#73ae76", "#75bfc2", "#c4ab69"]}
 ];
 
-function gardenAnswerNote(result, seed = 0) {
+function gardenAnswerNote(result, seed = 0, gain = null) {
   const success = result !== "retry";
   const style = gardenCelebrations[seed % gardenCelebrations.length] || gardenCelebrations[0];
   const note = document.createElement("div");
   note.className = success ? "answer-party" : "retry-note";
   note.dataset.result = result;
+  if (success && Number.isInteger(gain?.tier) && gain.tier >= 2 && gain.tier <= 5 && typeof gain.strand === "string") {
+    note.dataset.variant = "beanstalk";
+    note.dataset.tier = gain.tier;
+    note.dataset.strand = gain.strand.slice(0, 60);
+    const scene = document.createElement("span");
+    scene.className = "climb-scene";
+    scene.setAttribute("aria-hidden", "true");
+    const stalk = document.createElement("span");
+    stalk.className = "beanstalk";
+    for (let i = 0; i < 4; i++) stalk.append(document.createElement("i"));
+    const climber = document.createElement("span");
+    climber.className = "climber";
+    scene.append(stalk, climber);
+    const caption = document.createElement("strong");
+    caption.textContent = "Up to tier " + gain.tier + "!";
+    const skill = document.createElement("small");
+    skill.textContent = note.dataset.strand;
+    caption.append(skill);
+    note.append(scene, caption);
+    return note;
+  }
   if (success) note.dataset.variant = style.name;
   const icon = document.createElement("span");
   icon.setAttribute("aria-hidden", "true");

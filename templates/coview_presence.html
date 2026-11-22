@@ -3,10 +3,12 @@
    data-url="{% url 'coview_broadcast' request.session.child %}" data-token="{{ csrf_token }}"
    data-assignment="{{ assignment_id }}" data-step="{{ step }}">Your parent can watch this garden.</p>
 <script defer src="{% static 'garden-peer.js' %}"></script>
-<script defer src="{% static 'share-garden.js' %}?v=20261121b"></script>
+<script defer src="{% static 'share-garden.js' %}?v=20261122c"></script>
 <script defer src="{% static 'drawing.js' %}"></script>
-<script defer src="{% static 'trace-shapes.js' %}"></script>
-<script defer src="{% static 'activity.js' %}?v=20261121b"></script>
+<script defer src="{% static 'garden-tools.js' %}"></script>
+<script defer src="{% static 'harvest.js' %}"></script>
+<script defer src="{% static 'trace-shapes.js' %}?v=20261122c"></script>
+<script defer src="{% static 'activity.js' %}?v=20261122c"></script>
 <script defer src="{% static 'learner-navigation.js' %}"></script>
-<script defer src="{% static 'answer-note.js' %}?v=20261121b"></script>
-<script defer src="{% static 'answer-feedback.js' %}?v=20261121b"></script>
+<script defer src="{% static 'answer-note.js' %}?v=20261122c"></script>
+<script defer src="{% static 'answer-feedback.js' %}?v=20261122c"></script>

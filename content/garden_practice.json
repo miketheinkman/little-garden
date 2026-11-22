@@ -1,0 +1,597 @@
+{
+  "shift-v1": [
+    {
+      "prompt": "Start Daisy with a capital D. Hold Shift and press the letter.",
+      "answer": "D",
+      "choices": [],
+      "name_tail": "aisy",
+      "letters": [
+        "d",
+        "t",
+        "v"
+      ]
+    },
+    {
+      "prompt": "Start Mint with a capital M. Hold Shift and press the letter.",
+      "answer": "M",
+      "choices": [],
+      "name_tail": "int",
+      "letters": [
+        "m",
+        "t",
+        "v"
+      ]
+    },
+    {
+      "prompt": "Start Poppy with a capital P. Hold Shift and press the letter.",
+      "answer": "P",
+      "choices": [],
+      "name_tail": "oppy",
+      "letters": [
+        "p",
+        "t",
+        "v"
+      ]
+    },
+    {
+      "prompt": "Start Sage with a capital S. Hold Shift and press the letter.",
+      "answer": "S",
+      "choices": [],
+      "name_tail": "age",
+      "letters": [
+        "s",
+        "t",
+        "v"
+      ]
+    }
+  ],
+  "arrow-maze-v1": [
+    {
+      "prompt": "Steer the beetle to the leaf. Use the arrow keys or the arrows below.",
+      "answer": "3",
+      "choices": [],
+      "maze": "B.#L...#......."
+    },
+    {
+      "prompt": "Steer the beetle to the leaf. Use the arrow keys or the arrows below.",
+      "answer": "4",
+      "choices": [],
+      "maze": "B#..L.#.#......"
+    },
+    {
+      "prompt": "Steer the beetle to the leaf. Use the arrow keys or the arrows below.",
+      "answer": "8",
+      "choices": [],
+      "maze": "B...#..#L#....."
+    }
+  ],
+  "backspace-v1": [
+    {
+      "prompt": "The label should say “sage.” Erase the extra letter at the end.",
+      "answer": "sage",
+      "choices": [],
+      "label": "sagep"
+    },
+    {
+      "prompt": "The label should say “dill.” Erase the extra letter at the end.",
+      "answer": "dill",
+      "choices": [],
+      "label": "dilll"
+    },
+    {
+      "prompt": "The label should say “iris.” Erase the extra letter at the end.",
+      "answer": "iris",
+      "choices": [],
+      "label": "iriss"
+    }
+  ],
+  "left-right-v1": [
+    {
+      "prompt": "Grown-up, say “Use your right hand to touch the flower on the right.”",
+      "answer": "right",
+      "choices": [
+        "left",
+        "right"
+      ],
+      "sides": [
+        {
+          "icon": "🍄",
+          "label": "mushroom"
+        },
+        {
+          "icon": "🌷",
+          "label": "flower"
+        }
+      ]
+    },
+    {
+      "prompt": "Grown-up, say “Use your left hand to touch the pear on the left.”",
+      "answer": "left",
+      "choices": [
+        "left",
+        "right"
+      ],
+      "sides": [
+        {
+          "icon": "🍐",
+          "label": "pear"
+        },
+        {
+          "icon": "🥕",
+          "label": "carrot"
+        }
+      ]
+    }
+  ],
+  "scissors-v1": [
+    {
+      "prompt": "Draw a short straight stem from the edge. Snip to the end of the stem together.",
+      "answer": "We cut the line",
+      "choices": [
+        "We cut the line"
+      ]
+    },
+    {
+      "prompt": "Draw a large curved leaf edge. Follow the curve with small snips.",
+      "answer": "We cut the line",
+      "choices": [
+        "We cut the line"
+      ]
+    }
+  ],
+  "rhymes-v1": [
+    {
+      "prompt": "Listen to the word. Which picture rhymes with it?",
+      "answer": "goat",
+      "choices": [
+        "goat",
+        "bee",
+        "rose"
+      ],
+      "pictures": [
+        {
+          "label": "goat",
+          "icon": "🐐"
+        },
+        {
+          "label": "bee",
+          "icon": "🐝"
+        },
+        {
+          "label": "rose",
+          "icon": "🌹"
+        }
+      ],
+      "word": "coat"
+    },
+    {
+      "prompt": "Listen to the word. Which picture rhymes with it?",
+      "answer": "fox",
+      "choices": [
+        "tree",
+        "fox",
+        "hat"
+      ],
+      "pictures": [
+        {
+          "label": "tree",
+          "icon": "🌳"
+        },
+        {
+          "label": "fox",
+          "icon": "🦊"
+        },
+        {
+          "label": "hat",
+          "icon": "🎩"
+        }
+      ],
+      "word": "box"
+    },
+    {
+      "prompt": "Listen to the word. Which picture rhymes with it?",
+      "answer": "fish",
+      "choices": [
+        "hat",
+        "goat",
+        "fish"
+      ],
+      "pictures": [
+        {
+          "label": "hat",
+          "icon": "🎩"
+        },
+        {
+          "label": "goat",
+          "icon": "🐐"
+        },
+        {
+          "label": "fish",
+          "icon": "🐟"
+        }
+      ],
+      "word": "dish"
+    },
+    {
+      "prompt": "Listen to the word. Which picture rhymes with it?",
+      "answer": "shell",
+      "choices": [
+        "shell",
+        "tree",
+        "cake"
+      ],
+      "pictures": [
+        {
+          "label": "shell",
+          "icon": "🐚"
+        },
+        {
+          "label": "tree",
+          "icon": "🌳"
+        },
+        {
+          "label": "cake",
+          "icon": "🍰"
+        }
+      ],
+      "word": "bell"
+    }
+  ],
+  "syllables-v1": [
+    {
+      "prompt": "Listen, say the word, and tap the drum once for each beat.",
+      "answer": "2",
+      "choices": [],
+      "word": "garden"
+    },
+    {
+      "prompt": "Listen, say the word, and tap the drum once for each beat.",
+      "answer": "3",
+      "choices": [],
+      "word": "sunflower"
+    },
+    {
+      "prompt": "Listen, say the word, and tap the drum once for each beat.",
+      "answer": "1",
+      "choices": [],
+      "word": "leaf"
+    },
+    {
+      "prompt": "Listen, say the word, and tap the drum once for each beat.",
+      "answer": "2",
+      "choices": [],
+      "word": "carrot"
+    }
+  ],
+  "magic-e-v1": [
+    {
+      "prompt": "Add a silent e. Read the new word and choose its picture.",
+      "answer": "cane",
+      "choices": [
+        "cane",
+        "hat",
+        "tree"
+      ],
+      "pictures": [
+        {
+          "label": "cane",
+          "icon": "🦯"
+        },
+        {
+          "label": "hat",
+          "icon": "🎩"
+        },
+        {
+          "label": "tree",
+          "icon": "🌳"
+        }
+      ],
+      "stem": "can"
+    },
+    {
+      "prompt": "Add a silent e. Read the new word and choose its picture.",
+      "answer": "pine",
+      "choices": [
+        "fish",
+        "pine",
+        "dog"
+      ],
+      "pictures": [
+        {
+          "label": "fish",
+          "icon": "🐟"
+        },
+        {
+          "label": "pine",
+          "icon": "🌲"
+        },
+        {
+          "label": "dog",
+          "icon": "🐕"
+        }
+      ],
+      "stem": "pin"
+    },
+    {
+      "prompt": "Add a silent e. Read the new word and choose its picture.",
+      "answer": "tube",
+      "choices": [
+        "bee",
+        "fox",
+        "tube"
+      ],
+      "pictures": [
+        {
+          "label": "bee",
+          "icon": "🐝"
+        },
+        {
+          "label": "fox",
+          "icon": "🦊"
+        },
+        {
+          "label": "tube",
+          "icon": "🧪"
+        }
+      ],
+      "stem": "tub"
+    }
+  ],
+  "sentence-v1": [
+    {
+      "prompt": "Tap the words in order to tell what happens in the picture.",
+      "answer": "Birds build nests",
+      "choices": [],
+      "tiles": [
+        "nests",
+        "build",
+        "Birds"
+      ],
+      "scene": "🐦 🪹",
+      "scene_alt": "A bird is making a nest.",
+      "also_accept": [
+        "The snail slowly climbs"
+      ]
+    },
+    {
+      "prompt": "Tap the words in order to tell what happens in the picture.",
+      "answer": "The snail climbs slowly",
+      "choices": [],
+      "tiles": [
+        "slowly",
+        "climbs",
+        "snail",
+        "The"
+      ],
+      "scene": "🐌 🌱",
+      "scene_alt": "A snail is climbing a stem."
+    },
+    {
+      "prompt": "Tap the words in order to tell what happens in the picture.",
+      "answer": "The sun warms seeds",
+      "choices": [],
+      "tiles": [
+        "sun",
+        "warms",
+        "seeds",
+        "The"
+      ],
+      "scene": "☀️ 🌱",
+      "scene_alt": "Sunlight falls on seedlings."
+    }
+  ],
+  "more-v1": [
+    {
+      "prompt": "Look at the two piles. Which has more acorns?",
+      "answer": "right",
+      "choices": [
+        "left",
+        "right"
+      ],
+      "piles": [
+        1,
+        4
+      ]
+    },
+    {
+      "prompt": "Look at the two piles. Which has more acorns?",
+      "answer": "left",
+      "choices": [
+        "left",
+        "right"
+      ],
+      "piles": [
+        6,
+        3
+      ]
+    },
+    {
+      "prompt": "Look at the two piles. Which has more acorns?",
+      "answer": "right",
+      "choices": [
+        "left",
+        "right"
+      ],
+      "piles": [
+        2,
+        4
+      ]
+    },
+    {
+      "prompt": "Look at the two piles. Which has more acorns?",
+      "answer": "left",
+      "choices": [
+        "left",
+        "right"
+      ],
+      "piles": [
+        5,
+        2
+      ]
+    }
+  ],
+  "twos-v1": [
+    {
+      "prompt": "Gather the cherries in pairs. Count by twos. How many cherries are there?",
+      "answer": "8",
+      "choices": [
+        "8",
+        "7",
+        "10"
+      ],
+      "pairs": 4
+    },
+    {
+      "prompt": "Gather the cherries in pairs. Count by twos. How many cherries are there?",
+      "answer": "12",
+      "choices": [
+        "11",
+        "14",
+        "12"
+      ],
+      "pairs": 6
+    },
+    {
+      "prompt": "Gather the cherries in pairs. Count by twos. How many cherries are there?",
+      "answer": "14",
+      "choices": [
+        "16",
+        "14",
+        "13"
+      ],
+      "pairs": 7
+    }
+  ],
+  "measure-v1": [
+    {
+      "prompt": "Lay acorns from the start line to the tip of the worm. How many acorns long is it?",
+      "answer": "5",
+      "choices": [],
+      "length": 5,
+      "object": "worm"
+    },
+    {
+      "prompt": "Lay acorns from the start line to the tip of the carrot. How many acorns long is it?",
+      "answer": "6",
+      "choices": [],
+      "length": 6,
+      "object": "carrot"
+    },
+    {
+      "prompt": "Lay acorns from the start line to the tip of the worm. How many acorns long is it?",
+      "answer": "3",
+      "choices": [],
+      "length": 3,
+      "object": "worm"
+    }
+  ],
+  "coins-v1": [
+    {
+      "prompt": "This packet of beet seeds costs 7 cents. Put the exact price on the counter.",
+      "answer": "7",
+      "choices": [],
+      "price": 7
+    },
+    {
+      "prompt": "This packet of squash seeds costs 11 cents. Put the exact price on the counter.",
+      "answer": "11",
+      "choices": [],
+      "price": 11
+    },
+    {
+      "prompt": "This packet of radish seeds costs 15 cents. Put the exact price on the counter.",
+      "answer": "15",
+      "choices": [],
+      "price": 15
+    }
+  ],
+  "clock-v1": [
+    {
+      "prompt": "Time to open the greenhouse! Which time does the garden clock show?",
+      "answer": "7:00",
+      "choices": [
+        "7:00",
+        "7:30",
+        "8:00"
+      ],
+      "hour_angle": 210.0,
+      "minute_angle": 0,
+      "hour_position": "7",
+      "minute_position": "12"
+    },
+    {
+      "prompt": "Time to check the sprouts! Which time does the garden clock show?",
+      "answer": "10:30",
+      "choices": [
+        "10:00",
+        "11:30",
+        "10:30"
+      ],
+      "hour_angle": 315.0,
+      "minute_angle": 180,
+      "hour_position": "halfway between 10 and 11",
+      "minute_position": "6"
+    },
+    {
+      "prompt": "Time to turn the compost! Which time does the garden clock show?",
+      "answer": "3:00",
+      "choices": [
+        "4:00",
+        "3:00",
+        "3:30"
+      ],
+      "hour_angle": 90.0,
+      "minute_angle": 0,
+      "hour_position": "3",
+      "minute_position": "12"
+    }
+  ],
+  "sink-float-v1": [
+    {
+      "prompt": "Point to each dry object and predict whether it will rest at the bottom or stay at the surface.",
+      "answer": "We made predictions",
+      "choices": [
+        "We made predictions"
+      ]
+    },
+    {
+      "prompt": "Try the four objects separately. Tell your grown-up which result surprised you and why.",
+      "answer": "We compared results",
+      "choices": [
+        "We compared results"
+      ]
+    }
+  ],
+  "living-v1": [
+    {
+      "prompt": "Which crate does this bucket belong in?",
+      "answer": "Non-living",
+      "choices": [
+        "Living",
+        "Non-living"
+      ],
+      "specimen": "bucket",
+      "icon": "🪣"
+    },
+    {
+      "prompt": "Which crate does this bee belong in?",
+      "answer": "Living",
+      "choices": [
+        "Living",
+        "Non-living"
+      ],
+      "specimen": "bee",
+      "icon": "🐝"
+    },
+    {
+      "prompt": "Which crate does this spoon belong in?",
+      "answer": "Non-living",
+      "choices": [
+        "Living",
+        "Non-living"
+      ],
+      "specimen": "spoon",
+      "icon": "🥄"
+    }
+  ]
+}

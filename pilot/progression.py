@@ -6,6 +6,7 @@ from statistics import median
 
 from django.utils import timezone
 
+from .themes import summary
 from .models import SkillSample
 from .practice import CURRENT_LESSONS, CURRENT_VERSION, LESSONS
 
@@ -31,6 +32,32 @@ def fit(samples):
     return min((i/4 for i in range(4, 4*ceiling+1)), key=loss)
 
 
+FIT_LABELS = ("On level", "Slightly above level", "Above level", "Slightly below level",
+              "Below level", "Placement pending", "Placement check-in")
+
+
+def record_tier(sample, child_id):
+    """Carry the high-water mark forward once per new scored observation."""
+    earlier = SkillSample.objects.filter(assignment__learner_id=child_id, strand=sample.strand,
+                                         pk__lt=sample.pk).order_by("-measured", "-pk")
+    fields = ("level", "score", "ms_per_key", "peak_tier")
+    previous = list(reversed(list(earlier.values(*fields)[:23])))
+    peak = previous[-1]["peak_tier"] if previous else None
+    if previous and peak is None:
+        # Older installations have scores but no recorded milestones.
+        from collections import deque
+        window = deque(maxlen=24)
+        peak = 1
+        for observation in earlier.order_by("measured", "pk").values(*fields).iterator():
+            window.append(observation)
+            peak = max(peak, int(fit(list(window))))
+    tier = int(fit([*previous, {"level": sample.level, "score": sample.score, "ms_per_key": sample.ms_per_key}]))
+    sample.peak_tier = max(tier, peak or 1)
+    sample.save(update_fields=["peak_tier"])
+    if peak is not None and tier > peak:
+        return {"strand": sample.strand, "tier": tier}
+
+
 def band(level, estimate):
     if estimate is None:
         return "Placement pending"
@@ -53,6 +80,7 @@ def item_score(kind, artwork):
 
 class Progress:
     def __init__(self, child):
+        self.theme = child.lesson_theme
         self.samples = defaultdict(list)
         self.attempted = defaultdict(list)
         self.sessions = {}
@@ -157,7 +185,7 @@ class Progress:
             if used[strand] >= 2:
                 continue
             used[strand] += 1
-            result.append(dict(key=key,title=LESSONS[key]["title"],reason=reason,band=self.label(LESSONS[key])))
+            result.append(dict(key=key,title=summary(key, LESSONS[key], self.theme)["title"],reason=reason,band=self.label(LESSONS[key])))
         return result
 
     def checkins(self):

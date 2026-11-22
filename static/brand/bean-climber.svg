@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 50">
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <!-- One boot rests on a leaf while the other knee comes up. -->
+    <path d="m19 33 2 8-7 4m10-12 7 3 3-6" fill="none" stroke="#344c60" stroke-width="5"/>
+    <path d="m12 46 5-1m15-16 4 1" stroke="#5c392f" stroke-width="4"/>
+    <path d="m20 23-5 8 2 5 11-1-1-11" fill="#df9951" stroke="#76462b"/>
+    <path d="M18 24h3l1 6 5-1 1 6-12 2-1-6 2-1z" fill="#476984"/>
+    <path d="m26 25 5-3 2-7m-12 9 6 5 9-5" fill="none" stroke="#aa623b" stroke-width="3.5"/>
+    <g fill="#c77c4d"><circle cx="33.5" cy="14" r="2.2"/><circle cx="36" cy="24" r="2.2"/></g>
+    <path d="M15 12q2-7 9-5 6 1 6 8l2 3-3 1q-1 5-7 4-7-1-7-11" fill="#ce8959" stroke="#75472f"/>
+    <path d="M15 11q-3 7 3 10l2-7 3-4" fill="#483328"/>
+    <circle cx="27" cy="15" r="1" fill="#362b26"/>
+    <path d="M13 12q0-10 9-10 7 0 8 8l5 1-1 2-11-1-8 3z" fill="#bd5338" stroke="#793c2c"/>
+  </g>
+</svg>

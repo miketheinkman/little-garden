@@ -77,6 +77,42 @@ class FamilyPilotTests(TestCase):
             response = self.client.get(f"/play/{row.pk}/")
             self.assertContains(response, LESSONS[row.lesson]["items"][0]["prompt"], html=True)
 
+    def test_filtered_bulk_add_skips_active_versions_and_reopens_removed_lessons(self):
+        from .practice import CURRENT_LESSONS
+        url = self.manage + "library/?category=Keyboard+%26+mouse&participation=Independent"
+        legacy = self.child.assignment_set.create(lesson="keys-v1", step=1)
+        matching = [key for key, lesson in CURRENT_LESSONS.items() if lesson["category"] == "Keyboard & mouse"]
+        self.assertNotContains(self.client.get(url), 'data-lesson="keys-v2"')
+        for _ in range(2):
+            response = self.client.post(url, {"action": "all"}, HTTP_ACCEPT="application/json")
+            self.assertEqual(set(response.json()["active"]), set(matching))
+        self.assertEqual(list(self.child.assignment_set.values_list("lesson", flat=True)),
+                         ["keys-v1"] + [key for key in matching if key != "keys-v2"])
+        self.assertFalse(self.sibling.assignment_set.exists())
+        self.client.post(self.manage, {"action": "remove", "row": legacy.pk})
+        self.assertContains(self.client.get(url), 'data-lesson="keys-v2"')
+        self.client.post(self.manage + "library/", {"action": "all"})
+        self.assertEqual(self.child.assignment_set.filter(removed_at=None).count(), len(CURRENT_LESSONS))
+
+
+    def test_tier_and_fit_filters_use_the_selected_child_for_bulk_add(self):
+        from django.utils import timezone
+        from urllib.parse import urlencode
+        row = self.child.assignment_set.create(lesson="count1-v1", completed=timezone.now())
+        row.samples.create(step=0, strand="Number sense", level=1, score=100)
+        filters = {"category": "Numbers & patterns", "participation": "Independent", "tier": "4", "fit": "Above level"}
+        url = self.manage + "library/?" + urlencode(filters)
+        response = self.client.get(url)
+        matches = {key for entries in response.context["groups"].values() for key, *_ in entries}
+        self.assertEqual(matches, {"ten-v1", "market-v1", "coins-v1", "clock-v1"})
+        sibling_url = url.replace(self.manage, f"/children/{self.sibling.pk}/")
+        self.assertContains(self.client.get(sibling_url), "No lessons match these filters")
+        self.assertContains(self.client.get(sibling_url.replace("Above+level", "Placement+pending")), 'data-lesson="ten-v1"')
+        self.client.post(url, {"action": "all"})
+        self.assertEqual(set(self.child.assignment_set.filter(completed=None).values_list("lesson", flat=True)), matches)
+        checks = self.client.get(self.manage + "library/?tier=checkin&fit=Placement+check-in")
+        self.assertEqual(checks.context["available"], 3)
+
 
 class RecoveryTests(TestCase):
     def test_reset_and_single_use(self):
@@ -284,12 +320,17 @@ class PracticeRoundTests(TestCase):
         row = child.assignment_set.get()
         self.assertEqual(row.round_snapshot, seen)
         self.client.post(library, {"lesson":key})
-        self.assertEqual(child.assignment_set.last().round_snapshot, build_round(key,18))
+        self.assertEqual(child.assignment_set.count(), 1)
         self.client.post(f"/children/{child.pk}/",{"action":"play"})
         play_url = f"/play/{row.pk}/"
         self.client.post(play_url, {"step":0,"answer":seen["items"][0]["answer"]})
         for _ in range(2):
             self.assertEqual(self.client.get(play_url).context["item"], seen["items"][1])
+        for step, item in enumerate(seen["items"][1:], 1):
+            self.client.post(play_url, {"step": step, "answer": item["answer"]})
+        self.client.force_login(parent)
+        self.client.post(library, {"lesson": key})
+        self.assertEqual(child.assignment_set.last().round_snapshot, build_round(key, 18))
 
 
 class DrawingTests(TestCase):
@@ -355,6 +396,24 @@ class ProgressionTests(TestCase):
         self.assertGreater(p.estimates["Number sense"],2)
         self.client.force_login(self.parent)
         self.assertContains(self.client.get("/"),"67% across 3 scored steps")
+
+    def test_tier_gain_only_on_a_new_personal_best_in_the_same_skill(self):
+        row = self.child.assignment_set.create(lesson="number-check-v1")
+        self.open_child()
+        def answer(step):
+            return self.client.post(f"/play/{row.pk}/", {"step": step, "answer": "3"}, HTTP_ACCEPT="application/json")
+        self.assertNotIn("tier_gain", answer(0).json())  # First placement.
+        self.assertEqual(answer(1).json()["tier_gain"], {"strand": "Number sense", "tier": 3})
+        self.assertEqual(answer(1).status_code, 302)  # A repeat cannot award it again.
+        self.assertEqual(list(row.samples.order_by("step").values_list("peak_tier", flat=True)), [2, 3])
+        from .progression import record_tier
+        # Historical scores predate milestone tracking. Recover their high before awarding.
+        row.samples.update(peak_tier=None)
+        for step in range(2, 30):
+            row.samples.create(step=step, strand="Number sense", level=1, score=0)
+        sample = row.samples.create(step=30, strand="Number sense", level=1, score=100)
+        self.assertIsNone(record_tier(sample, self.child.pk))
+        self.assertEqual(sample.peak_tier, 3)
 
     def test_empty_queue_guard_and_sibling_isolation(self):
         from .progression import Progress
@@ -568,3 +627,82 @@ class CoViewTests(TestCase):
         self.assertIsNone(caches["coview"].get(f"frame:{key}")["state"])
         poll()  # Another parent tab needs relayed data.
         self.assertTrue(send()["relay"])
+
+class LessonThemeTests(TestCase):
+    def test_every_theme_preserves_round_structure_and_playable_targets(self):
+        from copy import deepcopy
+        from pathlib import Path
+        from django.conf import settings
+        from .art import art_item
+        from .practice import CURRENT_LESSONS, build_round
+        from .themes import THEMES, themed_round
+        for key in CURRENT_LESSONS:
+            for variation in (0, 1, 2):
+                base = build_round(key, variation)
+                original = deepcopy(base)
+                for theme in THEMES:
+                    with self.subTest(key=key, variation=variation, theme=theme):
+                        lesson = themed_round(key, base, theme, variation)
+                        for field in ("kind", "strand", "level", "participation"):
+                            self.assertEqual(lesson[field], base[field])
+                        self.assertEqual(len(lesson["items"]), len(base["items"]))
+                        for before, item in zip(base["items"], lesson["items"]):
+                            if item["choices"]:
+                                self.assertIn(item["answer"], item["choices"])
+                            if item["answer"].isdigit() and key != "key-check-v1":
+                                self.assertEqual(before["answer"], item["answer"])
+                            if "word" in item:
+                                self.assertTrue((Path(settings.BASE_DIR)/"static"/"phonics"/(item["word"] + ".wav")).is_file())
+                            if "pictures" in item:
+                                self.assertIn(item["answer"], [pic["label"] for pic in item["pictures"]])
+                            if "shape" in item:
+                                self.assertIn("1", art_item(item)["mask"])
+                            if "tiles" in item:
+                                self.assertCountEqual(item["answer"].split(), item["tiles"])
+                        if theme != "garden":
+                            self.assertEqual(lesson["world"]["label"], THEMES[theme]["label"])
+                self.assertEqual(base, original)
+
+    def test_theme_is_per_child_and_opened_round_keeps_its_answers(self):
+        from django.test import Client
+        from .views import assign_lesson
+        parent = get_user_model().objects.create_user("theme-parent")
+        self.client.force_login(parent)
+        child = Learner.objects.create(parent=parent, nickname="Pip")
+        sibling = Learner.objects.create(parent=parent, nickname="Fern")
+        row = assign_lesson(child, "signs-v1", 0)
+        manage = f"/children/{child.pk}/"
+        self.client.post(manage, {"action":"theme","theme":"space"})
+        self.assertEqual(self.client.post(manage, {"action":"theme","theme":"unknown"}).status_code, 400)
+        device = Client()
+        device.force_login(parent)
+        device.post(manage, {"action":"play"})
+        url = f"/play/{row.pk}/"
+        preview = self.client.get(manage + "library/signs-v1/preview/0/").context["item"]
+        played = device.get(url).context["item"]
+        self.assertEqual(played, preview)
+        self.client.post(manage, {"action":"theme","theme":"bakery"})
+        self.assertEqual(device.get(url).context["item"], played)
+        device.post(url, {"step":0, "answer":played["answer"]})
+        row.refresh_from_db()
+        self.assertEqual((row.step, row.samples.count()), (1,1))
+        child.refresh_from_db()
+        next_row = assign_lesson(child, "signs-v1", 0)
+        self.assertEqual(device.get(f"/play/{next_row.pk}/").context["lesson"]["world_key"], "bakery")
+        sibling.refresh_from_db()
+        self.assertEqual(sibling.lesson_theme, "garden")
+        outsider = get_user_model().objects.create_user("another-theme-parent")
+        self.client.force_login(outsider)
+        self.assertEqual(self.client.post(manage, {"action":"theme","theme":"farm"}).status_code, 404)
+
+    def test_all_mazes_reach_the_leaf(self):
+        from .practice import GARDEN_PRACTICE
+        for item in LESSONS["arrow-maze-v1"]["items"] + GARDEN_PRACTICE["arrow-maze-v1"]:
+            maze = item["maze"]
+            reachable = [maze.index("B")]
+            for cell in reachable:
+                for neighbor in (cell-1, cell+1, cell-5, cell+5):
+                    if (0 <= neighbor < len(maze) and abs(neighbor%5-cell%5) <= 1
+                        and maze[neighbor] != "#" and neighbor not in reachable):
+                        reachable.append(neighbor)
+            self.assertIn(maze.index("L"), reachable)

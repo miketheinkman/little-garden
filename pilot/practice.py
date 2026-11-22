@@ -6,6 +6,7 @@ from django.conf import settings
 
 CONTENT = settings.BASE_DIR / "content"
 LESSONS = json.loads((CONTENT / "lessons.json").read_text())
+GARDEN_PRACTICE = json.loads((CONTENT / "garden_practice.json").read_text())
 AUTHORED = json.loads((CONTENT / "variations.json").read_text())
 
 
@@ -22,6 +23,8 @@ LESSONS.update(CURRENT_LESSONS)
 
 
 def round_count(key):
+    if key in {"scissors-v1", "sink-float-v1"}:
+        return 4
     return 1 + len(AUTHORED[key]) if key in AUTHORED else 1000
 
 
@@ -54,6 +57,13 @@ def five_prompt_round(key, number, rng):
     return dict(original, items=items + extra)
 
 
+# The same word banks supply the bundled spoken examples.
+SHORT_VOWEL_WORDS = {"a": ("cat", "map"), "e": ("hen", "net"), "i": ("pig", "fin"),
+                     "o": ("pot", "fox"), "u": ("sun", "cup")}
+DIGRAPH_WORDS = {"sh": ("ship", "shop", "shell"), "ch": ("chat", "chin", "chip"),
+                 "th": ("thin", "thick", "thumb")}
+
+
 def build_round(key, number):
     lesson = LESSONS[key]
     if number == 0:
@@ -68,8 +78,45 @@ def build_round(key, number):
             if len(item["choices"]) > 1:
                 item["choices"] = rng.sample(item["choices"], len(item["choices"]))
         return dict(lesson, items=items)
+    if key in GARDEN_PRACTICE:
+        # Keep paired investigations in order so prediction precedes observation.
+        if key in {"scissors-v1", "sink-float-v1"}:
+            pairs = list(zip(items, GARDEN_PRACTICE[key], strict=True))
+            items = [dict(pair[(number >> i) & 1]) for i, pair in enumerate(pairs)]
+        else:
+            items = rng.sample(items + GARDEN_PRACTICE[key], len(items))
+        return dict(lesson, items=items)
     group = key.removesuffix("-v1")
-    if group in ("keys", "number-keys", "sounds", "signs", "blend", "letters", "digits"):
+    if group in ("middle-sound", "digraphs"):
+        words = SHORT_VOWEL_WORDS if group == "middle-sound" else DIGRAPH_WORDS
+        for item, sound in zip(items, rng.sample(list(words), len(items))):
+            item.update(word=rng.choice(words[sound]), answer=sound, choices=options(rng, sound, words))
+    elif group == "case-match":
+        alphabet = "abcdefghijklmnopqrstuvwxyz"
+        for item, letter in zip(items, rng.sample(alphabet, len(items))):
+            item.update(keycap=letter.upper(), answer=letter, choices=options(rng, letter, alphabet))
+    elif group == "lowercase":
+        for item, letter in zip(items, rng.sample("abcdefghijklmnopqrstuvwxyz", len(items))):
+            item.update(prompt=f"Start at the gold dot and trace lowercase {letter}.", answer=letter)
+    elif group == "ten":
+        for item, seeds in zip(items, rng.sample(range(1, 10), len(items))):
+            left = 10 - seeds
+            item.update(prompt=rng.choice(["How many more seeds will fill this tray?",
+                                           "Count the empty spaces. How many seeds will fit?",
+                                           "How many more seeds will make ten?"]),
+                        seeds=seeds, answer=str(left), choices=options(rng, left, range(1, 10)))
+    elif group == "harvest":
+        # Include both group sizes, with whole shares and at most twelve counters.
+        groups = [2, 3, rng.choice([2, 3])]
+        rng.shuffle(groups)
+        for item, rabbits in zip(items, groups):
+            carrots = rabbits * rng.randint(2, 12 // rabbits)
+            question = rng.choice(["Can you deal one to each rabbit in turn?",
+                                   "How many carrots will each rabbit get?",
+                                   "How can you check that each rabbit gets the same number?"])
+            item.update(carrots=carrots, rabbits=rabbits,
+                        prompt=f"Share {carrots} carrots equally between {rabbits} rabbits. {question}")
+    elif group in ("keys", "number-keys", "sounds", "signs", "blend", "letters", "digits"):
         pools = {
             "keys": list("ABCDEFGHJKLMNPRSTUVWYZ"), "number-keys": list("0123456789"),
             "sounds": ["map", "fan", "dog", "net", "lip", "rug", "pot", "hen"],

@@ -71,6 +71,58 @@
     "strand": "Keyboard use",
     "level": 1
   },
+  "case-match-v1": {
+    "title": "Match big & small letters",
+    "category": "Keyboard & mouse",
+    "skill": "Match uppercase keys to lowercase seed labels",
+    "age": "4–6",
+    "level": 2,
+    "strand": "Keyboard use",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Which seed label matches this big letter?",
+        "answer": "a",
+        "choices": [
+          "s",
+          "a",
+          "m"
+        ],
+        "keycap": "A"
+      },
+      {
+        "prompt": "Find the small letter for this key.",
+        "answer": "m",
+        "choices": [
+          "m",
+          "t",
+          "r"
+        ],
+        "keycap": "M"
+      },
+      {
+        "prompt": "Which lowercase label belongs with this key?",
+        "answer": "s",
+        "choices": [
+          "c",
+          "n",
+          "s"
+        ],
+        "keycap": "S"
+      },
+      {
+        "prompt": "Match the big letter to its small letter.",
+        "answer": "t",
+        "choices": [
+          "f",
+          "t",
+          "l"
+        ],
+        "keycap": "T"
+      }
+    ]
+  },
   "lines-v1": {
     "title": "Follow the trail",
     "skill": "Pointer control",
@@ -221,6 +273,48 @@
     "strand": "Letter sounds",
     "level": 1
   },
+  "middle-sound-v1": {
+    "title": "Listen for the middle sound",
+    "category": "Reading & language",
+    "skill": "Hear the short vowel in a three-sound word",
+    "age": "5–6",
+    "level": 2,
+    "strand": "Letter sounds",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Listen and say the word slowly. Which vowel do you hear in the middle?",
+        "answer": "a",
+        "choices": [
+          "u",
+          "a",
+          "i"
+        ],
+        "word": "cat"
+      },
+      {
+        "prompt": "Say the word. Pick the letter for its middle sound.",
+        "answer": "i",
+        "choices": [
+          "i",
+          "e",
+          "o"
+        ],
+        "word": "pig"
+      },
+      {
+        "prompt": "Which vowel makes the middle sound in this word?",
+        "answer": "u",
+        "choices": [
+          "o",
+          "a",
+          "u"
+        ],
+        "word": "sun"
+      }
+    ]
+  },
   "blend-v1": {
     "title": "Build sat",
     "skill": "Blend and spell",
@@ -263,6 +357,48 @@
     "strand": "Letter sounds",
     "level": 2
   },
+  "digraphs-v1": {
+    "title": "Two letters, one sound",
+    "category": "Reading & language",
+    "skill": "Match an initial sound to sh, ch, or th",
+    "age": "6–7",
+    "level": 3,
+    "strand": "Letter sounds",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Listen to the word. Which two letters make its first sound?",
+        "answer": "sh",
+        "choices": [
+          "sh",
+          "th",
+          "ch"
+        ],
+        "word": "ship"
+      },
+      {
+        "prompt": "Say the word slowly. Pick the letter pair you hear at the start.",
+        "answer": "ch",
+        "choices": [
+          "th",
+          "sh",
+          "ch"
+        ],
+        "word": "chat"
+      },
+      {
+        "prompt": "Which pair of letters makes the first sound in this word?",
+        "answer": "th",
+        "choices": [
+          "ch",
+          "th",
+          "sh"
+        ],
+        "word": "thin"
+      }
+    ]
+  },
   "letters-v1": {
     "title": "Trace the letters",
     "skill": "Letter formation practice",
@@ -293,6 +429,34 @@
     "strand": "Pointer control",
     "level": 3
   },
+  "lowercase-v1": {
+    "title": "Trace lowercase letters",
+    "category": "Movement & coordination",
+    "skill": "Form lowercase letters from the starting dot on soil lines",
+    "age": "5–7",
+    "level": 3,
+    "strand": "Pointer control",
+    "kind": "trace",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Start at the gold dot and trace lowercase l.",
+        "answer": "l",
+        "choices": []
+      },
+      {
+        "prompt": "Start at the gold dot and trace lowercase c.",
+        "answer": "c",
+        "choices": []
+      },
+      {
+        "prompt": "Start at the gold dot and trace lowercase o.",
+        "answer": "o",
+        "choices": []
+      }
+    ],
+    "soil_lines": true
+  },
   "digits-v1": {
     "title": "Trace the numbers",
     "skill": "Numeral formation practice",
@@ -315,48 +479,6 @@
     "category": "Movement & coordination",
     "participation": "Independent",
     "strand": "Pointer control",
-    "level": 3
-  },
-  "five-v1": {
-    "title": "Make five",
-    "skill": "Compose five",
-    "age": "5–6",
-    "kind": "choice",
-    "items": [
-      {
-        "prompt": "1 seeds are planted. How many more make five?",
-        "answer": "4",
-        "choices": [
-          "2",
-          "3",
-          "4"
-        ],
-        "display": "● ○ ○ ○ ○ "
-      },
-      {
-        "prompt": "3 seeds are planted. How many more make five?",
-        "answer": "2",
-        "choices": [
-          "2",
-          "3",
-          "4"
-        ],
-        "display": "● ● ● ○ ○ "
-      },
-      {
-        "prompt": "2 seeds are planted. How many more make five?",
-        "answer": "3",
-        "choices": [
-          "2",
-          "3",
-          "4"
-        ],
-        "display": "● ● ○ ○ ○ "
-      }
-    ],
-    "category": "Numbers & patterns",
-    "participation": "Independent",
-    "strand": "Number sense",
     "level": 3
   },
   "book-v1": {
@@ -432,6 +554,90 @@
     "strand": "Number sense",
     "level": 2
   },
+  "five-v1": {
+    "title": "Make five",
+    "skill": "Compose five",
+    "age": "5–6",
+    "kind": "choice",
+    "items": [
+      {
+        "prompt": "1 seeds are planted. How many more make five?",
+        "answer": "4",
+        "choices": [
+          "2",
+          "3",
+          "4"
+        ],
+        "display": "● ○ ○ ○ ○ "
+      },
+      {
+        "prompt": "3 seeds are planted. How many more make five?",
+        "answer": "2",
+        "choices": [
+          "2",
+          "3",
+          "4"
+        ],
+        "display": "● ● ● ○ ○ "
+      },
+      {
+        "prompt": "2 seeds are planted. How many more make five?",
+        "answer": "3",
+        "choices": [
+          "2",
+          "3",
+          "4"
+        ],
+        "display": "● ● ○ ○ ○ "
+      }
+    ],
+    "category": "Numbers & patterns",
+    "participation": "Independent",
+    "strand": "Number sense",
+    "level": 3
+  },
+  "ten-v1": {
+    "title": "Make ten",
+    "category": "Numbers & patterns",
+    "skill": "Find how many more seeds fill a two-row ten-frame",
+    "age": "5–7",
+    "level": 4,
+    "strand": "Number sense",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "One row is full. How many more seeds will fill the tray?",
+        "answer": "5",
+        "choices": [
+          "4",
+          "5",
+          "6"
+        ],
+        "seeds": 5
+      },
+      {
+        "prompt": "How many empty spaces are left in the ten-frame?",
+        "answer": "2",
+        "choices": [
+          "2",
+          "3",
+          "8"
+        ],
+        "seeds": 8
+      },
+      {
+        "prompt": "How many more seeds will make ten?",
+        "answer": "7",
+        "choices": [
+          "3",
+          "6",
+          "7"
+        ],
+        "seeds": 3
+      }
+    ]
+  },
   "market-v1": {
     "title": "Garden market",
     "category": "Numbers & patterns",
@@ -462,6 +668,46 @@
     ],
     "strand": "Number sense",
     "level": 4
+  },
+  "harvest-v1": {
+    "title": "Share the harvest",
+    "category": "Numbers & patterns",
+    "skill": "Give each rabbit an equal share of the carrots",
+    "age": "6–8",
+    "level": 4,
+    "strand": "Number sense",
+    "kind": "adult",
+    "participation": "Parent required",
+    "items": [
+      {
+        "prompt": "Share 6 carrots equally between 2 rabbits. Give one to each rabbit in turn.",
+        "answer": "We shared equally",
+        "choices": [
+          "We shared equally"
+        ],
+        "carrots": 6,
+        "rabbits": 2
+      },
+      {
+        "prompt": "Share 9 carrots equally between 3 rabbits. How many does each rabbit get?",
+        "answer": "We shared equally",
+        "choices": [
+          "We shared equally"
+        ],
+        "carrots": 9,
+        "rabbits": 3
+      },
+      {
+        "prompt": "Share 12 carrots equally between 3 rabbits. How can you tell the shares are equal?",
+        "answer": "We shared equally",
+        "choices": [
+          "We shared equally"
+        ],
+        "carrots": 12,
+        "rabbits": 3
+      }
+    ],
+    "prep": "Take turns dealing one carrot to each rabbit. Use the screen, or up to 12 small snacks or counters."
   },
   "pattern-v1": {
     "title": "Petal patterns",
@@ -999,5 +1245,773 @@
         "level": 3
       }
     ]
+  },
+  "shift-v1": {
+    "category": "Keyboard & mouse",
+    "strand": "Keyboard use",
+    "title": "Shift for a big letter",
+    "age": "6–8",
+    "level": 3,
+    "skill": "Use Shift to capitalize a garden name",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Start Fern with a capital F. Hold Shift and press the letter.",
+        "answer": "F",
+        "choices": [],
+        "name_tail": "ern",
+        "letters": [
+          "f",
+          "t",
+          "v"
+        ]
+      },
+      {
+        "prompt": "Start Rose with a capital R. Hold Shift and press the letter.",
+        "answer": "R",
+        "choices": [],
+        "name_tail": "ose",
+        "letters": [
+          "r",
+          "t",
+          "v"
+        ]
+      },
+      {
+        "prompt": "Start Basil with a capital B. Hold Shift and press the letter.",
+        "answer": "B",
+        "choices": [],
+        "name_tail": "asil",
+        "letters": [
+          "b",
+          "t",
+          "v"
+        ]
+      },
+      {
+        "prompt": "Start Iris with a capital I. Hold Shift and press the letter.",
+        "answer": "I",
+        "choices": [],
+        "name_tail": "ris",
+        "letters": [
+          "i",
+          "t",
+          "v"
+        ]
+      }
+    ],
+    "tool": "shift"
+  },
+  "arrow-maze-v1": {
+    "category": "Keyboard & mouse",
+    "strand": "Keyboard use",
+    "title": "Arrow key maze",
+    "age": "4–6",
+    "level": 2,
+    "skill": "Navigate a beetle through garden rows with arrow keys",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Steer the beetle to the leaf. Use the arrow keys or the arrows below.",
+        "answer": "14",
+        "choices": [],
+        "maze": "B..####.####..L"
+      },
+      {
+        "prompt": "Steer the beetle to the leaf. Use the arrow keys or the arrows below.",
+        "answer": "13",
+        "choices": [],
+        "maze": "B#....#.#....L."
+      },
+      {
+        "prompt": "Steer the beetle to the leaf. Use the arrow keys or the arrows below.",
+        "answer": "14",
+        "choices": [],
+        "maze": "B....####.....L"
+      }
+    ],
+    "tool": "maze"
+  },
+  "backspace-v1": {
+    "category": "Keyboard & mouse",
+    "strand": "Keyboard use",
+    "title": "Back up and fix it",
+    "age": "5–7",
+    "level": 2,
+    "skill": "Erase an extra letter with Backspace",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "The label should say “mint.” Erase the extra letter at the end.",
+        "answer": "mint",
+        "choices": [],
+        "label": "mintt"
+      },
+      {
+        "prompt": "The label should say “fern.” Erase the extra letter at the end.",
+        "answer": "fern",
+        "choices": [],
+        "label": "fernx"
+      },
+      {
+        "prompt": "The label should say “rose.” Erase the extra letter at the end.",
+        "answer": "rose",
+        "choices": [],
+        "label": "rosee"
+      }
+    ],
+    "tool": "backspace"
+  },
+  "left-right-v1": {
+    "category": "Movement & coordination",
+    "strand": "Pointer control",
+    "title": "Left hand, right hand",
+    "age": "4–6",
+    "level": 2,
+    "skill": "Use left and right to follow a callout",
+    "kind": "choice",
+    "participation": "Parent required",
+    "items": [
+      {
+        "prompt": "Grown-up, say “Use your left hand to touch the leaf on the left.”",
+        "answer": "left",
+        "choices": [
+          "left",
+          "right"
+        ],
+        "sides": [
+          {
+            "icon": "🍃",
+            "label": "leaf"
+          },
+          {
+            "icon": "🌻",
+            "label": "flower"
+          }
+        ]
+      },
+      {
+        "prompt": "Grown-up, say “Use your right hand to touch the apple on the right.”",
+        "answer": "right",
+        "choices": [
+          "left",
+          "right"
+        ],
+        "sides": [
+          {
+            "icon": "🌱",
+            "label": "sprout"
+          },
+          {
+            "icon": "🍎",
+            "label": "apple"
+          }
+        ]
+      }
+    ],
+    "tool": "sides",
+    "prep": "Sit beside your child so you face the same way. Read each callout aloud."
+  },
+  "scissors-v1": {
+    "category": "Movement & coordination",
+    "strand": "Creative expression",
+    "title": "Scissors on paper",
+    "age": "4–6",
+    "level": 2,
+    "skill": "Snip along straight and curved paths",
+    "kind": "adult",
+    "participation": "Parent required",
+    "items": [
+      {
+        "prompt": "Draw a straight garden row from the edge of the paper. Let your child snip along it. Check it off together.",
+        "answer": "We cut the line",
+        "choices": [
+          "We cut the line"
+        ]
+      },
+      {
+        "prompt": "Draw a wide curve for a worm. Turn the paper gently as your child cuts along the curve.",
+        "answer": "We cut the line",
+        "choices": [
+          "We cut the line"
+        ]
+      }
+    ],
+    "prep": "Bring child-safe scissors and scrap paper. Draw the paths and supervise cutting."
+  },
+  "rhymes-v1": {
+    "category": "Reading & language",
+    "strand": "Letter sounds",
+    "title": "Rhyme time basket",
+    "age": "4–5",
+    "level": 1,
+    "skill": "Match pictures whose names rhyme",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Listen to the word. Which picture rhymes with it?",
+        "answer": "log",
+        "choices": [
+          "hat",
+          "log",
+          "bee"
+        ],
+        "pictures": [
+          {
+            "label": "hat",
+            "icon": "🎩"
+          },
+          {
+            "label": "log",
+            "icon": "🪵"
+          },
+          {
+            "label": "bee",
+            "icon": "🐝"
+          }
+        ],
+        "word": "frog"
+      },
+      {
+        "prompt": "Listen to the word. Which picture rhymes with it?",
+        "answer": "hat",
+        "choices": [
+          "hat",
+          "goat",
+          "dog"
+        ],
+        "pictures": [
+          {
+            "label": "hat",
+            "icon": "🎩"
+          },
+          {
+            "label": "goat",
+            "icon": "🐐"
+          },
+          {
+            "label": "dog",
+            "icon": "🐕"
+          }
+        ],
+        "word": "cat"
+      },
+      {
+        "prompt": "Listen to the word. Which picture rhymes with it?",
+        "answer": "bee",
+        "choices": [
+          "boat",
+          "dog",
+          "bee"
+        ],
+        "pictures": [
+          {
+            "label": "boat",
+            "icon": "⛵"
+          },
+          {
+            "label": "dog",
+            "icon": "🐕"
+          },
+          {
+            "label": "bee",
+            "icon": "🐝"
+          }
+        ],
+        "word": "tree"
+      },
+      {
+        "prompt": "Listen to the word. Which picture rhymes with it?",
+        "answer": "cake",
+        "choices": [
+          "fox",
+          "cake",
+          "rose"
+        ],
+        "pictures": [
+          {
+            "label": "fox",
+            "icon": "🦊"
+          },
+          {
+            "label": "cake",
+            "icon": "🍰"
+          },
+          {
+            "label": "rose",
+            "icon": "🌹"
+          }
+        ],
+        "word": "lake"
+      }
+    ],
+    "tool": "pictures"
+  },
+  "syllables-v1": {
+    "category": "Reading & language",
+    "strand": "Letter sounds",
+    "title": "Clap the syllables",
+    "age": "4–6",
+    "level": 2,
+    "skill": "Tap once for each syllable in a word",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Listen, say the word, and tap the drum once for each beat.",
+        "answer": "1",
+        "choices": [],
+        "word": "cat"
+      },
+      {
+        "prompt": "Listen, say the word, and tap the drum once for each beat.",
+        "answer": "2",
+        "choices": [],
+        "word": "rabbit"
+      },
+      {
+        "prompt": "Listen, say the word, and tap the drum once for each beat.",
+        "answer": "3",
+        "choices": [],
+        "word": "butterfly"
+      },
+      {
+        "prompt": "Listen, say the word, and tap the drum once for each beat.",
+        "answer": "1",
+        "choices": [],
+        "word": "seed"
+      }
+    ],
+    "tool": "drum"
+  },
+  "magic-e-v1": {
+    "category": "Reading & language",
+    "strand": "Letter sounds",
+    "title": "Magic e wand",
+    "age": "6–8",
+    "level": 3,
+    "skill": "Read a word before and after adding silent e",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Add a silent e. Read the new word and choose its picture.",
+        "answer": "cape",
+        "choices": [
+          "kite",
+          "cape",
+          "tree"
+        ],
+        "pictures": [
+          {
+            "label": "kite",
+            "icon": "🪁"
+          },
+          {
+            "label": "cape",
+            "icon": "🦸"
+          },
+          {
+            "label": "tree",
+            "icon": "🌳"
+          }
+        ],
+        "stem": "cap"
+      },
+      {
+        "prompt": "Add a silent e. Read the new word and choose its picture.",
+        "answer": "kite",
+        "choices": [
+          "kite",
+          "bell",
+          "fox"
+        ],
+        "pictures": [
+          {
+            "label": "kite",
+            "icon": "🪁"
+          },
+          {
+            "label": "bell",
+            "icon": "🔔"
+          },
+          {
+            "label": "fox",
+            "icon": "🦊"
+          }
+        ],
+        "stem": "kit"
+      },
+      {
+        "prompt": "Add a silent e. Read the new word and choose its picture.",
+        "answer": "cube",
+        "choices": [
+          "tree",
+          "goat",
+          "cube"
+        ],
+        "pictures": [
+          {
+            "label": "tree",
+            "icon": "🌳"
+          },
+          {
+            "label": "goat",
+            "icon": "🐐"
+          },
+          {
+            "label": "cube",
+            "icon": "🧊"
+          }
+        ],
+        "stem": "cub"
+      }
+    ],
+    "tool": "magic"
+  },
+  "sentence-v1": {
+    "category": "Reading & language",
+    "strand": "Reading comprehension",
+    "title": "Sort the sentence",
+    "age": "6–8",
+    "level": 3,
+    "skill": "Build a sentence from word tiles to describe a scene",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Tap the words in order to tell what happens in the picture.",
+        "answer": "Bees visit flowers",
+        "choices": [],
+        "tiles": [
+          "Bees",
+          "flowers",
+          "visit"
+        ],
+        "scene": "🐝 🌼",
+        "scene_alt": "A bee lands on a flower."
+      },
+      {
+        "prompt": "Tap the words in order to tell what happens in the picture.",
+        "answer": "The rabbit eats carrots",
+        "choices": [],
+        "tiles": [
+          "eats",
+          "rabbit",
+          "The",
+          "carrots"
+        ],
+        "scene": "🐇 🥕",
+        "scene_alt": "A rabbit is eating a carrot."
+      },
+      {
+        "prompt": "Tap the words in order to tell what happens in the picture.",
+        "answer": "Seeds need water",
+        "choices": [],
+        "tiles": [
+          "need",
+          "water",
+          "Seeds"
+        ],
+        "scene": "🌰 💧",
+        "scene_alt": "Seeds are being watered."
+      }
+    ],
+    "tool": "sentence"
+  },
+  "more-v1": {
+    "category": "Numbers & patterns",
+    "strand": "Number sense",
+    "title": "Which pile has more?",
+    "age": "4–5",
+    "level": 1,
+    "skill": "Compare the sizes of two groups of acorns",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Look at the two piles. Which has more acorns?",
+        "answer": "right",
+        "choices": [
+          "left",
+          "right"
+        ],
+        "piles": [
+          2,
+          5
+        ]
+      },
+      {
+        "prompt": "Look at the two piles. Which has more acorns?",
+        "answer": "left",
+        "choices": [
+          "left",
+          "right"
+        ],
+        "piles": [
+          6,
+          2
+        ]
+      },
+      {
+        "prompt": "Look at the two piles. Which has more acorns?",
+        "answer": "right",
+        "choices": [
+          "left",
+          "right"
+        ],
+        "piles": [
+          3,
+          5
+        ]
+      },
+      {
+        "prompt": "Look at the two piles. Which has more acorns?",
+        "answer": "left",
+        "choices": [
+          "left",
+          "right"
+        ],
+        "piles": [
+          5,
+          1
+        ]
+      }
+    ],
+    "tool": "piles"
+  },
+  "twos-v1": {
+    "category": "Numbers & patterns",
+    "strand": "Number sense",
+    "title": "Count by twos",
+    "age": "5–7",
+    "level": 3,
+    "skill": "Count cherries in pairs of two",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Gather the cherries in pairs. Count by twos. How many cherries are there?",
+        "answer": "4",
+        "choices": [
+          "4",
+          "3",
+          "6"
+        ],
+        "pairs": 2
+      },
+      {
+        "prompt": "Gather the cherries in pairs. Count by twos. How many cherries are there?",
+        "answer": "6",
+        "choices": [
+          "5",
+          "8",
+          "6"
+        ],
+        "pairs": 3
+      },
+      {
+        "prompt": "Gather the cherries in pairs. Count by twos. How many cherries are there?",
+        "answer": "10",
+        "choices": [
+          "12",
+          "10",
+          "9"
+        ],
+        "pairs": 5
+      }
+    ],
+    "tool": "pairs"
+  },
+  "measure-v1": {
+    "category": "Numbers & patterns",
+    "strand": "Number sense",
+    "title": "Measure with acorns",
+    "age": "5–7",
+    "level": 3,
+    "skill": "Measure length with equal units placed end to end",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Lay acorns from the start line to the tip of the carrot. How many acorns long is it?",
+        "answer": "3",
+        "choices": [],
+        "length": 3,
+        "object": "carrot"
+      },
+      {
+        "prompt": "Lay acorns from the start line to the tip of the worm. How many acorns long is it?",
+        "answer": "4",
+        "choices": [],
+        "length": 4,
+        "object": "worm"
+      },
+      {
+        "prompt": "Lay acorns from the start line to the tip of the carrot. How many acorns long is it?",
+        "answer": "2",
+        "choices": [],
+        "length": 2,
+        "object": "carrot"
+      }
+    ],
+    "tool": "measure"
+  },
+  "coins-v1": {
+    "category": "Numbers & patterns",
+    "strand": "Number sense",
+    "title": "Garden stand coins",
+    "age": "6–8",
+    "level": 4,
+    "skill": "Combine pennies, nickels, and dimes to pay an exact price",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "This packet of pea seeds costs 6 cents. Put the exact price on the counter.",
+        "answer": "6",
+        "choices": [],
+        "price": 6
+      },
+      {
+        "prompt": "This packet of bean seeds costs 12 cents. Put the exact price on the counter.",
+        "answer": "12",
+        "choices": [],
+        "price": 12
+      },
+      {
+        "prompt": "This packet of carrot seeds costs 16 cents. Put the exact price on the counter.",
+        "answer": "16",
+        "choices": [],
+        "price": 16
+      }
+    ],
+    "tool": "coins"
+  },
+  "clock-v1": {
+    "category": "Numbers & patterns",
+    "strand": "Number sense",
+    "title": "Sun dial & clock",
+    "age": "6–8",
+    "level": 4,
+    "skill": "Read o’clock and half-past times on an analog clock",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Time to water the seedlings! Which time does the garden clock show?",
+        "answer": "8:00",
+        "choices": [
+          "8:00",
+          "8:30",
+          "9:00"
+        ],
+        "hour_angle": 240.0,
+        "minute_angle": 0,
+        "hour_position": "8",
+        "minute_position": "12"
+      },
+      {
+        "prompt": "Time to pick berries! Which time does the garden clock show?",
+        "answer": "9:30",
+        "choices": [
+          "9:00",
+          "10:30",
+          "9:30"
+        ],
+        "hour_angle": 285.0,
+        "minute_angle": 180,
+        "hour_position": "halfway between 9 and 10",
+        "minute_position": "6"
+      },
+      {
+        "prompt": "Time to put the tools away! Which time does the garden clock show?",
+        "answer": "4:30",
+        "choices": [
+          "5:30",
+          "4:30",
+          "4:00"
+        ],
+        "hour_angle": 135.0,
+        "minute_angle": 180,
+        "hour_position": "halfway between 4 and 5",
+        "minute_position": "6"
+      }
+    ],
+    "tool": "clock"
+  },
+  "sink-float-v1": {
+    "category": "Science & discovery",
+    "strand": "Scientific observation",
+    "title": "Sink or float tub",
+    "age": "4–7",
+    "level": 2,
+    "skill": "Predict and observe which objects sink or float",
+    "kind": "adult",
+    "participation": "Parent required",
+    "items": [
+      {
+        "prompt": "Before testing, name a leaf, pebble, twig, and apple. Put them into two prediction groups: sink or float.",
+        "answer": "We made predictions",
+        "choices": [
+          "We made predictions"
+        ]
+      },
+      {
+        "prompt": "Place each object in the water one at a time. Which stayed at the top? Which went to the bottom? Compare with your guesses.",
+        "answer": "We compared results",
+        "choices": [
+          "We compared results"
+        ]
+      }
+    ],
+    "prep": "Bring a bowl of water, a leaf, a pebble, a twig, and an apple. Stay beside your child and test each item together."
+  },
+  "living-v1": {
+    "category": "Science & discovery",
+    "strand": "Scientific observation",
+    "title": "Sorting living & non-living",
+    "age": "5–7",
+    "level": 2,
+    "skill": "Sort living things and non-living objects by their needs",
+    "kind": "choice",
+    "participation": "Independent",
+    "items": [
+      {
+        "prompt": "Which crate does this snail belong in?",
+        "answer": "Living",
+        "choices": [
+          "Living",
+          "Non-living"
+        ],
+        "specimen": "snail",
+        "icon": "🐌"
+      },
+      {
+        "prompt": "Which crate does this rock belong in?",
+        "answer": "Non-living",
+        "choices": [
+          "Living",
+          "Non-living"
+        ],
+        "specimen": "rock",
+        "icon": "🪨"
+      },
+      {
+        "prompt": "Which crate does this fern belong in?",
+        "answer": "Living",
+        "choices": [
+          "Living",
+          "Non-living"
+        ],
+        "specimen": "fern",
+        "icon": "🌿"
+      }
+    ],
+    "tool": "crates"
   }
 }

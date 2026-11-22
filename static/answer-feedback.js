@@ -39,7 +39,7 @@ function startAnswerFeedback(activity) {
       }
       if (!reply.next) throw new Error();
       if (reply.result === "correct" || reply.result === "finished") {
-        feedback.replaceChildren(gardenAnswerNote(reply.result, Number(feedback.dataset.successSeed)));
+        feedback.replaceChildren(gardenAnswerNote(reply.result, Number(feedback.dataset.successSeed), reply.tier_gain));
         document.dispatchEvent(new Event("garden-answer"));
         await new Promise(resolve => setTimeout(resolve, 2000));
       }

@@ -1,8 +1,16 @@
 """Grid coordinates are shared by the outline, the brush and the feedback measures."""
+import json
+from pathlib import Path
+
+THEME_SHAPES = json.loads((Path(__file__).resolve().parent.parent / "content/theme_shapes.json").read_text())
 WIDTH, HEIGHT = 32, 24
 
 
 def inside(shape, x, y):
+    if shape.startswith("theme:"):
+        pixels = THEME_SHAPES[shape[6:]]
+        col, row = (x-5)//3, (y-2)//3
+        return 0 <= row < len(pixels) and 0 <= col < len(pixels[row]) and pixels[row][col] == "#"
     if shape == "leaf":
         return abs(y-11.5+(x-15.5)*0.28) <= 7*(1-((x-15.5)/13)**2)
     if shape == "apple":
@@ -25,7 +33,7 @@ def inside(shape, x, y):
 
 
 def art_item(item):
-    return dict(item, palette=["Red","Gold","Green","Blue","Plum","Eraser"], mask="".join("1" if inside(item["shape"], x, y) else "0"
+    return dict(item, palette=["Red","Gold","Green","Blue","Plum","Eraser"], mask="".join("1" if inside(item["shape"], x, y) and (not item.get("starter") or 12 <= y <= 14) else "0"
                 for y in range(HEIGHT) for x in range(WIDTH)))
 
 

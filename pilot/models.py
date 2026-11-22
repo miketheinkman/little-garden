@@ -5,6 +5,7 @@ from django.db import models
 class Learner(models.Model):
     parent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     nickname = models.CharField(max_length=40)
+    lesson_theme = models.CharField(max_length=20, default="garden")
 
 
 class Assignment(models.Model):
@@ -72,6 +73,7 @@ class SkillSample(models.Model):
     level = models.PositiveSmallIntegerField()
     score = models.PositiveSmallIntegerField()
     ms_per_key = models.PositiveIntegerField(null=True)
+    peak_tier = models.PositiveSmallIntegerField(null=True)
     measured = models.DateTimeField(auto_now_add=True)
 
     class Meta:

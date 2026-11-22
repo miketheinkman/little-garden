@@ -10,6 +10,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
 from . import matchmaker
+from .themes import assignment_lesson
 from .art import art_item
 from .models import Assignment, Learner
 from .practice import LESSONS
@@ -29,6 +30,8 @@ def lesson_state(kind, data):
     state = {"retry": data.get("retry") == "1"}
     if kind in {"draw", "color", "mirror"} and re.fullmatch("[0-5]{768}", data.get("pixels", "")):
         state["pixels"] = data["pixels"]
+    elif kind == "adult" and re.fullmatch(r"[0-9]{1,2}(,[0-9]{1,2}){1,2}", data.get("shares", "")):
+        state["shares"] = data["shares"]
     elif kind == "type":
         state["typed"] = data.get("typed", "")[:80]
     elif kind == "basket":
@@ -42,6 +45,8 @@ def lesson_state(kind, data):
             value = data.get(axis, "")
             if re.fullmatch(r"[0-9]{1,2}|100", value):
                 state[axis] = int(value)
+    if re.fullmatch(r"(?:[0-9]{1,2},){0,39}[0-9]{1,2}", data.get("tool", "")):
+        state["tool"] = data["tool"]
     return state
 
 
@@ -77,26 +82,28 @@ def broadcast(request, pk):
 
 
 def lesson_html(row, step):
-    lesson = row.round_snapshot or LESSONS[row.lesson]
+    lesson = assignment_lesson(row)
     item = lesson["items"][step]
     if "shape" in item:
         item = art_item(item)
     return render_to_string("coview_scene.html", {"lesson": lesson, "item": item, "step": step, "seed": row.pk + step})
 
 
-def recent_response(row, title, action, celebration, submitted):
+def recent_response(row, title, action, celebration, submitted, tier_gain=None):
     live = caches["coview"]
     if live.get(f"watch:{row.learner_id}"):
         live.set(f"response:{row.learner_id}", f"{title} · Step {row.step + 1} · {action}", LEASE_SECONDS)
         if celebration:
-            live.set(f"celebration:{row.learner_id}:{row.pk}:{row.step}", celebration, 3)
+            effect = {"celebration": celebration, "tier_gain": tier_gain}
+            live.set(f"celebration:{row.learner_id}:{row.pk}:{row.step}", effect, 3)
             # A viewer may poll after the child has already moved to the next question.
             kind = LESSONS[row.lesson]["kind"]
             state = lesson_state(kind, {"typed": submitted.get("answer", ""), "pixels": submitted.get("pixels", ""),
-                                        "count": submitted.get("answer", ""), "percent": "100"})
+                                        "count": submitted.get("answer", ""), "percent": "100", "shares": submitted.get("shares", ""),
+                                        "tool": submitted.get("tool_state", "")})
             live.set(f"success:{row.learner_id}", {
                 "row": row.pk, "scene": f"{row.pk}:{row.step}", "html": lesson_html(row, row.step),
-                "state": state, "celebration": celebration,
+                "state": state, **effect,
             }, LEASE_SECONDS)
 
 
@@ -106,7 +113,7 @@ def current_frame(child, signal):
         return None
     if frame["screen"] == "garden":
         rows = child.assignment_set.filter(completed=None, removed_at=None)
-        titles = [(row.round_snapshot or LESSONS[row.lesson])["title"] for row in rows]
+        titles = [assignment_lesson(row, child.lesson_theme)["title"] for row in rows]
         return {"source": frame.get("source", ""), "scene": "garden",
                 "html": render_to_string("coview_scene.html", {"garden": True, "titles": titles})}
     step = frame["step"]
@@ -121,7 +128,7 @@ def current_frame(child, signal):
             return None
     source = frame.get("source", "")
     scene = f"{row.pk}:{step}"
-    reply = {"source": source, "scene": scene, "celebration": result}
+    reply = {"source": source, "scene": scene, **(result if isinstance(result, dict) else {"celebration": result})}
     if source and signal.get("source") == source and signal.get("direct") is True and signal.get("scene") == scene:
         return {**reply, "reuse": True}
     return {**reply, "html": lesson_html(row, step), "state": frame["state"]}
