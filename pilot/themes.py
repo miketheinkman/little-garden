@@ -13,6 +13,7 @@ THEME_CHOICES = [(key, world["label"]) for key, world in THEMES.items()]
 def lesson_title(key, original, w):
     actor, unit = w["actor"]["name"], w["one"]
     names = {
+        "water-works": f"Water Works at the {w['site']}", "train-tracks": f"Train Tracks to the {w['site']}",
         "ladybugs": f"{actor.capitalize()} lookout", "count1": f"Count the {w['many']}",
         "count2": f"Count a bigger set of {w['many']}", "beans": "Five real counters",
         "berry-basket": f"Fill the {w['box']}", "market": f"Orders at the {w['site']}",

@@ -1,0 +1,17 @@
+<section class="route-game setting-{{ lesson.world_key|default:'garden' }}" data-mode="{{ item.board.mode }}" data-place="{{ lesson.world.site|default:'garden bed' }}" data-landmark="{{ lesson.world.goal.icon|default:'🌱' }}" data-friend="{{ lesson.world.friend.icon|default:'🐇' }}" data-friend-name="{{ lesson.world.friend.name|default:'rabbit' }}" data-scenery="{{ lesson.world.other.icon|default:'🌼' }}" data-help="{{ puzzle_help|default:0 }}"{% if mirror %} data-mirror{% endif %}>
+  {{ item.board|json_script }}
+  <div class="route-heading"><strong>{{ item.board.name }}</strong><span>⚑ {{ lesson.world.site|default:"garden bed"|capfirst }}</span></div>
+  <div class="route-land"><div class="route-grid" role="group" aria-label="Puzzle board"></div></div>
+  {% if not mirror %}
+  <noscript>Turn on JavaScript to move the pieces.</noscript>
+  <div class="route-console">
+    <button class="route-spare" type="button" draggable="true" data-spare aria-pressed="false" hidden>╰ Spare bend</button>
+    <p class="route-message" role="status" aria-live="polite">Tap a marked piece, then press Go.</p>
+    <div class="route-actions">
+      <button type="button" data-run>▶ Go</button><button type="button" data-stop hidden>■ Stop</button><button type="submit" data-next hidden>Continue →</button>
+      <button type="button" data-undo>↶ Undo</button><button type="button" data-reset>↺ Reset</button><button type="button" data-hint>☀ Hint</button>
+    </div>
+    <button class="link" data-parent type="button">A grown-up helped</button>
+    <input type="hidden" name="moves"><input type="hidden" name="tool_state">
+  </div>{% endif %}
+</section>

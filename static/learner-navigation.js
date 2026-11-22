@@ -19,7 +19,7 @@ async function openLearnerPage(url, options = {}) {
     return;
   }
   const main = next.querySelector("main");
-  main.querySelectorAll("script").forEach(script => script.remove());
+  main.querySelectorAll('script:not([type="application/json"])').forEach(script => script.remove());
   document.querySelector("main").replaceWith(main);
   if (response.url !== location.href) history.pushState(null, "", response.url);
   startLesson();

@@ -1,0 +1,47 @@
+.route-game {
+  --land:#d9e6bd; --plate:#fff4cd; --rail:#4f5445; --track:#f1ce96; --flow:#176c9a;
+  color:var(--ink); border:1px solid var(--edge); border-radius:1.15rem; overflow:hidden;
+  max-width:36rem; margin:1rem auto; background:var(--surface);
+}
+[data-theme=dark] .route-game {--land:#374b41;--plate:#45483a;--rail:#c9ceb9;--track:#75664b;--flow:#86dffd}
+.route-game [hidden]{display:none!important}
+.route-heading,.route-console{padding:.8rem 1rem}
+.route-heading{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;flex-wrap:wrap;background:var(--wash)}
+.route-heading strong{font: bold 1.42rem Georgia,serif}
+.route-heading span{font-size:.85rem;color:var(--muted);font-weight:bold}
+.route-land{background:var(--land);background-image:radial-gradient(#70855444 1.5px,transparent 2px);background-size:13px 13px;padding:.75rem}
+.route-grid{position:relative;margin:auto;display:grid;grid-template-columns:repeat(var(--cols),1fr);max-width:calc(var(--cols) * 5rem);isolation:isolate}
+.route-cell{aspect-ratio:1;min-width:0;position:relative;display:grid;place-items:center;margin:0;padding:0;border:0;border-radius:0;color:var(--rail);background:transparent;font:inherit;line-height:1}
+.route-editable{background:var(--plate);outline:2px dashed var(--rail);outline-offset:-3px;border-radius:.5rem;color:var(--rail);touch-action:manipulation}
+button.route-cell:focus-visible{outline:4px solid var(--focus);z-index:3;outline-offset:0}
+.route-cell svg{width:100%;height:100%;overflow:visible;pointer-events:none}
+.route-cell .route-mark{position:absolute;right:4%;top:4%;font:bold .8rem/1 system-ui;background:var(--surface);color:var(--ink);padding:.08rem .15rem;border-radius:1rem;pointer-events:none}
+.route-cell .route-figure{position:absolute;font-size:clamp(1.1rem,4.5vw,1.95rem);line-height:1;pointer-events:none}
+.route-cell .route-scenery{font-size:1.05rem;opacity:.64}
+.route-cell.is-wet{background-color:#57b4d233}
+.route-cell.is-wet svg .route-core{stroke:var(--flow)}
+.route-cell.is-hint,.route-cell.is-stop{box-shadow:inset 0 0 0 4px var(--focus);border-radius:.5rem}
+.route-token{pointer-events:none;position:absolute;left:0;top:0;width:calc(100% / var(--cols));aspect-ratio:1;display:grid;place-items:center;font-size:clamp(1.4rem,5vw,2rem);transition:transform .25s ease-in-out;filter:drop-shadow(0 2px 1px #17281977);z-index:2}
+.route-actions{display:flex;flex-wrap:wrap;gap:.45rem}
+.route-actions button,.route-spare{min-height:44px;padding:.42rem .8rem}
+.route-actions button:not([data-run],[data-next]),.route-spare{border:1px solid var(--edge);background:var(--wash);color:var(--ink)}
+.route-actions button:disabled{opacity:.5}
+.route-console [data-parent]{font-size:.9rem;min-height:44px;padding:.4rem 0}
+.route-spare[aria-pressed=true]{outline:3px solid var(--focus)}
+.route-message{margin:.25rem 0 .65rem}
+.route-spare{margin-bottom:.45rem}
+@media(prefers-reduced-motion:reduce){.route-token{transition:none}}
+.route-cell[data-marker]::after{content:attr(data-marker);position:absolute;bottom:0;right:0;background:var(--focus);color:var(--surface);border-radius:1rem;min-width:1.25em;font-weight:bold;text-align:center}
+.route-game[data-mode="water"] .route-token{transition:none}
+.route-flag{position:absolute;top:0;right:9%;color:var(--flower);font:bold 1.35rem/1 system-ui}
+.route-cell.is-arrived{background:var(--warm);border-radius:50%}
+.route-valve .route-figure{width:55%;height:55%;border:.16em solid #823c25;border-radius:50%;background:#f6be89;color:#67311e;display:grid;place-items:center;font:bold clamp(1.25rem,5vw,2rem)/1 Georgia,serif}
+.route-valve-open .route-figure{border-color:#31654b;background:#cce7ae;color:#214c37;transform:rotate(45deg)}
+.route-solved .route-heading{background:var(--warm)}
+
+.route-game:not(.setting-garden) .route-land{
+  background-color:color-mix(in srgb,var(--sky) 22%,var(--surface));
+  background-image:radial-gradient(color-mix(in srgb,var(--sky) 40%,transparent) 1px,transparent 1.6px);
+}
+.route-token[data-rider]:not([data-rider=""])::after{content:attr(data-rider);position:absolute;right:0;top:0;font-size:.6em}
+.route-cell.is-picked-up .route-figure{visibility:hidden}

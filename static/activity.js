@@ -38,6 +38,8 @@ function startActivity(form, signal) {
   }
   signal.addEventListener("abort", stopPlayback, {once: true});
   window.addEventListener("pagehide", stopPlayback, {signal});
+  const route = form.querySelector(".route-game");
+  if (route) startRoutePuzzle(route, form, signal);
   const harvest = form.querySelector(".harvest");
   if (harvest) startHarvest(harvest, form);
 

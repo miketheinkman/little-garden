@@ -7,7 +7,7 @@
 <div data-success-seed="{{ seed }}" aria-live="polite"></div>
 {% if lesson.participation == "Parent required" %}<p>Parent required · {{ lesson.prep }}</p>{% endif %}
 {% include 'lesson_visual.html' with mirror=True %}
-{% if lesson.tool %}{% include 'garden_tool.html' with mirror=True %}
+{% if item.board %}{% include 'puzzle_board.html' with mirror=True %}{% elif lesson.tool %}{% include 'garden_tool.html' with mirror=True %}
 {% elif item.carrots %}{% include 'harvest_board.html' with mirror=True %}
 {% elif item.mask %}
 <canvas class="live-art" width="640" height="480" data-kind="{{ lesson.kind }}" data-mask="{{ item.mask }}" aria-label="Live drawing"></canvas>

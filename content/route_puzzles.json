@@ -1,0 +1,22 @@
+{
+  "water-works-v1": {
+    "title": "Water Works", "mode": "water", "skill": "Guide water through pipes, valves and branches",
+    "levels": [
+      ["First splash", "Tap the wheel to open the valve. Press Go to send the water.", ["....", "SV-G", "...."]],
+      ["Around the bend", "Turn the curved pipe until its ends join the path. Press Go to try it.", ["...G", "...|", "S--c"]],
+      ["Pipe delivery", "Pick up the spare pipe. Tap the empty square to place it, then turn it to join the path.", ["..G.", "..|.", "S-o."]],
+      ["The leaky branch", "Water can split in two. Close the leaking branch and send the water to the flag.", [".....", "S-TVG", "..v.."]],
+      ["Double splash", "Both flags need water. Follow each branch and connect both paths.", [".....", "S-TVG", "..c-G"]]
+    ]
+  },
+  "train-tracks-v1": {
+    "title": "Train Tracks", "mode": "train", "skill": "Connect tracks and switch a train onto a route",
+    "levels": [
+      ["First departure", "Tap the loose track to turn it. Press Go to drive to the flag.", ["....", "Si-G", "...."]],
+      ["Ticket to turn", "Pick up the curved track. Tap the empty square to place it, then turn it toward the station.", ["...G", "...|", "S--o"]],
+      ["Switchyard", "Tap the switch to choose a track. Press Go and watch which way the train goes.", ["....", "S-J-", "..bG"]],
+      ["Passenger express", "Pick up the passenger on the way to the station. Try the switch and the bend.", [".....", "S-J-G", "..cPq"]],
+      ["Two-station run", "Find a way to pick up the passenger and reach the flag. You can change both switches.", [".....", "SJ---", ".cPJG", "...G."]]
+    ]
+  }
+}

@@ -30,6 +30,28 @@ class FamilyPilotTests(TestCase):
         self.client.force_login(self.parent)
         self.assertContains(self.client.get("/"), "3 steps completed")
 
+    def test_puzzle_experiment_and_assistance(self):
+        from .progression import Progress
+        self.client.post(self.manage, {"action": "assign", "lesson": "water-works-v1"})
+        row = Assignment.objects.get()
+        url = f"/play/{row.pk}/"
+        self.client.post(self.manage, {"action": "play"})
+        for action in ("run", "hint", "parent"):
+            self.assertEqual(self.client.post(url, {"step": 0, "moves": "0", "action": action}).status_code, 200)
+        self.assertFalse(row.samples.exists())
+        row.refresh_from_db()
+        self.assertEqual((row.retries, row.step, row.puzzle_help), (0, 0, 3))
+        self.assertContains(self.client.post(url, {"step": 0, "answer": "correct"}), "try again")
+        self.client.post(url, {"step": 0, "moves": "1"})
+        row.refresh_from_db()
+        self.assertEqual((row.step, row.puzzle_help, row.samples.get().puzzle_help), (1, 0, 3))
+        progress = Progress(self.child)
+        self.assertEqual(progress.timeline()[0]["help_counts"], [0, 0, 0, 1])
+        self.assertNotIn("Causal reasoning", progress.estimates)
+        self.client.post(url, {"step": 1, "moves": "2"})
+        self.assertEqual(row.samples.get(step=1).puzzle_help, 0)
+        self.assertIn("Causal reasoning", Progress(self.child).estimates)
+
     def test_animation_follows_saved_outcome(self):
         keys = self.child.assignment_set.create(lesson="keys-v1")
         checkin = self.child.assignment_set.create(lesson="number-check-v1")
@@ -167,7 +189,11 @@ class LibraryTests(TestCase):
             for step, item in enumerate(lesson["items"]):
                 url = f"{self.library}{key}/preview/{step}/"
                 self.assertContains(self.client.get(url), item["prompt"], html=True)
-                response = self.client.post(url, {"answer": item["answer"], "pixels": "0"*16+"1"+"0"*751}, follow=True)
+                data = {"answer": item["answer"], "pixels": "0"*16+"1"+"0"*751}
+                if "board" in item:
+                    from .test_puzzles import winning_moves
+                    data["moves"] = "".join(map(str, winning_moves(item["board"])[0]))
+                response = self.client.post(url, data, follow=True)
             self.assertContains(response, "Preview complete")
         self.assertFalse(Assignment.objects.exists())
 

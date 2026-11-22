@@ -4,8 +4,11 @@ import random
 
 from django.conf import settings
 
+from .puzzles import PUZZLES, route_lesson
+
 CONTENT = settings.BASE_DIR / "content"
 LESSONS = json.loads((CONTENT / "lessons.json").read_text())
+LESSONS.update({key: route_lesson(key) for key in PUZZLES})
 GARDEN_PRACTICE = json.loads((CONTENT / "garden_practice.json").read_text())
 AUTHORED = json.loads((CONTENT / "variations.json").read_text())
 
@@ -23,6 +26,8 @@ LESSONS.update(CURRENT_LESSONS)
 
 
 def round_count(key):
+    if key in PUZZLES:
+        return 4
     if key in {"scissors-v1", "sink-float-v1"}:
         return 4
     return 1 + len(AUTHORED[key]) if key in AUTHORED else 1000
@@ -68,6 +73,8 @@ def build_round(key, number):
     lesson = LESSONS[key]
     if number == 0:
         return lesson
+    if key in PUZZLES:
+        return route_lesson(key, number % 4)
     rng = random.Random(f"{key}/{number}")
     if key in FIVE_PROMPT_ROUNDS:
         return five_prompt_round(key, number, rng)

@@ -6,6 +6,8 @@
   let timer, controller;
 
   function draw(scene, state) {
+    const route = scene.querySelector(".route-game");
+    if (route) paintRouteMirror(route, state.tool || "");
     const tool = scene.querySelector(".garden-tool");
     if (tool) paintGardenTool(tool, state.tool || "");
     const harvest = scene.querySelector(".harvest");
@@ -55,6 +57,7 @@
       tile.sceneHTML = html;
     }
     if (frame?.state) draw(scene, frame.state);
+    else if (scene.querySelector(".route-game")) paintRouteMirror(scene.querySelector(".route-game"), "");
     else if (scene.querySelector(".garden-tool")) paintGardenTool(scene.querySelector(".garden-tool"));
     const slot = scene.querySelector("[data-success-seed]");
     const result = frame?.celebration || "";

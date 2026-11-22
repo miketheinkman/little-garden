@@ -39,7 +39,7 @@ FIT_LABELS = ("On level", "Slightly above level", "Above level", "Slightly below
 def record_tier(sample, child_id):
     """Carry the high-water mark forward once per new scored observation."""
     earlier = SkillSample.objects.filter(assignment__learner_id=child_id, strand=sample.strand,
-                                         pk__lt=sample.pk).order_by("-measured", "-pk")
+                                         pk__lt=sample.pk, puzzle_help=0).order_by("-measured", "-pk")
     fields = ("level", "score", "ms_per_key", "peak_tier")
     previous = list(reversed(list(earlier.values(*fields)[:23])))
     peak = previous[-1]["peak_tier"] if previous else None
@@ -85,9 +85,10 @@ class Progress:
         self.attempted = defaultdict(list)
         self.sessions = {}
         evidence = SkillSample.objects.filter(assignment__learner=child).order_by("measured", "pk").values(
-            "assignment_id", "assignment__lesson", "strand", "level", "score", "measured", "ms_per_key")
+            "assignment_id", "assignment__lesson", "strand", "level", "score", "measured", "ms_per_key", "puzzle_help")
         for s in evidence:
-            self.samples[s["strand"]].append(s)
+            if not s["puzzle_help"]:
+                self.samples[s["strand"]].append(s)
             self.sessions.setdefault(s["assignment_id"], []).append(s)
         completed = child.assignment_set.exclude(completed=None).filter(skipped=0).order_by("-completed","-pk").values_list("lesson","completed")
         self.recent = []
@@ -114,7 +115,10 @@ class Progress:
             change = None if comparable not in prior else score-prior[comparable]
             prior[comparable] = score
             times = [s["ms_per_key"] for s in samples if s["ms_per_key"]]
-            history.append(dict(seconds=round(median(times)/1000,1) if times else None, title=LESSONS[key]["title"], date=samples[-1]["measured"], strand=first["strand"],
+            help_counts = None
+            if LESSONS[key]["kind"] == "puzzle":
+                help_counts = [sum(s["puzzle_help"] == value for s in samples) for value in range(4)]
+            history.append(dict(help_counts=help_counts, seconds=round(median(times)/1000,1) if times else None, title=LESSONS[key]["title"], date=samples[-1]["measured"], strand=first["strand"],
                                 levels=", ".join(map(str, sorted(set(levels)))), score=score,
                                 count=len(samples), change=change))
         return sorted(history, key=lambda point: point["date"], reverse=True)
@@ -160,7 +164,7 @@ class Progress:
                 continue
             recent_rounds = by_lesson[key][-2:]
             if len(recent_rounds) == 2 and all(
-                len(session) == len(LESSONS[session[0]["assignment__lesson"]]["items"]) and min(s["score"] for s in session) >= 90
+                len(session) == len(LESSONS[session[0]["assignment__lesson"]]["items"]) and all(s["score"] >= 90 and not s["puzzle_help"] for s in session)
                 and session[-1]["measured"] > review_cutoff for session in recent_rounds
             ):
                 continue

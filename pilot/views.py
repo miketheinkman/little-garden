@@ -15,6 +15,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 
 from .themes import THEMES, THEME_CHOICES, assignment_lesson, summary, themed_round
+from .puzzles import parse_moves, simulate, hint
 from .audio import lesson_clips
 from .art import art_item, evaluate
 from .coview import recent_response
@@ -23,7 +24,25 @@ from .progression import FIT_LABELS, Progress, item_score, record_tier
 from .practice import CURRENT_LESSONS, CURRENT_VERSION, FIVE_PROMPT_ROUNDS, LESSONS, build_round, round_count
 
 
+def puzzle_action(request, item, row=None):
+    board = item["board"]
+    moves = parse_moves(board, request.POST.get("moves", ""))
+    if moves is None:
+        return HttpResponseBadRequest("Reopen this puzzle to load its pieces.")
+    action = request.POST["action"]
+    if action == "run":
+        return JsonResponse(simulate(board, moves))
+    if row:
+        flag = 1 if action == "hint" else 2
+        Assignment.objects.filter(pk=row.pk, step=row.step, completed=None, removed_at=None).update(
+            puzzle_help=F("puzzle_help").bitor(flag))
+    return JsonResponse({"spot": hint(board, moves) if action == "hint" else None})
+
+
 def lesson_response(request, lesson, item):
+    if "board" in item:
+        moves = parse_moves(item["board"], request.POST.get("moves", ""))
+        return moves is not None and simulate(item["board"], moves)["success"], None
     if "shape" in item:
         pixels = request.POST.get("pixels", "")
         feedback = evaluate(lesson["kind"], item["mask"], pixels)
@@ -256,6 +275,8 @@ def preview(request, pk, key, step):
     context["item"] = item
     context.update(lesson_clips(item))
     if request.method == "POST":
+        if "board" in item and request.POST.get("action") in {"run", "hint", "parent"}:
+            return puzzle_action(request, item)
         if request.POST.get("action") == "skip":
             return redirect(preview_url(step+1))
         accepted, artwork = lesson_response(request, lesson, item)
@@ -379,6 +400,8 @@ def play(request, pk):
         current = Assignment.objects.filter(pk=pk, step=row.step, completed=None, removed_at=None)
         if request.POST.get("step") != str(row.step):
             return redirect("play", pk)
+        if "board" in item and request.POST.get("action") in {"run", "hint", "parent"}:
+            return puzzle_action(request, item, row)
         skip = request.POST.get("action") == "skip"
         accepted, artwork = (False, None) if skip else lesson_response(request, lesson, item)
         catalog = LESSONS[row.lesson]
@@ -399,15 +422,24 @@ def play(request, pk):
                 if artwork:
                     changes["artwork"] = artwork
             updated = current.update(**changes)
+            help_used = 0
+            if updated and advance and "board" in item:
+                # The guarded update holds the row through reading and clearing this step's help.
+                saved = Assignment.objects.filter(pk=pk)
+                help_used = saved.values_list("puzzle_help", flat=True).get()
+                if help_used:
+                    saved.update(puzzle_help=0)
             score = item_score(lesson["kind"], artwork)
+            if "board" in item:
+                score = 100 if accepted else None
             if updated and not skip and score is not None:
                 sample, created = SkillSample.objects.get_or_create(
                     assignment=row, step=row.step, defaults={
                         "strand": catalog["strand"], "level": item.get("level",catalog["level"]),
-                        "score": score if accepted else 0,
+                        "score": score if accepted else 0, "puzzle_help": help_used,
                         "ms_per_key": key_pace(request, catalog, item) if accepted else None,
                     })
-                if created:
+                if created and not help_used:
                     milestone = record_tier(sample, row.learner_id)
                     if accepted:
                         tier_gain = milestone
@@ -428,4 +460,4 @@ def play(request, pk):
         if request.headers.get("Accept") == "application/json":
             return JsonResponse({"result": "retry"})
         error = "Take another look. You can try again."
-    return render(request, "play.html", {**lesson_clips(item), "assignment_id": row.pk, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})
+    return render(request, "play.html", {**lesson_clips(item), "assignment_id": row.pk, "puzzle_help": row.puzzle_help, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})

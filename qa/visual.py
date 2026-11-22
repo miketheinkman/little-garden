@@ -78,6 +78,82 @@ class VisualReview(StaticLiveServerTestCase):
             page.wait_for_function("document.querySelector('#directions-audio').currentTime > 0")
             browser.close()
 
+    def test_logic_puzzles(self):
+        child = Learner.objects.get(pk=self.child_id)
+        child.lesson_theme = "space"
+        child.save()
+        family = Client()
+        family.force_login(child.parent)
+        device = Client()
+        device.force_login(child.parent)
+        device.post(reverse("manage", args=[child.pk]), {"action": "play"})
+        variants = [(width, theme, assign_lesson(child, "water-works-v1", 0))
+                    for width in (1200, 375) for theme in ("light", "dark")]
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width, theme, row in variants:
+                self.variant = f"route-{width}-{theme}"
+                with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme,
+                                         has_touch=width == 375) as ctx:
+                    def sign_in(client):
+                        ctx.add_cookies([{"name": "sessionid", "value": client.cookies["sessionid"].value,
+                                          "url": self.live_server_url}])
+                    sign_in(device)
+                    page = ctx.new_page()
+                    page.goto(self.live_server_url + reverse("play", args=[row.pk]))
+                    game = page.locator(".route-game")
+                    game.locator("[data-run]").click()
+                    expect(game.locator(".is-stop")).to_be_visible()
+                    game.locator("[data-hint]").click()
+                    expect(game.locator(".is-hint")).to_be_visible()
+                    self.capture(page, "hint")
+                    valve = game.get_by_role("button", name=re.compile("closed valve"))
+                    valve.focus()
+                    valve.press("Space")
+                    game.locator("[data-undo]").click()
+                    expect(valve).to_be_visible()
+                    valve.click()
+                    game.locator("[data-run]").click()
+                    expect(game.locator("[data-next]")).to_be_visible()
+                    self.capture(page, "water")
+                    if width == 1200 and theme == "light":
+                        with browser.new_context() as viewer:
+                            viewer.add_cookies([{"name": "sessionid", "value": family.cookies["sessionid"].value,
+                                                 "url": self.live_server_url}])
+                            mirror = viewer.new_page()
+                            mirror.goto(self.live_server_url + reverse("coview"))
+                            expect(mirror.locator(".route-game .is-arrived")).to_be_visible(timeout=15000)
+                    game.locator("[data-next]").click()
+                    expect(page.locator(".route-heading")).to_contain_text("Around the bend")
+                    sign_in(family)
+                    page.goto(self.live_server_url + reverse("preview", args=[child.pk, "train-tracks-v1", 1]))
+                    spare = game.locator("[data-spare]")
+                    socket = game.get_by_role("button", name=re.compile("empty space"))
+                    if width == 375:
+                        spare.tap()
+                        socket.tap()
+                    else:
+                        spare.drag_to(socket)
+                    bend = game.get_by_role("button", name=re.compile("bend,"))
+                    expect(bend).to_be_visible()
+                    game.locator("[data-reset]").click()
+                    expect(socket).to_be_visible()
+                    spare.click()
+                    socket.click()
+                    for _ in range(3):
+                        bend.click()
+                    game.locator("[data-run]").click()
+                    game.locator("[data-stop]").click()
+                    expect(game.locator(".route-message")).to_contain_text("Paused")
+                    game.locator("[data-run]").click()
+                    expect(game.locator("[data-next]")).to_be_visible()
+                    self.capture(page, "station")
+            browser.close()
+        for _, _, row in variants:
+            row.refresh_from_db()
+            self.assertEqual(row.step, 1)
+            self.assertEqual(row.samples.get(step=0).puzzle_help, 1)
+
     def test_new_lessons_and_library_queue(self):
         parent = get_user_model().objects.get(username="reviewer")
         login = Client()
