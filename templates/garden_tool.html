@@ -1,3 +1,4 @@
+{% load static %}
 <fieldset class="garden-tool" aria-label="{{ lesson.title }}" data-tool="{{ lesson.tool }}" {% if mirror %}disabled{% endif %}>
 {% if lesson.tool == 'shift' %}
 <p class="garden-sign"><output data-initial>_</output>{{ item.name_tail }}</p>
@@ -17,7 +18,8 @@
 {% if lesson.tool == 'magic' %}<p class="garden-sign">{{ item.stem }}<output data-e></output></p><button type="button" data-action="add-e">Add e</button>{% endif %}
 <div class="picture-choices">{% for pic in item.pictures %}<button name="answer" value="{{ pic.label }}"><span aria-hidden="true">{{ pic.icon }}</span>{{ pic.label }}</button>{% endfor %}</div>
 {% elif lesson.tool == 'drum' %}
-<button type="button" data-action="count" class="drum-pad">🥁 Tap the drum</button>
+{% if not mirror %}<audio data-drum-sound hidden preload="auto" src="{% static 'sounds/hand-drum.ogg' %}"></audio>{% endif %}
+<button type="button" data-action="beat" class="drum-pad">🥁 Tap the drum</button>
 <p>Beats <output data-count>0</output></p><button type="button" data-action="reset">Start over</button>
 {% elif lesson.tool == 'sentence' %}
 <p class="scene-strip" role="img" aria-label="{{ item.scene_alt }}">{{ item.scene }}</p>

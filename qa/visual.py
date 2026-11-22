@@ -246,7 +246,25 @@ class VisualReview(StaticLiveServerTestCase):
                                 kid.wait_for_function("document.querySelector('.word-station audio').currentTime > 0")
                                 expect(kid.locator("#audio-status")).to_be_hidden()
                             if name == "syllables":
-                                board.get_by_role("button", name="Tap the drum").click()
+                                pad = board.get_by_role("button", name="Tap the drum")
+                                hit = board.locator("[data-drum-sound]")
+                                hit.evaluate("""el => {
+                                    window.drumHits = 0;
+                                    el.addEventListener("playing", () => window.drumHits++);
+                                }""")
+                                pad.click()
+                                kid.wait_for_function("window.drumHits === 1")
+                                expect(board.locator("[data-count]")).to_have_text("1")
+                                kid.wait_for_function("document.querySelector('[data-drum-sound]').ended")
+                                pad.press("Space")
+                                kid.wait_for_function("window.drumHits === 2")
+                                expect(board.locator("[data-count]")).to_have_text("2")
+                                expect(tile.locator("[data-count]")).to_have_text("2")
+                                expect(tile.locator("[data-drum-sound]")).to_have_count(0)
+                                board.get_by_role("button", name="Start over").click()
+                                expect(board.locator("[data-count]")).to_have_text("0")
+                                pad.press("Enter")
+                                expect(board.locator("[data-count]")).to_have_text("1")
                         elif name == "magic-e":
                             expect(board.locator(".picture-choices")).to_be_hidden()
                             board.get_by_role("button", name="Add e").click()

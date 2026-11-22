@@ -41,6 +41,7 @@ function paintGardenTool(board, encoded = "") {
       board.querySelector('[data-action="add-e"]').disabled = Boolean(count);
       break;
     case "drum":
+      board.querySelector(".drum-pad").disabled = count >= 40;
       board.querySelector("[data-count]").textContent = count;
       value = String(count);
       break;
@@ -117,6 +118,14 @@ function startGardenTool(board, form, answer, signal) {
     if (button.dataset.coin && steps.length < 40) steps.push(Number(button.dataset.coin));
     switch (button.dataset.action) {
       case "shift": steps = [steps[0] === 1 ? 0 : 1]; break;
+      case "beat": {
+        if (steps.length >= 40) break;
+        steps.push(1);
+        const drum = board.querySelector("[data-drum-sound]");
+        drum.currentTime = 0;
+        drum.play().catch(() => {}); // Counting also works with audio unavailable.
+        break;
+      }
       case "erase": case "count": if (steps.length < 40) steps.push(1); break;
       case "add-e": steps = [1]; break;
       case "undo": steps.pop(); break;

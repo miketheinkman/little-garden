@@ -46,7 +46,7 @@ Run checks with `.venv/bin/python manage.py test`. Curriculum lives in `content/
 
 ## Licensing
 
-Application code, templates, styles, and scripts are licensed under [AGPL-3.0-only](LICENSE). Original curriculum and media under `content/`, the milestone artwork under `static/brand/`, and the spoken word clips under `static/phonics/` are licensed under [CC BY-SA 4.0](LICENSES/CC-BY-SA-4.0.txt). Attribute original lessons to Little Garden contributors, identify changes, and include the license when redistributing them. The Ogg Vorbis lesson recordings use Piper’s en_US-lessac-medium voice. Earlier WAV word clips use Flite’s CMU US SLT voice. Dependencies keep their own licenses. These public grants cover project materials; private family records are outside their scope.
+Application code, templates, styles, and scripts are licensed under [AGPL-3.0-only](LICENSE). Original curriculum and media under `content/`, the milestone artwork under `static/brand/`, the lesson recordings under `static/phonics/`, and the percussion under `static/sounds/` are licensed under [CC BY-SA 4.0](LICENSES/CC-BY-SA-4.0.txt). Attribute original lessons to Little Garden contributors, identify changes, and include the license when redistributing them. The Ogg Vorbis lesson recordings use Piper’s en_US-lessac-medium voice. Earlier WAV word clips use Flite’s CMU US SLT voice. Dependencies keep their own licenses. These public grants cover project materials; private family records are outside their scope.
 
 Third parties may host the project commercially under the applicable licenses. The official service’s donation policy is independent of those permissions.
 

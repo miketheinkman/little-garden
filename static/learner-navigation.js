@@ -1,6 +1,8 @@
 // Keep the learner's live connection while replacing the server-rendered lesson.
-const activityScript = 'script[src*="/activity.js?"]';
-const loadedActivity = document.querySelector(activityScript)?.getAttribute("src");
+function playerScripts(doc) {
+  return [...doc.querySelectorAll("main script[src]")].map(script => script.getAttribute("src")).join("\n");
+}
+const loadedScripts = playerScripts(document);
 let learnerRequest;
 async function openLearnerPage(url, options = {}) {
   learnerRequest?.abort();
@@ -12,8 +14,7 @@ async function openLearnerPage(url, options = {}) {
   if (request.signal.aborted) return;
   const badge = next.querySelector("#live-presence");
   // A new release may need different controls than the scripts already running in this tab.
-  const nextActivity = next.querySelector(activityScript)?.getAttribute("src");
-  if (!badge || nextActivity !== loadedActivity || badge.dataset.url !== document.querySelector("#live-presence").dataset.url) {
+  if (!badge || playerScripts(next) !== loadedScripts || badge.dataset.url !== document.querySelector("#live-presence").dataset.url) {
     location.assign(response.url);
     return;
   }
