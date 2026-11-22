@@ -364,3 +364,43 @@ class ProgressionTests(TestCase):
         self.child.assignment_set.create(lesson="number-check-v1", completed=timezone.now()-timedelta(days=29))
         checks = Progress(self.child).checkins()
         self.assertEqual(next(c["reason"] for c in checks if c["key"]=="number-check-v1"), "Recheck suggested")
+
+
+class QueueAndPaceTests(TestCase):
+    def setUp(self):
+        self.parent = get_user_model().objects.create_user("timing-parent")
+        self.client.force_login(self.parent)
+        self.child = Learner.objects.create(parent=self.parent, nickname="Sprout")
+        self.manage = f"/children/{self.child.pk}/"
+
+    def test_remove_specific_duplicate_and_block_stale_play(self):
+        first, duplicate = [self.child.assignment_set.create(lesson="keys-v1") for _ in range(2)]
+        self.client.post(self.manage, {"action":"remove", "row":duplicate.pk})
+        self.assertEqual(list(self.child.assignment_set.filter(removed_at=None)), [first])
+        self.client.post(self.manage, {"action":"play"})
+        self.assertRedirects(self.client.post(f"/play/{duplicate.pk}/", {"step":0,"answer":"S"}), "/")
+        self.assertFalse(duplicate.samples.exists())
+
+    def test_skip_is_idempotent_and_timing_keeps_raw_score(self):
+        row = self.child.assignment_set.create(lesson="key-check-v1")
+        self.client.post(self.manage, {"action":"play"})
+        url = f"/play/{row.pk}/"
+        for _ in range(2):
+            self.client.post(url, {"step":0, "action":"skip"})
+        self.client.post(url, {"step":1, "answer":"sun", "active_ms":"15000"})
+        self.client.post(url, {"step":2, "action":"skip"})
+        row.refresh_from_db()
+        self.assertEqual((row.skipped,row.answered,row.retries), (2,1,0))
+        sample = row.samples.get()
+        self.assertEqual((sample.score,sample.ms_per_key), (100,5000))
+        self.client.force_login(self.parent)
+        self.assertContains(self.client.get("/"), "2 skipped")
+        self.assertContains(self.client.get("/"), "5.0 s/key")
+
+    def test_fluency_only_with_repeated_timed_evidence(self):
+        from .progression import fit
+        def samples(pace, count):
+            return [dict(level=2,score=100,ms_per_key=pace)]*count
+        self.assertEqual(fit(samples(5000,2)),fit(samples(60000,2)))
+        self.assertGreater(fit(samples(5000,6)),fit(samples(60000,6)))
+        self.assertEqual(fit(samples(None,6)),fit(samples(5000,6)))

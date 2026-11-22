@@ -97,3 +97,40 @@ if (form.dataset.kind === "basket") {
   add.onclick = () => update(1);
   take.onclick = () => update(-1);
 }
+
+// Response time is optional evidence. Only active, visible time on this step counts.
+if (form.dataset.timing) {
+  const storageKey = "garden-key-time-" + form.dataset.timing;
+  let elapsed = 0;
+  try { elapsed = Number(sessionStorage.getItem(storageKey)) || 0; } catch {}
+  let since = null;
+  function pause() {
+    if (since !== null) elapsed += performance.now() - since;
+    since = null;
+    try { sessionStorage.setItem(storageKey, String(Math.round(elapsed))); } catch {}
+  }
+  function syncClock() {
+    pause();
+    if (!document.hidden && document.hasFocus()) since = performance.now();
+  }
+  document.addEventListener("visibilitychange", syncClock);
+  window.addEventListener("focus", syncClock);
+  window.addEventListener("blur", pause);
+  window.addEventListener("pagehide", pause);
+  window.addEventListener("pageshow", syncClock);
+  syncClock();
+  let typed = false;
+  let assisted = false;
+  form.addEventListener("input", event => {
+    if (event.inputType === "insertText" && event.data?.length === 1) typed = true;
+    else if (!event.inputType?.startsWith("delete")) assisted = true;
+  });
+  form.addEventListener("formdata", event => {
+    // The key handler creates a hidden answer; a clicked onscreen choice is untimed.
+    const physical = form.dataset.kind === "key" && form.querySelector('input[type=hidden][name=answer]');
+    if (physical || (form.dataset.kind === "type" && typed && !assisted)) {
+      pause();
+      event.formData.set("active_ms", String(Math.round(elapsed)));
+    }
+  });
+}

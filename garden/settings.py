@@ -23,9 +23,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 import os
 import secrets
 
-DEBUG = os.getenv("GARDEN_DEV", "1") == "1"
+LOCAL_PILOT = os.getenv("GARDEN_LOCAL_PILOT") == "1"
+DEBUG = not LOCAL_PILOT and os.getenv("GARDEN_DEV", "1") == "1"
 SECRET_KEY = os.getenv("GARDEN_SECRET_KEY")
-if not SECRET_KEY and DEBUG:
+if not SECRET_KEY and (DEBUG or LOCAL_PILOT):
     secret_file = BASE_DIR / ".local-secret"
     if not secret_file.exists():
         try:
@@ -38,7 +39,7 @@ if not SECRET_KEY and DEBUG:
 if not SECRET_KEY:
     raise RuntimeError("Set GARDEN_SECRET_KEY")
 ALLOWED_HOSTS = os.getenv("GARDEN_HOSTS", "localhost,127.0.0.1,[::1]").split(",")
-SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = CSRF_COOKIE_SECURE = not (DEBUG or LOCAL_PILOT)
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/login/"

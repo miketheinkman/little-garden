@@ -1,0 +1,14 @@
+[Unit]
+Description=Little Garden family pilot on %i
+StartLimitIntervalSec=0
+
+[Service]
+WorkingDirectory=%h/.local/share/little-garden-pilot
+ExecStart="%h/.local/share/little-garden-pilot/.venv/bin/python" -m garden.serve %i
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

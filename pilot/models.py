@@ -17,6 +17,12 @@ class Assignment(models.Model):
     step = models.PositiveIntegerField(default=0)
     retries = models.PositiveIntegerField(default=0)
     completed = models.DateTimeField(null=True)
+    removed_at = models.DateTimeField(null=True)
+    skipped = models.PositiveIntegerField(default=0)
+
+    @property
+    def answered(self):
+        return self.step - self.skipped
 
     class Meta:
         ordering = ["position", "id"]
@@ -65,6 +71,7 @@ class SkillSample(models.Model):
     strand = models.CharField(max_length=60)
     level = models.PositiveSmallIntegerField()
     score = models.PositiveSmallIntegerField()
+    ms_per_key = models.PositiveIntegerField(null=True)
     measured = models.DateTimeField(auto_now_add=True)
 
     class Meta:

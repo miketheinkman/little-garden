@@ -15,6 +15,21 @@ python3 -m venv .venv
 
 Open http://127.0.0.1:8000/ and create a parent account. Add a learner nickname, queue a few lessons, and open the learner’s garden. This signs the adult out on that browser. Sign back in to change learners, move work to the front of a queue, or review the last seven days. Finished lessons and partially completed steps survive a browser restart on the server. For a first session, try Ladybug lookout, Meet the letter keys, and Five real beans.
 
+### Start the home-network pilot at boot
+
+On a Linux host with systemd, choose the home network interface from `ip -brief -4 address`. The example uses `wlp3s0`. After setting up the checkout and database above, run these commands from the checkout as the account that owns it.
+
+```sh
+mkdir -p ~/.local/share ~/.config/systemd/user
+ln -s "$PWD" ~/.local/share/little-garden-pilot
+install -m 0644 deploy/little-garden@.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now little-garden@localhost little-garden@wlp3s0
+loginctl enable-linger "$USER"
+```
+
+Open `http://127.0.0.1:8137/` on the host or use its home-network IPv4 address on port 8137 from another device. The Wi-Fi service retries until the selected interface has a private IPv4 address. The loopback service works offline. Both use the checkout’s database, saved mail settings and local secret. This HTTP setup is for a trusted home network. For status, run `systemctl --user status little-garden@localhost little-garden@wlp3s0`. After code updates and migrations, restart both with `systemctl --user restart little-garden@localhost little-garden@wlp3s0`.
+
 ## Pilot scope
 
 Twenty-seven draft lessons for approximately ages 4–8 are grouped by subject and adult involvement. Open a learner’s lesson library to filter, preview any step, and assign an activity. Preview attempts leave learner progress untouched. Activities include steering a winding trail, filling a berry basket, typing garden signs, reading short scenes, and investigating shadows together. Parent reports summarize completion and retries. Shared reading and offline activities use family confirmation. These records describe participation and do not establish mastery.
@@ -45,6 +60,8 @@ For a local Gmail sender with Google 2-Step Verification and app passwords enabl
 
 ## Practice rounds
 
+Parents can remove one copy of an assignment from a learner’s queue, including after it has started. Previously scored answers remain in the skill history. A learner can skip any question, including a check-in question. Skipping adds no answer score or retry. The weekly record lists answered and skipped steps separately.
+
 The first assignment uses the original round. Reassigning a lesson from the library advances from the learner’s most recently assigned round. In preview, browse rounds and assign the exact one on screen. Assignments store their questions and answers together so retries and resumed sessions are consistent. Older assignments continue using their original version. Stories and guided investigations rotate through three authored sequences. Practice activities use repeatable variations within the lesson’s skill and difficulty range. Preview feedback records the round and step.
 
 Art & drawing includes coloring, reflection, and creative drawing on a 32-by-24 grid. Coloring measures the fraction of the target filled and the fraction of painted cells outside it. Mirror match measures intersection over union with the reflected reference. These are descriptive practice measures; any nonempty valid picture completes the step. Creative drawings receive no numeric score. Finished child assignments store the picture in the family database and display it in the parent’s weekly record.
@@ -52,6 +69,8 @@ Art & drawing includes coloring, reflection, and creative drawing on a 32-by-24 
 ## Placement and suggestions
 
 Tiers 1–5 describe local curriculum difficulty within a strand. Three untimed check-ins (number sense, keyboard use and letter sounds) sample increasing difficulty, advancing after each answer. Assign them from the parent dashboard. A recheck is suggested after four weeks or eight subsequently scored rounds in the strand. Normal practice still allows retries. The first submitted answer per step supplies one accuracy observation; coloring and mirror tasks use shape overlap. Adult confirmations, guided tracing, simple clicks, and free drawing supply participation records only. Earlier rounds without recorded first responses retain their completion history.
+
+Keyboard lessons and check-ins measure focused time to submit a physical key or typed answer. The parent report shows median seconds per key for correct first responses. After three timed first-try successes, placement considers pace alongside accuracy. The pilot uses a gradual adjustment between five and sixty seconds per key. These are provisional settings. Learners have unlimited time, and a correct answer earns full accuracy credit at any speed.
 
 Each strand’s estimate fits the latest 24 observations, weighting recent ones more heavily and limiting the estimate to one tier above the highest attempted task. The family and learner views plot the most recent 12 scored-round checkpoints on a fixed 1–5 scale. These pilot estimates are provisional. The dated round history shows raw scores and changes for comparable tasks. Suggestions stay within one tier of the current estimate, prioritize practice after difficulty, rotate among strands, and rest a lesson for two weeks following two recent fluent rounds. The parent queue always takes priority. A child can opt into a suggested activity when the parent queue is empty.
 

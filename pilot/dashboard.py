@@ -74,13 +74,13 @@ def dashboard(request):
     selected = request.GET.get("lesson", "")
     flag = request.GET.get("flag", "")
     lessons = {key: lesson for key, lesson in LESSONS.items() if not selected or selected == key}
-    assignments = Assignment.objects.filter(lesson__in=lessons)
+    assignments = Assignment.objects.filter(lesson__in=lessons, removed_at=None)
     notes = LessonFeedback.objects.filter(lesson__in=lessons)
     metrics = {
         row["lesson"]: row for row in assignments.order_by().values("lesson").annotate(
             assigned=Count("id"),
             started=Count("id", filter=Q(step__gt=0) | Q(retries__gt=0) | Q(completed__isnull=False)),
-            finished=Count("id", filter=Q(completed__isnull=False)),
+            finished=Count("id", filter=Q(completed__isnull=False, skipped=0)),
             learners=Count("learner_id", distinct=True, filter=Q(step__gt=0) | Q(retries__gt=0) | Q(completed__isnull=False)),
             retries=Sum("retries"),
         )

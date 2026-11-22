@@ -2,6 +2,7 @@
 from collections import defaultdict
 from datetime import timedelta
 from math import exp
+from statistics import median
 
 from django.utils import timezone
 
@@ -14,11 +15,17 @@ def fit(samples):
     recent = samples[-24:]
     if not recent:
         return None
+    # A provisional fluency signal needs repeated timed successes. Keep raw accuracy intact.
+    timed = [s["ms_per_key"] for s in recent if s.get("ms_per_key") and s["score"] == 100]
+    pace = median(timed) if len(timed) >= 3 else None
     def loss(ability):
         penalty = 0.025 * (ability - 1.5)**2
         for age, sample in enumerate(reversed(recent)):
             expected = 1 / (1 + exp(1.65 * (sample["level"] - ability) - 1))
-            penalty += .94**age * (expected - sample["score"]/100)**2
+            target = sample["score"]/100
+            if pace and sample.get("ms_per_key") and target == 1:
+                target -= .20 * min(1, max(0, (pace-5000)/55000))
+            penalty += .94**age * (expected - target)**2
         return penalty
     ceiling = min(5, max(s["level"] for s in recent) + 1)
     return min((i/4 for i in range(4, 4*ceiling+1)), key=loss)
@@ -50,11 +57,11 @@ class Progress:
         self.attempted = defaultdict(list)
         self.sessions = {}
         evidence = SkillSample.objects.filter(assignment__learner=child).order_by("measured", "pk").values(
-            "assignment_id", "assignment__lesson", "strand", "level", "score", "measured")
+            "assignment_id", "assignment__lesson", "strand", "level", "score", "measured", "ms_per_key")
         for s in evidence:
             self.samples[s["strand"]].append(s)
             self.sessions.setdefault(s["assignment_id"], []).append(s)
-        completed = child.assignment_set.exclude(completed=None).order_by("-completed","-pk").values_list("lesson","completed")
+        completed = child.assignment_set.exclude(completed=None).filter(skipped=0).order_by("-completed","-pk").values_list("lesson","completed")
         self.recent = []
         for key, when in completed:
             self.attempted[key].append(when)
@@ -77,7 +84,8 @@ class Progress:
             comparable = (key, levels)
             change = None if comparable not in prior else score-prior[comparable]
             prior[comparable] = score
-            history.append(dict(title=LESSONS[key]["title"], date=samples[-1]["measured"], strand=first["strand"],
+            times = [s["ms_per_key"] for s in samples if s["ms_per_key"]]
+            history.append(dict(seconds=round(median(times)/1000,1) if times else None, title=LESSONS[key]["title"], date=samples[-1]["measured"], strand=first["strand"],
                                 levels=", ".join(map(str, sorted(set(levels)))), score=score,
                                 count=len(samples), change=change))
         return sorted(history, key=lambda point: point["date"], reverse=True)

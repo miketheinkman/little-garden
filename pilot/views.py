@@ -57,7 +57,7 @@ def home(request):
     if request.user.is_authenticated:
         learners = list(Learner.objects.filter(parent=request.user))
         for child in learners:
-            child.queue = decorate(child.assignment_set.filter(completed=None))
+            child.queue = decorate(child.assignment_set.filter(completed=None, removed_at=None))
             progress = Progress(child)
             for row in child.queue:
                 row.fit_label = progress.label(LESSONS[row.lesson])
@@ -72,7 +72,7 @@ def home(request):
         return render(request, "parent.html", {"learners": learners, "lessons": LESSONS})
     child = Learner.objects.filter(pk=request.session.get("child")).first()
     if child:
-        queue = decorate(child.assignment_set.filter(completed=None))
+        queue = decorate(child.assignment_set.filter(completed=None, removed_at=None))
         progress = Progress(child)
         child.charts = progress.charts()
         child.round_count = len(progress.recent)
@@ -193,6 +193,8 @@ def preview(request, pk, key, step):
         item = art_item(item)
     context["item"] = item
     if request.method == "POST":
+        if request.POST.get("action") == "skip":
+            return redirect(preview_url(step+1))
         accepted, artwork = lesson_response(request, lesson, item)
         if accepted or lesson.get("checkin") and request.POST.get("answer", "").strip():
             if artwork:
@@ -233,9 +235,15 @@ def manage(request, pk):
         request.session["child"] = child.pk
     elif action == "assign" and request.POST.get("lesson") in LESSONS:
         assign_lesson(child, request.POST["lesson"])
+    elif action == "remove":
+        try:
+            row_id = int(request.POST.get("row", ""))
+        except ValueError:
+            return HttpResponseBadRequest("Choose an assignment from the queue.")
+        child.assignment_set.filter(pk=row_id, completed=None, removed_at=None).update(removed_at=timezone.now())
     elif action == "first":
-        row = get_object_or_404(child.assignment_set, pk=request.POST["row"], completed=None)
-        first = child.assignment_set.filter(completed=None).first()
+        row = get_object_or_404(child.assignment_set, pk=request.POST["row"], completed=None, removed_at=None)
+        first = child.assignment_set.filter(completed=None, removed_at=None).first()
         row.position = first.position-1
         row.save(update_fields=["position"])
     else:
@@ -253,7 +261,7 @@ def start_suggestion(request):
     if not Learner.objects.filter(pk=pk).update(nickname=F("nickname")):
         raise Http404
     child = Learner.objects.get(pk=pk)
-    if child.assignment_set.filter(completed=None).exists():
+    if child.assignment_set.filter(completed=None, removed_at=None).exists():
         return redirect("home")
     key = request.POST.get("lesson")
     if key not in {entry["key"] for entry in Progress(child).recommendations()}:
@@ -261,11 +269,23 @@ def start_suggestion(request):
     return redirect("play", assign_lesson(child, key).pk)
 
 
+def key_pace(request, catalog, item):
+    if catalog["strand"] != "Keyboard use" or catalog["kind"] not in {"key", "type"}:
+        return None
+    try:
+        elapsed = int(request.POST.get("active_ms", ""))
+    except ValueError:
+        return None
+    if not 1 <= elapsed <= 3_600_000:
+        return None
+    return max(1, round(elapsed / len(item["answer"])))
+
+
 def play(request, pk):
     if request.user.is_authenticated:
         return redirect("home")
     row = get_object_or_404(Assignment, pk=pk, learner_id=request.session.get("child"))
-    if row.completed:
+    if row.completed or row.removed_at:
         return redirect("home")
     lesson = row.round_snapshot or LESSONS[row.lesson]
     item = lesson["items"][row.step]
@@ -273,31 +293,37 @@ def play(request, pk):
         item = art_item(item)
     error = ""
     if request.method == "POST":
-        current = Assignment.objects.filter(pk=pk, step=row.step, completed=None)
+        current = Assignment.objects.filter(pk=pk, step=row.step, completed=None, removed_at=None)
         if request.POST.get("step") != str(row.step):
             return redirect("play", pk)
-        accepted, artwork = lesson_response(request, lesson, item)
+        skip = request.POST.get("action") == "skip"
+        accepted, artwork = (False, None) if skip else lesson_response(request, lesson, item)
         catalog = LESSONS[row.lesson]
         checkin = catalog.get("checkin", False)
-        if checkin and not request.POST.get("answer", "").strip():
+        if checkin and not skip and not request.POST.get("answer", "").strip():
             return redirect("play", pk)
-        advance = accepted or checkin
+        advance = skip or accepted or checkin
         done = advance and row.step+1 == len(lesson["items"])
         with transaction.atomic():
-            changes = {"retries": F("retries") + int(not accepted)}
+            changes = {"retries": F("retries") + int(not accepted and not skip)}
+            if skip:
+                changes["skipped"] = F("skipped") + 1
             if advance:
-                changes.update(step=F("step")+1, completed=timezone.now() if done else None, artwork=artwork)
+                changes.update(step=F("step")+1, completed=timezone.now() if done else None)
+                if artwork:
+                    changes["artwork"] = artwork
             updated = current.update(**changes)
             score = item_score(lesson["kind"], artwork)
-            if updated and score is not None:
+            if updated and not skip and score is not None:
                 SkillSample.objects.get_or_create(
                     assignment=row, step=row.step, defaults={
                         "strand": catalog["strand"], "level": item.get("level",catalog["level"]),
                         "score": score if accepted else 0,
+                        "ms_per_key": key_pace(request, catalog, item) if accepted else None,
                     })
         if done and updated:
             messages.success(request, artwork["feedback"] if artwork else f"Finished {lesson['title']}! Well done.")
         if advance or not updated:
             return redirect("home") if done else redirect("play", pk)
         error = "Take another look. You can try again."
-    return render(request, "play.html", {"step": row.step,"lesson": lesson,"item": item,"error": error})
+    return render(request, "play.html", {"assignment_id": row.pk, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})

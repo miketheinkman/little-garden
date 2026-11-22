@@ -29,17 +29,25 @@ class VisualReview(StaticLiveServerTestCase):
         self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"), name)
 
     def test_feature_screens(self):
-        with sync_playwright() as pw:
-            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
-            for device, width in [("desktop", 1200), ("phone", 375)]:
-                for theme in ("light", "dark"):
-                    with self.subTest(device=device, theme=theme):
-                        self.variant = f"{device}-{theme}"
+        for device, width in [("desktop", 1200), ("phone", 375)]:
+            for theme in ("light", "dark"):
+                with self.subTest(device=device, theme=theme):
+                    self.variant = f"{device}-{theme}"
+                    learner = Learner.objects.get(pk=self.child_id)
+                    kept = learner.assignment_set.create(lesson="keys-v1")
+                    duplicate = learner.assignment_set.create(lesson="keys-v1")
+                    with sync_playwright() as pw:
+                        browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
                         with browser.new_context(viewport={"width": width, "height": 820}, color_scheme="light") as ctx:
-                            self.exercise(ctx.new_page(), theme)
-            browser.close()
+                            self.exercise(ctx.new_page(), theme, kept.pk)
+                        browser.close()
+                    duplicate.refresh_from_db()
+                    self.assertIsNotNone(duplicate.removed_at)
+                    kept.refresh_from_db()
+                    self.assertEqual(kept.skipped, 2)
+                    self.assertGreater(kept.samples.get().ms_per_key, 0)
 
-    def exercise(self, page, theme):
+    def exercise(self, page, theme, kept_id):
         errors = []
         page.on("pageerror", lambda error: errors.append(str(error)))
         page.goto(self.live_server_url)
@@ -81,10 +89,31 @@ class VisualReview(StaticLiveServerTestCase):
         self.capture(page, "admin")
 
         page.goto(self.live_server_url)
+        self.capture(page, "queue-controls")
+        page.get_by_role("button", name="Remove", exact=True).last.click()
+        expect(page.get_by_role("button", name="Remove", exact=True)).to_have_count(1)
         page.get_by_role("button", name="Open Fern’s garden").click()
         expect(page.get_by_role("heading", name="My progress")).to_be_visible()
         expect(page.locator("html")).to_have_attribute("data-theme", theme)
         self.capture(page, "child")
+        page.get_by_role("link", name="Start lesson").click()
+        expect(page).to_have_url(self.live_server_url + reverse("play", args=[kept_id]))
+        self.capture(page, "skip-question")
+        page.locator("body").click(position={"x": 1, "y": 1})
+        page.keyboard.press("s")
+        expect(page.get_by_text("Step 2 of 3", exact=True)).to_be_visible()
+        page.get_by_role("button", name="Skip this question").click()
+        page.get_by_role("button", name="Skip this question").click()
+        expect(page).to_have_url(self.live_server_url + "/")
+        page.get_by_role("link", name="Parent sign in").click()
+        page.locator("#id_username").fill("reviewer")
+        page.locator("#id_password").fill("garden-qa-only")
+        page.locator("#id_password").press("Enter")
+        page.get_by_text("Skill placement and progress", exact=True).click()
+        expect(page.get_by_text("s/key (median)", exact=False).first).to_be_visible()
+        page.get_by_text("This week’s learning record", exact=True).click()
+        expect(page.get_by_text("2 skipped", exact=False).first).to_be_visible()
+        self.capture(page, "keyboard-progress")
         picker.select_option("system")
         for scheme in ("dark", "light"):
             page.emulate_media(color_scheme=scheme)
