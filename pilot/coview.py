@@ -64,19 +64,24 @@ def broadcast(request, pk):
             step = int(request.POST["step"])
         except (KeyError, ValueError):
             return HttpResponseBadRequest()
-        row = get_object_or_404(Assignment, pk=row_id, learner_id=pk, step=step, completed=None, removed_at=None)
-        state = None if source and request.POST.get("metadata") == "1" else lesson_state(LESSONS[row.lesson]["kind"], request.POST)
-        live.set(f"frame:{pk}", {"screen": "lesson", "row": row.pk, "step": step, "state": state, "source": source}, LEASE_SECONDS)
+        row = Assignment.objects.filter(pk=row_id, learner_id=pk, step=step, completed=None, removed_at=None).first()
+        if row:
+            state = None if source and request.POST.get("metadata") == "1" else lesson_state(LESSONS[row.lesson]["kind"], request.POST)
+            live.set(f"frame:{pk}", {"screen": "lesson", "row": row.pk, "step": step, "state": state, "source": source}, LEASE_SECONDS)
+        elif not live.get(f"celebration:{pk}:{row_id}:{step}"):
+            raise Http404
     else:
         return HttpResponseBadRequest()
     signal = matchmaker.child_signal(pk, source, request.POST) if watching else {}
     return JsonResponse({"watching": watching, **signal})
 
 
-def recent_response(child_id, title, step, action):
+def recent_response(row, title, action, celebration):
     live = caches["coview"]
-    if live.get(f"watch:{child_id}"):
-        live.set(f"response:{child_id}", f"{title} · Step {step + 1} · {action}", LEASE_SECONDS)
+    if live.get(f"watch:{row.learner_id}"):
+        live.set(f"response:{row.learner_id}", f"{title} · Step {row.step + 1} · {action}", LEASE_SECONDS)
+        if celebration:
+            live.set(f"celebration:{row.learner_id}:{row.pk}:{row.step}", celebration, 3)
 
 
 def current_frame(child, signal):
@@ -89,6 +94,9 @@ def current_frame(child, signal):
         return {"source": frame.get("source", ""), "html": render_to_string("coview_scene.html", {"garden": True, "titles": titles})}
     row = child.assignment_set.filter(pk=frame["row"], step=frame["step"], completed=None, removed_at=None).first()
     if not row:
+        result = caches["coview"].get(f"celebration:{child.pk}:{frame['row']}:{frame['step']}")
+        if result:
+            return {"source": frame.get("source", ""), "html": render_to_string("coview_scene.html", {"celebration": result})}
         return None
     source = frame.get("source", "")
     if source and signal.get("source") == source and signal.get("direct") is True:

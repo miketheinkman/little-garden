@@ -12,9 +12,11 @@ if (window.speechSynthesis) {
 }
 
 function answer(value) {
+  if (form.inert) return;
   const field = document.createElement("input");
   field.type = "hidden";
   field.name = "answer";
+  field.dataset.generatedAnswer = "";
   field.value = value;
   form.append(field);
   form.requestSubmit();
@@ -22,6 +24,7 @@ function answer(value) {
 
 if (form.dataset.kind === "key") {
   document.addEventListener("keydown", event => {
+    if (form.inert) return;
     if (event.target.closest("a, button, input, textarea, select, [contenteditable]") && !form.contains(event.target)) return;
     if (!event.repeat && !event.ctrlKey && !event.metaKey && !event.altKey && /^[a-z0-9]$/i.test(event.key)) {
       event.preventDefault();

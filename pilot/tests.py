@@ -30,6 +30,29 @@ class FamilyPilotTests(TestCase):
         self.client.force_login(self.parent)
         self.assertContains(self.client.get("/"), "3 steps completed")
 
+    def test_animation_follows_saved_outcome(self):
+        keys = self.child.assignment_set.create(lesson="keys-v1")
+        checkin = self.child.assignment_set.create(lesson="number-check-v1")
+        guided = self.child.assignment_set.create(lesson="beans-v1")
+        self.client.post(self.manage, {"action": "play"})
+
+        def submit(row, answer, step=0):
+            return self.client.post(f"/play/{row.pk}/", {"answer": answer, "step": step},
+                                    HTTP_ACCEPT="application/json").json()
+
+        self.assertEqual(submit(keys, "X"), {"result": "retry"})
+        self.assertEqual(submit(keys, "S")["result"], "correct")
+        self.assertEqual(keys.samples.get(step=0).score, 0)
+        self.assertEqual(submit(checkin, "2")["result"], "advance")
+        self.assertEqual(submit(guided, "We tried it"), {"result": "finished", "next": "/"})
+        self.client.force_login(self.parent)
+        before = Assignment.objects.count()
+        url = f"{self.manage}library/keys-v1/preview/0/"
+        for answer, expected in (("X", "retry"), ("S", "correct")):
+            self.assertEqual(self.client.post(url, {"answer": answer},
+                             HTTP_ACCEPT="application/json").json()["result"], expected)
+        self.assertEqual(Assignment.objects.count(), before)
+
     def test_child_scope_and_parent_gate(self):
         other = self.sibling.assignment_set.create(lesson="keys-v1")
         self.client.post(self.manage, {"action": "play"})

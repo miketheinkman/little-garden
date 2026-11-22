@@ -121,7 +121,7 @@ details[open]>summary{margin-bottom:.5rem}
 main>form.inline[method=get]{padding:1rem;background:var(--wash);border:1px solid var(--line);border-radius:1rem;margin:1rem 0 1.6rem}
 .preview-nav{gap:1.25rem}.preview-tools{margin:.75rem 0;padding:.8rem 1rem;background:var(--wash);border:1px solid var(--line);border-radius:.8rem}.preview-tools p{margin:0}.preview-tools form{margin-left:auto}
 .skill-charts svg path{stroke:var(--grid)}.skill-charts svg g{fill:var(--muted)}.skill-charts svg polyline{stroke:var(--link)}.skill-charts svg circle{fill:var(--link)}
-[role=status]:not(:empty){padding:.65rem 1rem;background:var(--wash);border-inline-start:4px solid var(--edge)}
+[role=status]:not(:empty, #answer-feedback){padding:.65rem 1rem;background:var(--wash);border-inline-start:4px solid var(--edge)}
 footer{border-top:1px solid var(--line);margin-top:2rem}
 @media(max-width:660px){
  header{grid-template-columns:1fr auto;gap:.35rem .75rem;padding-block:.65rem}
@@ -166,3 +166,33 @@ header.live-heading {display:flex;flex-wrap:wrap;align-items:baseline;justify-co
 main:has(#live-room) {max-width:1600px}
 .live-tile:only-child,.live-grid:has(> [hidden]) .live-tile {max-width:860px;width:100%}
 .live-response {font-size:.92rem;border-top:1px solid var(--line);padding-top:.6rem;color:var(--muted)}
+
+.answer-party,.retry-note {display:flex;align-items:center;gap:.8rem;color:var(--ink)}
+.answer-party {
+  position:fixed;z-index:10;top:50%;left:50%;transform:translate(-50%,-50%);
+  padding:1rem 1.6rem;border:2px solid var(--edge);border-radius:1.5rem;
+  background:var(--surface);box-shadow:0 .45rem 0 var(--shadow),0 1rem 3rem #172b2433;
+  font:700 clamp(1.9rem,5vw,3rem)/1.1 Georgia,serif;white-space:nowrap;pointer-events:none;
+}
+.answer-icon {position:relative;display:inline-block;line-height:1;font-size:1.35em}
+.answer-party .answer-icon {animation:popper-kick .55s ease-out both}
+.answer-icon i {
+  position:absolute;left:65%;top:25%;width:7px;height:12px;border-radius:2px;
+  opacity:0;animation:paper-burst 1.65s var(--delay) ease-out both;
+}
+.answer-icon i:nth-child(3n) {width:8px;height:8px;border-radius:50%}
+.retry-note {width:fit-content;margin:.5rem 0;padding:.45rem .9rem;background:var(--wash);border-radius:.85rem}
+.retry-note .answer-icon {transform-origin:50% 90%;animation:sprout-nod .75s ease-in-out}
+@keyframes popper-kick {
+  0% {transform:scale(.8) rotate(-12deg)} 42% {transform:scale(1.12) rotate(6deg)} 100% {transform:none}
+}
+@keyframes paper-burst {
+  0% {opacity:0;transform:scale(.35)} 8% {opacity:1}
+  50% {opacity:1;transform:translate(var(--flight-x),var(--flight-y)) rotate(var(--spin))}
+  100% {opacity:0;transform:translate(var(--flight-x),calc(var(--flight-y) + 78px)) rotate(calc(var(--spin) + 95deg))}
+}
+@keyframes sprout-nod {0%,100% {transform:none} 32% {transform:rotate(-12deg)} 68% {transform:rotate(8deg)}}
+@media (prefers-reduced-motion:reduce) {
+  .answer-party .answer-icon,.answer-icon i,.retry-note .answer-icon {animation:none}
+}
+.live-scene .answer-party {position:relative;top:auto;left:auto;transform:none;width:fit-content;margin:2rem auto}

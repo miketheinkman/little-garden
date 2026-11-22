@@ -30,7 +30,10 @@
       pointer.style.left = state.x + "%"; pointer.style.top = state.y + "%";
     }
     const retry = scene.querySelector("[data-retry]");
-    if (retry) retry.hidden = !state.retry;
+    if (retry && retry.hidden === Boolean(state.retry)) {
+      retry.hidden = !state.retry;
+      retry.replaceChildren(...(state.retry ? [gardenAnswerNote("retry")] : []));
+    }
   }
 
   function show(tile, frame, message) {
@@ -42,6 +45,8 @@
     if (tile.sceneHTML !== html) {
       // The server renders this fragment from household-scoped curriculum and escaped text.
       scene.innerHTML = html;
+      const answer = scene.querySelector("[data-answer-result]");
+      if (answer) answer.append(gardenAnswerNote(answer.dataset.answerResult));
       tile.sceneHTML = html;
     }
     if (frame?.state) draw(scene, frame.state);

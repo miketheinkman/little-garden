@@ -1,4 +1,5 @@
-{% if garden %}
+{% if celebration %}<div data-answer-result="{{ celebration }}"></div>
+{% elif garden %}
 <h3>My lessons</h3>
 {% if titles %}<ul>{% for title in titles %}<li>{{ title }}</li>{% endfor %}</ul>{% else %}<p>Time for a garden break!</p>{% endif %}
 {% else %}
@@ -14,5 +15,5 @@
 {% elif lesson.kind == "type" %}<p class="live-writing"><span>Garden sign</span><output data-typed></output></p>
 {% elif lesson.kind == "mouse" %}<div class="meadow" aria-label="Ladybug meadow"><span class="bug step{{ step }}" {% if item.x %}style="left:{{ item.x }}%;top:{{ item.y }}%"{% endif %}>🐞</span><i class="live-pointer" hidden></i></div>
 {% else %}<div class="live-choices">{% for choice in item.choices %}<span>{{ choice }}</span>{% endfor %}</div>{% endif %}
-<p data-retry hidden>Take another look. You can try again.</p>
+<div data-retry hidden></div>
 {% endif %}

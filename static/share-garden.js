@@ -63,7 +63,7 @@
   function activityState() {
     const data = {};
     if (!form || !watching) return data;
-    if (document.querySelector('article [role="alert"]')) data.retry = "1";
+    if (document.querySelector('#native-retry, #answer-feedback .retry-note')) data.retry = "1";
     switch (form.dataset.kind) {
       case "draw": case "mirror": case "color": data.pixels = form.elements.pixels.value; break;
       case "type": data.typed = form.elements.answer.value.slice(0, 80); break;

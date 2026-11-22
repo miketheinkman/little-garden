@@ -31,6 +31,17 @@ def lesson_response(request, lesson, item):
     return request.POST.get("answer", "").casefold() == item["answer"].casefold(), None
 
 
+def success_result(lesson):
+    return "finished" if lesson["kind"] in {"draw", "color", "mirror", "adult"} else "correct"
+
+
+def answer_transition(request, destination, lesson, accepted=False):
+    if request.headers.get("Accept") != "application/json":
+        return redirect(destination)
+    result = success_result(lesson) if accepted else "advance"
+    return JsonResponse({"result": result, "next": destination})
+
+
 def signup(request):
     form = ParentSignupForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
@@ -202,7 +213,9 @@ def preview(request, pk, key, step):
         if accepted or lesson.get("checkin") and request.POST.get("answer", "").strip():
             if artwork:
                 messages.success(request, artwork["feedback"])
-            return redirect(preview_url(step+1))
+            return answer_transition(request, preview_url(step+1), lesson, accepted)
+        if request.headers.get("Accept") == "application/json":
+            return JsonResponse({"result": "retry"})
         context["error"] = "Take another look. You can try again."
     return render(request, "play.html", context)
 
@@ -331,10 +344,14 @@ def play(request, pk):
                 action = "Answered " + request.POST.get("answer", "")[:80]
             else:
                 action = "Finished" if advance else "Tried again"
-            transaction.on_commit(lambda: recent_response(row.learner_id, lesson["title"], row.step, action), robust=True)
+            celebration = success_result(lesson) if accepted and request.headers.get("Accept") == "application/json" else None
+            transaction.on_commit(lambda: recent_response(row, lesson["title"], action, celebration), robust=True)
         if done and updated:
             messages.success(request, artwork["feedback"] if artwork else f"Finished {lesson['title']}! Well done.")
         if advance or not updated:
-            return redirect("home") if done else redirect("play", pk)
+            destination = reverse("home") if done else reverse("play", args=[pk])
+            return answer_transition(request, destination, lesson, bool(updated and accepted))
+        if request.headers.get("Accept") == "application/json":
+            return JsonResponse({"result": "retry"})
         error = "Take another look. You can try again."
     return render(request, "play.html", {"assignment_id": row.pk, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})
