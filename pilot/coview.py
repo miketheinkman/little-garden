@@ -9,12 +9,13 @@ from django.template.loader import render_to_string
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
+from . import matchmaker
 from .art import art_item
 from .models import Assignment, Learner
 from .practice import LESSONS
 
 
-LEASE_SECONDS = 8
+LEASE_SECONDS = matchmaker.LEASE
 
 
 @never_cache
@@ -51,10 +52,12 @@ def broadcast(request, pk):
         raise Http404
     live = caches["coview"]
     watching = live.get(f"watch:{pk}") is not None
+    source = request.POST.get("source", "")
+    source = source if matchmaker.token(source) else ""
     if not watching:
         live.delete(f"frame:{pk}")
     elif request.POST.get("screen") == "garden":
-        live.set(f"frame:{pk}", {"screen": "garden"}, LEASE_SECONDS)
+        live.set(f"frame:{pk}", {"screen": "garden", "source": source}, LEASE_SECONDS)
     elif request.POST.get("screen") == "lesson":
         try:
             row_id = int(request.POST["assignment"])
@@ -62,11 +65,12 @@ def broadcast(request, pk):
         except (KeyError, ValueError):
             return HttpResponseBadRequest()
         row = get_object_or_404(Assignment, pk=row_id, learner_id=pk, step=step, completed=None, removed_at=None)
-        state = lesson_state(LESSONS[row.lesson]["kind"], request.POST)
-        live.set(f"frame:{pk}", {"screen": "lesson", "row": row.pk, "step": step, "state": state}, LEASE_SECONDS)
+        state = None if source and request.POST.get("metadata") == "1" else lesson_state(LESSONS[row.lesson]["kind"], request.POST)
+        live.set(f"frame:{pk}", {"screen": "lesson", "row": row.pk, "step": step, "state": state, "source": source}, LEASE_SECONDS)
     else:
         return HttpResponseBadRequest()
-    return JsonResponse({"watching": watching})
+    signal = matchmaker.child_signal(pk, source, request.POST) if watching else {}
+    return JsonResponse({"watching": watching, **signal})
 
 
 def recent_response(child_id, title, step, action):
@@ -75,22 +79,25 @@ def recent_response(child_id, title, step, action):
         live.set(f"response:{child_id}", f"{title} · Step {step + 1} · {action}", LEASE_SECONDS)
 
 
-def current_frame(child):
+def current_frame(child, signal):
     frame = caches["coview"].get(f"frame:{child.pk}")
     if not frame:
         return None
     if frame["screen"] == "garden":
         rows = child.assignment_set.filter(completed=None, removed_at=None)
         titles = [(row.round_snapshot or LESSONS[row.lesson])["title"] for row in rows]
-        return {"html": render_to_string("coview_scene.html", {"garden": True, "titles": titles})}
+        return {"source": frame.get("source", ""), "html": render_to_string("coview_scene.html", {"garden": True, "titles": titles})}
     row = child.assignment_set.filter(pk=frame["row"], step=frame["step"], completed=None, removed_at=None).first()
     if not row:
         return None
+    source = frame.get("source", "")
+    if source and signal.get("source") == source and signal.get("direct") is True:
+        return {"source": source, "reuse": True}
     lesson = row.round_snapshot or LESSONS[row.lesson]
     item = lesson["items"][row.step]
     if "shape" in item:
         item = art_item(item)
-    return {"html": render_to_string("coview_scene.html", {"lesson": lesson, "item": item, "step": row.step}),
+    return {"source": frame.get("source", ""), "html": render_to_string("coview_scene.html", {"lesson": lesson, "item": item, "step": row.step}),
             "state": frame["state"]}
 
 
@@ -105,10 +112,15 @@ def watch(request):
             return HttpResponseBadRequest()
         children = [get_object_or_404(children, pk=selected)]
     result = {}
+    signals = matchmaker.object_field(request.POST, "signals")
+    replies = {}
     for child in children:
         caches["coview"].set(f"watch:{child.pk}", True, LEASE_SECONDS)
-        frame = current_frame(child)
+        signal = signals.get(str(child.pk))
+        signal = signal if isinstance(signal, dict) else {}
+        frame = current_frame(child, signal)
+        replies[child.pk] = matchmaker.viewer_signal(child.pk, frame and frame["source"], signal)
         if frame:
             frame["response"] = caches["coview"].get(f"response:{child.pk}")
         result[child.pk] = frame
-    return JsonResponse({"children": result})
+    return JsonResponse({"children": result, "signals": replies})

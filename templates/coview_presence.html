@@ -2,4 +2,5 @@
 <p class="live-presence" id="live-presence" role="status"
    data-url="{% url 'coview_broadcast' request.session.child %}" data-token="{{ csrf_token }}"
    data-assignment="{{ assignment_id }}" data-step="{{ step }}">Your parent can watch this garden.</p>
+<script defer src="{% static 'garden-peer.js' %}"></script>
 <script defer src="{% static 'share-garden.js' %}"></script>

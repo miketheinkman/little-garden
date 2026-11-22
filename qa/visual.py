@@ -76,8 +76,10 @@ class VisualReview(StaticLiveServerTestCase):
                     with self.subTest(size=size, theme=theme):
                         contexts = []
                         pages = []
-                        for cookie in cookies:
+                        for index, cookie in enumerate(cookies):
                             context = browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme)
+                            if index == 1 and size == "phone":
+                                context.add_init_script("window.RTCPeerConnection = undefined")
                             contexts.append(context)
                             context.add_cookies([{"name": "sessionid", "value": cookie, "url": self.live_server_url}])
                             pages.append(context.new_page())
@@ -102,12 +104,34 @@ class VisualReview(StaticLiveServerTestCase):
                             viewer.wait_for_function(
                                 """() => document.querySelector('.live-art')?.getContext('2d')
                                              .getImageData(321,241,1,1).data[0] === 212""")
+                            expect(ash_tile.locator(".live-status")).to_have_text("Live · Direct", timeout=15000)
+                            expect(fern_tile.locator(".live-status")).to_have_text(
+                                "Live · Server relay" if size == "phone" else "Live · Direct", timeout=15000)
                             self.capture(viewer, "coview-together")
                             picker.select_option(str(ash.pk))
                             expect(fern_tile).to_be_hidden()
                             typist.locator('input[name="answer"]').fill("fern bed")
                             expect(ash_tile.locator("output")).to_have_text("fern bed")
                             self.capture(viewer, "coview-single")
+                            if size == "desktop" and theme == "light":
+                                from urllib.parse import parse_qs
+                                def is_metadata(request):
+                                    fields = parse_qs(request.post_data or "")
+                                    return "/co-view/share/" in request.url and fields.get("metadata") == ["1"] and "typed" not in fields
+                                with typist.expect_request(is_metadata, timeout=8000):
+                                    pass
+                                posts = []
+                                typist.on("request", lambda req: posts.append(req.post_data) if "/co-view/share/" in req.url else None)
+                                with typist.expect_request(is_metadata, timeout=8000):
+                                    typist.locator('input[name="answer"]').fill("direct only")
+                                    expect(ash_tile.locator("output")).to_have_text("direct only")
+                                self.assertTrue(posts)
+                                self.assertFalse(any("typed" in parse_qs(body or "") for body in posts))
+                                ash_tile.evaluate("tile => tile.peer.close()")
+                                typist.locator('input[name="answer"]').fill("relay works")
+                                expect(ash_tile.locator(".live-status")).to_have_text("Live · Server relay")
+                                expect(ash_tile.locator("output")).to_have_text("relay works", timeout=8000)
+                                self.capture(viewer, "coview-relay-recovery")
                             typist.locator('input[name="answer"]').fill("red pot")
                             typist.get_by_role("button", name="Check sign").click()
                             expect(ash_tile).to_contain_text("Answered red pot")

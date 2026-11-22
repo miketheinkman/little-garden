@@ -478,3 +478,29 @@ class CoViewTests(TestCase):
         frames = self.client.post("/co-view/watch/", {"child": "all"}).json()["children"]
         self.assertEqual(list(frames), [str(self.child.pk)])
         self.assertEqual(self.device.post(self.share, dict(self.payload, assignment=wrong.pk)).status_code, 404)
+
+    def test_peer_match_is_scoped_to_the_live_page_and_viewer(self):
+        import json
+        from django.core.cache import caches
+        key = str(self.child.pk)
+        peer, source = "a"*32, "b"*32
+        sdp = "v=0\r\nm=application 9 UDP/DTLS/SCTP webrtc-datachannel\r\n"
+        def poll(**signal):
+            return self.client.post("/co-view/watch/", {"child": key, "signals": json.dumps({key: signal})}).json()
+        def send(**extra):
+            return self.device.post(self.share, dict(self.payload, source=source, **extra)).json()
+        poll()
+        send()
+        poll(id=peer, source="c"*32, offer=sdp)
+        self.assertIsNone(send()["offer"])
+        poll(id=peer, source=source, offer=sdp)
+        self.assertEqual(send()["offer"], {"id": peer, "sdp": sdp})
+        send(peers=peer, answer=json.dumps({"id": peer, "sdp": sdp}))
+        self.assertEqual(poll(id=peer, source=source, offer=sdp)["signals"][key]["answer"], sdp)
+        self.assertEqual(poll(id="d"*32, source=source)["signals"][key], {})
+        caches["coview"].delete(f"relay:{key}")
+        self.assertTrue(poll(id=peer, source=source, direct=True)["children"][key]["reuse"])
+        self.assertFalse(send(metadata="1")["relay"])
+        self.assertIsNone(caches["coview"].get(f"frame:{key}")["state"])
+        poll()  # Another parent tab needs relayed data.
+        self.assertTrue(send()["relay"])
