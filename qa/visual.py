@@ -79,7 +79,8 @@ class VisualReview(StaticLiveServerTestCase):
                         pages = []
                         for index, cookie in enumerate(cookies):
                             context = browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme)
-                            if index == 1 and size == "phone":
+                            relay_only = size == "phone" and theme == "light"
+                            if (index == 1 and size == "phone") or (index == 2 and relay_only):
                                 context.add_init_script("window.RTCPeerConnection = undefined")
                             contexts.append(context)
                             context.add_cookies([{"name": "sessionid", "value": cookie, "url": self.live_server_url}])
@@ -105,7 +106,8 @@ class VisualReview(StaticLiveServerTestCase):
                             viewer.wait_for_function(
                                 """() => document.querySelector('.live-art')?.getContext('2d')
                                              .getImageData(321,241,1,1).data[0] === 212""")
-                            expect(ash_tile.locator(".live-status")).to_have_text("Live · Direct", timeout=15000)
+                            expect(ash_tile.locator(".live-status")).to_have_text(
+                                "Live · Server relay" if relay_only else "Live · Direct", timeout=15000)
                             expect(fern_tile.locator(".live-status")).to_have_text(
                                 "Live · Server relay" if size == "phone" else "Live · Direct", timeout=15000)
                             self.capture(viewer, "coview-together")
@@ -133,6 +135,25 @@ class VisualReview(StaticLiveServerTestCase):
                                 expect(ash_tile.locator(".live-status")).to_have_text("Live · Server relay")
                                 expect(ash_tile.locator("output")).to_have_text("relay works", timeout=8000)
                                 self.capture(viewer, "coview-relay-recovery")
+                            check_direct = not relay_only and (size, theme) != ("desktop", "light")
+                            if check_direct:
+                                peer_id = ash_tile.evaluate("tile => tile.peer.id")
+                                ash_tile.evaluate("""tile => {
+                                    tile.statuses = [];
+                                    new MutationObserver(() => tile.statuses.push(tile.querySelector(".live-status").textContent))
+                                      .observe(tile.querySelector(".live-status"), {childList: true, subtree: true});
+                                }""")
+
+                            if relay_only:
+                                # The entire child celebration happens between viewer polls.
+                                viewer.evaluate("""() => {
+                                    const fetchNow = window.fetch;
+                                    const gate = new Promise(resolve => window.resumeWatch = resolve);
+                                    window.fetch = async (url, options) => {
+                                        if (String(url).includes("/co-view/watch/")) await gate;
+                                        return fetchNow(url, options);
+                                    };
+                                }""")
                             prompt = ash_tile.locator(".live-scene h3")
                             prompt_text = prompt.inner_text()
                             question_node = prompt.element_handle()
@@ -142,6 +163,9 @@ class VisualReview(StaticLiveServerTestCase):
                             expect(child_party).to_be_visible()
                             variant = child_party.get_attribute("data-variant")
                             seen_variants.add(variant)
+                            if relay_only:
+                                expect(typist.get_by_text("Step 2 of 3", exact=True)).to_be_visible()
+                                viewer.evaluate("window.resumeWatch()")
                             party = ash_tile.locator(".answer-party")
                             expect(party).to_have_attribute("data-variant", variant)
                             expect(prompt).to_have_text(prompt_text)
@@ -149,7 +173,14 @@ class VisualReview(StaticLiveServerTestCase):
                                 el.closest(".live-scene").querySelector("h3").getBoundingClientRect().bottom"""))
                             self.assertTrue(question_node.evaluate("(el) => el.isConnected"))
                             expect(ash_tile.locator("output")).to_have_text("red pot")
-                            self.assertGreater(party.evaluate("el => el.getAnimations({subtree: true}).length"), 1)
+                            # Sample real painted movement before pausing for the screenshot.
+                            self.assertTrue(party.evaluate("""async el => {
+                                const particle = el.querySelector("i");
+                                const before = particle.getBoundingClientRect();
+                                await new Promise(resolve => setTimeout(resolve, 140));
+                                const after = particle.getBoundingClientRect();
+                                return el.isConnected && (after.x !== before.x || after.y !== before.y);
+                            }"""))
                             # Capture the actual animation mid-flight on the mirror.
                             party.evaluate("""el => el.getAnimations({subtree:true}).forEach(anim => {
                                 anim.pause(); anim.currentTime = 520;
@@ -157,6 +188,15 @@ class VisualReview(StaticLiveServerTestCase):
                             ash_tile.screenshot(path=self.out / f"{self.variant}-mirror-success.png")
                             expect(ash_tile).to_contain_text("Answered red pot")
                             expect(ash_tile).to_contain_text("Step 2 of 3")
+                            if check_direct:
+                                typist.get_by_role("button", name="Skip this question").click()
+                                expect(ash_tile).to_contain_text("Step 3 of 3")
+                                typist.locator('input[name="answer"]').fill(typing.round_snapshot["items"][2]["answer"])
+                                typist.get_by_role("button", name="Check sign").click()
+                                expect(ash_tile.locator(".answer-party")).to_be_visible()
+                                expect(ash_tile).to_contain_text("My lessons")
+                                self.assertEqual(ash_tile.evaluate("tile => tile.peer.id"), peer_id, ash_tile.evaluate("tile => tile.statuses"))
+                                self.assertEqual(ash_tile.evaluate("tile => tile.statuses.filter(s => s !== 'Live · Direct')"), [])
                             picker.select_option(str(fern.pk))
                             painter.goto(self.live_server_url + reverse("play", args=[trail.pk]))
                             expect(fern_tile.locator(".live-trail")).to_be_visible()

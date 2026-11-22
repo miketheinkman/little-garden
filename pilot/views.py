@@ -345,7 +345,7 @@ def play(request, pk):
             else:
                 action = "Finished" if advance else "Tried again"
             celebration = success_result(lesson) if accepted and request.headers.get("Accept") == "application/json" else None
-            transaction.on_commit(lambda: recent_response(row, lesson["title"], action, celebration), robust=True)
+            transaction.on_commit(lambda: recent_response(row, lesson["title"], action, celebration, request.POST), robust=True)
         if done and updated:
             messages.success(request, artwork["feedback"] if artwork else f"Finished {lesson['title']}! Well done.")
         if advance or not updated:

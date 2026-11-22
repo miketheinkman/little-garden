@@ -1,6 +1,6 @@
 (() => {
-  const badge = document.querySelector("#live-presence");
-  const form = document.querySelector("#activity");
+  let badge = document.querySelector("#live-presence");
+  let form = document.querySelector("#activity");
   let watching = false;
   let pointer = null;
   let timer;
@@ -52,16 +52,22 @@
   }
   window.addEventListener("pagehide", stopDirect);
 
-  const meadow = document.querySelector(".meadow");
-  meadow?.addEventListener("pointermove", event => {
+  function sceneKey() {
+    return form ? badge.dataset.assignment + ":" + badge.dataset.step : "garden";
+  }
+  document.addEventListener("pointermove", event => {
+    const meadow = event.target.closest(".meadow");
+    if (!meadow) { pointer = null; return; }
     const box = meadow.getBoundingClientRect();
     pointer = {x: Math.round(100 * (event.clientX - box.left) / box.width),
                y: Math.round(100 * (event.clientY - box.top) / box.height)};
   });
-  meadow?.addEventListener("pointerleave", () => { pointer = null; });
+  document.addEventListener("pointerout", event => {
+    if (!event.relatedTarget || !event.relatedTarget.closest?.(".meadow")) pointer = null;
+  });
 
   function activityState() {
-    const data = {};
+    const data = {scene: sceneKey()};
     if (!form || !watching) return data;
     if (document.querySelector('#native-retry, #answer-feedback .retry-note')) data.retry = "1";
     const party = document.querySelector("#answer-feedback .answer-party");
@@ -101,6 +107,7 @@
     clearTimeout(timer);
     if (document.hidden || busy) return;
     busy = true;
+    const sentBadge = badge;
     const controller = new AbortController();
     const deadline = setTimeout(() => controller.abort(), 5000);
     try {
@@ -108,17 +115,33 @@
         method: "POST", signal: controller.signal, headers: {"X-CSRFToken": badge.dataset.token},
         body: new URLSearchParams(broadcast()), cache: "no-store"
       });
+      if ([401, 403].includes(response.status) || response.redirected) {
+        status(false);
+        stopDirect();
+        return;
+      }
       if (!response.ok) throw new Error();
       const result = await response.json();
       status(result.watching && !document.hidden);
       match(result);
-    } catch { status(false); stopDirect(); }
+    } catch {
+      if (badge === sentBadge && performance.now() >= leaseUntil) { status(false); stopDirect(); }
+    }
     finally {
       clearTimeout(deadline);
       busy = false;
-      if (!document.hidden) timer = setTimeout(send, watching ? 650 : 2500);
+      if (!document.hidden) timer = setTimeout(send, badge !== sentBadge ? 0 : watching ? 650 : 2500);
     }
   }
+  document.addEventListener("garden-screen", () => {
+    badge = document.querySelector("#live-presence");
+    form = document.querySelector("#activity");
+    pointer = null;
+    status(watching);
+    directFrames();
+    send();
+  });
+  document.addEventListener("garden-answer", () => { directFrames(); send(); });
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {clearTimeout(timer); status(false); stopDirect();}
     else send();

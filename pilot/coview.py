@@ -76,12 +76,28 @@ def broadcast(request, pk):
     return JsonResponse({"watching": watching, **signal})
 
 
-def recent_response(row, title, action, celebration):
+def lesson_html(row, step):
+    lesson = row.round_snapshot or LESSONS[row.lesson]
+    item = lesson["items"][step]
+    if "shape" in item:
+        item = art_item(item)
+    return render_to_string("coview_scene.html", {"lesson": lesson, "item": item, "step": step, "seed": row.pk + step})
+
+
+def recent_response(row, title, action, celebration, submitted):
     live = caches["coview"]
     if live.get(f"watch:{row.learner_id}"):
         live.set(f"response:{row.learner_id}", f"{title} · Step {row.step + 1} · {action}", LEASE_SECONDS)
         if celebration:
             live.set(f"celebration:{row.learner_id}:{row.pk}:{row.step}", celebration, 3)
+            # A viewer may poll after the child has already moved to the next question.
+            kind = LESSONS[row.lesson]["kind"]
+            state = lesson_state(kind, {"typed": submitted.get("answer", ""), "pixels": submitted.get("pixels", ""),
+                                        "count": submitted.get("answer", ""), "percent": "100"})
+            live.set(f"success:{row.learner_id}", {
+                "row": row.pk, "scene": f"{row.pk}:{row.step}", "html": lesson_html(row, row.step),
+                "state": state, "celebration": celebration,
+            }, LEASE_SECONDS)
 
 
 def current_frame(child, signal):
@@ -91,7 +107,8 @@ def current_frame(child, signal):
     if frame["screen"] == "garden":
         rows = child.assignment_set.filter(completed=None, removed_at=None)
         titles = [(row.round_snapshot or LESSONS[row.lesson])["title"] for row in rows]
-        return {"source": frame.get("source", ""), "html": render_to_string("coview_scene.html", {"garden": True, "titles": titles})}
+        return {"source": frame.get("source", ""), "scene": "garden",
+                "html": render_to_string("coview_scene.html", {"garden": True, "titles": titles})}
     step = frame["step"]
     row = child.assignment_set.filter(pk=frame["row"], removed_at=None).first()
     if not row:
@@ -103,14 +120,11 @@ def current_frame(child, signal):
         if row.step != step + 1 or not result:
             return None
     source = frame.get("source", "")
-    if source and signal.get("source") == source and signal.get("direct") is True:
-        return {"source": source, "reuse": True, "celebration": result}
-    lesson = row.round_snapshot or LESSONS[row.lesson]
-    item = lesson["items"][step]
-    if "shape" in item:
-        item = art_item(item)
-    html = render_to_string("coview_scene.html", {"lesson": lesson, "item": item, "step": step, "seed": row.pk + step})
-    return {"source": source, "html": html, "state": frame["state"], "celebration": result}
+    scene = f"{row.pk}:{step}"
+    reply = {"source": source, "scene": scene, "celebration": result}
+    if source and signal.get("source") == source and signal.get("direct") is True and signal.get("scene") == scene:
+        return {**reply, "reuse": True}
+    return {**reply, "html": lesson_html(row, step), "state": frame["state"]}
 
 
 @never_cache
@@ -133,6 +147,11 @@ def watch(request):
         frame = current_frame(child, signal)
         replies[child.pk] = matchmaker.viewer_signal(child.pk, frame and frame["source"], signal)
         if frame:
+            success = caches["coview"].get(f"success:{child.pk}")
+            if success and success["scene"] != signal.get("seen") and child.assignment_set.filter(
+                pk=success["row"], removed_at=None
+            ).exists():
+                frame["success"] = success
             frame["response"] = caches["coview"].get(f"response:{child.pk}")
         result[child.pk] = frame
     return JsonResponse({"children": result, "signals": replies})

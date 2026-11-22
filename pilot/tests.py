@@ -525,6 +525,20 @@ class CoViewTests(TestCase):
         self.assertEqual(frame["html"], original)
         self.assertEqual(frame["celebration"], "correct")
         self.assertEqual(frame["state"]["typed"], answer)
+        # Even if the next screen arrives before the viewer polls, it can play
+        # the answered prompt once, complete with the submitted answer.
+        self.device.post(self.share, {"screen": "garden"})
+        garden = watch()
+        self.assertEqual(garden["scene"], "garden")
+        success = garden["success"]
+        self.assertEqual(success["scene"], f"{self.row.pk}:{last_step}")
+        self.assertEqual(success["html"], original)
+        self.assertEqual(success["state"]["typed"], answer)
+        seen = {str(self.child.pk): {"seen": success["scene"]}}
+        import json
+        acknowledged = self.client.post("/co-view/watch/", {"child": "all", "signals": json.dumps(seen)})
+        self.assertNotIn("success", acknowledged.json()["children"][str(self.child.pk)])
+        self.device.post(self.share, payload)
         caches["coview"].delete(f"celebration:{self.child.pk}:{self.row.pk}:{last_step}")
         self.assertIsNone(watch())
         self.assertEqual(self.device.post(self.share, payload).status_code, 404)
@@ -549,7 +563,7 @@ class CoViewTests(TestCase):
         self.assertEqual(poll(id=peer, source=source, offer=sdp)["signals"][key]["answer"], sdp)
         self.assertEqual(poll(id="d"*32, source=source)["signals"][key], {})
         caches["coview"].delete(f"relay:{key}")
-        self.assertTrue(poll(id=peer, source=source, direct=True)["children"][key]["reuse"])
+        self.assertTrue(poll(id=peer, source=source, direct=True, scene=f"{self.row.pk}:0")["children"][key]["reuse"])
         self.assertFalse(send(metadata="1")["relay"])
         self.assertIsNone(caches["coview"].get(f"frame:{key}")["state"])
         poll()  # Another parent tab needs relayed data.

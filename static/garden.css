@@ -219,10 +219,11 @@ main:has(#live-room) {max-width:1600px}
   100% {opacity:0;transform:translate(var(--flight-x),var(--flight-y)) rotate(55deg) scale(.2)}
 }
 .live-scene .answer-party {
-  position:relative;top:auto;left:auto;transform:none;overflow:hidden;max-width:100%;width:fit-content;
-  margin:.4rem 0 .8rem;padding:.65rem 1.35rem .65rem 2rem;min-height:4.5rem;font-size:clamp(1.2rem,3vw,1.7rem);
+  position:relative;top:auto;left:auto;transform:none;overflow:hidden;width:min(100%,24rem);justify-content:center;
+  margin:.4rem 0 .8rem;padding:.65rem 1rem;min-height:5.25rem;font-size:clamp(1.4rem,3vw,1.85rem);
+  background:var(--wash);--burst-x:.85px;--burst-y:.34px;animation:mirror-arrival .45s ease-out both;
 }
-.live-scene .answer-party {--burst-x:.55px;--burst-y:.22px}
+@keyframes mirror-arrival {from {transform:scale(.92)} to {transform:scale(1)}}
 @media (prefers-reduced-motion:reduce) {
-  .answer-party .answer-icon,.answer-party .answer-icon i,.retry-note .answer-icon {animation:none}
+  .live-scene .answer-party,.answer-party .answer-icon,.answer-party .answer-icon i,.retry-note .answer-icon {animation:none}
 }

@@ -7,4 +7,4 @@
 <p id="draw-help">Drag to draw. With a keyboard, use the arrow keys to move and Space to paint.</p>
 <input type="hidden" name="pixels" id="pixels">
 <button id="finish-art" disabled>Finish picture</button>
-<script defer src="{% static 'drawing.js' %}"></script>
+{% if preview %}<script defer src="{% static 'drawing.js' %}"></script>{% endif %}

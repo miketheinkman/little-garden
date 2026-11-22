@@ -49,7 +49,7 @@
     }
     if (frame?.state) draw(scene, frame.state);
     const slot = scene.querySelector("[data-success-seed]");
-    const result = frame?.celebration || frame?.state?.celebration || "";
+    const result = frame?.celebration || "";
     if (slot && result !== (slot.dataset.result || "")) {
       slot.dataset.result = result;
       slot.replaceChildren(...(result ? [gardenAnswerNote(result, Number(slot.dataset.successSeed))] : []));
@@ -65,13 +65,39 @@
     tile.direct = null;
   }
   function fresh(tile) {
-    return tile.peer?.channel?.readyState === "open" && tile.direct && performance.now() - tile.received < 2200;
+    return tile.peer?.channel?.readyState === "open" && tile.direct && performance.now() - tile.received < 4000;
   }
+  function clearCelebrations(tile) {
+    clearTimeout(tile.finishTimer);
+    tile.playing = null;
+    tile.nextSuccess = null;
+  }
+
   function display(tile) {
     const frame = tile.frame;
-    if (!frame) { show(tile, null, "Waiting for an open garden"); return; }
-    if (fresh(tile)) show(tile, {...frame, state: tile.direct}, "Live · Direct");
-    else show(tile, frame, "Live · Server relay");
+    const direct = fresh(tile);
+    const status = direct ? "Live · Direct" : "Live · Server relay";
+    const state = frame && direct && tile.direct.scene === frame.scene ? tile.direct : frame?.state;
+    const result = frame?.celebration || state?.celebration;
+    if (result && frame.scene !== tile.seen && !tile.nextSuccess) {
+      tile.nextSuccess = {...frame, state, celebration: result};
+    }
+    if (!tile.playing && tile.nextSuccess) {
+      tile.playing = tile.nextSuccess;
+      tile.nextSuccess = null;
+      tile.seen = tile.playing.scene;
+      tile.finishTimer = setTimeout(() => {
+        tile.playing = null;
+        display(tile);
+      }, 2000);
+    }
+    if (tile.playing) {
+      show(tile, tile.playing, status);
+    } else if (frame) {
+      show(tile, {...frame, state, celebration: ""}, status);
+    } else {
+      show(tile, null, direct ? status : "Waiting for an open garden");
+    }
   }
   function connect(tile, source) {
     if (tile.source !== source) {
@@ -95,6 +121,7 @@
         // Peer input is data only. Markup and the active step always come from Django.
         const bound = (v, max) => Math.max(0, Math.min(max, parseInt(v, 10) || 0));
         tile.direct = {
+          scene: data.scene,
           typed: typeof data.typed === "string" ? data.typed.slice(0, 80) : "",
           pixels: typeof data.pixels === "string" && /^[0-5]{768}$/.test(data.pixels) ? data.pixels : "",
           celebration: ["correct", "finished"].includes(data.celebration) ? data.celebration : "",
@@ -107,16 +134,27 @@
     } catch { tile.retryAfter = now + 10000; }
   }
   function signal(tile) {
-    if (!tile.peer) return {};
-    return {id: tile.peer.id, source: tile.source, direct: Boolean(fresh(tile)),
+    const current = {scene: tile.frame?.scene, seen: tile.seen};
+    if (!tile.peer) return current;
+    return {...current, id: tile.peer.id, source: tile.source, direct: Boolean(fresh(tile)),
             offer: tile.peer.pc.remoteDescription ? "" : tile.peer.sdp};
   }
   function receive(tile, frame, reply) {
-    if (frame?.reuse && frame.source === tile.frame?.source) {
-      frame = {...tile.frame, response: frame.response, celebration: frame.celebration};
+    const success = frame?.success;
+    if (frame?.reuse && frame.source === tile.frame?.source && frame.scene === tile.frame.scene) {
+      frame = {...tile.frame, ...frame};
+    }
+    if (success && success.scene !== tile.seen) {
+      tile.nextSuccess = {...success, response: frame.response};
     }
     tile.frame = frame;
-    connect(tile, frame?.source || "");
+    // A committed skip can briefly precede the broadcast of the next step.
+    if (frame) {
+      tile.lastFrameAt = performance.now();
+      connect(tile, frame.source);
+    } else if (performance.now() - (tile.lastFrameAt || 0) > 4000) {
+      connect(tile, "");
+    }
     const peer = tile.peer;
     if (reply?.answer && peer && !peer.pc.remoteDescription && !peer.applying) {
       peer.applying = true;
@@ -126,7 +164,10 @@
     }
     display(tile);
   }
-  function disconnected(tile) {
+  function disconnected(tile, accessDenied = false) {
+    // A missed signaling poll need not tear down a healthy local channel.
+    if (!accessDenied && fresh(tile) && performance.now() - tile.lastFrameAt < 6000) return;
+    clearCelebrations(tile);
     stopPeer(tile);
     tile.frame = null;
     show(tile, null, "Connection lost · reconnecting");
@@ -141,7 +182,7 @@
     const deadline = setTimeout(() => {
       request.abort();
       if (controller === request && !document.hidden) {
-        tiles.filter(tile => !tile.hidden).forEach(disconnected);
+        tiles.filter(tile => !tile.hidden).forEach(tile => disconnected(tile));
         timer = setTimeout(poll, 900);
       }
     }, 5000);
@@ -151,6 +192,10 @@
     try {
       const response = await fetch(room.dataset.url, {method: "POST", signal: request.signal,
         headers: {"X-CSRFToken": room.dataset.token}, body: new URLSearchParams({child: selection, signals: JSON.stringify(signals)}), cache: "no-store"});
+      if ([401, 403, 404].includes(response.status) || response.redirected) {
+        visible.forEach(tile => disconnected(tile, true));
+        return;
+      }
       if (!response.ok) throw new Error();
       const data = await response.json();
       if (request.signal.aborted) return;
@@ -159,7 +204,7 @@
         receive(tile, frame, data.signals?.[tile.dataset.child]);
       });
     } catch {
-      if (!request.signal.aborted) visible.forEach(disconnected);
+      if (!request.signal.aborted) visible.forEach(tile => disconnected(tile));
     } finally {
       clearTimeout(deadline);
       if (!request.signal.aborted) timer = setTimeout(poll, 900);
@@ -168,8 +213,13 @@
   function switchView() {
     tiles.forEach(tile => {
       tile.hidden = select.value !== "all" && select.value !== tile.dataset.child;
-      if (tile.hidden || document.hidden) { stopPeer(tile); tile.frame = null; }
-      show(tile, null, "Connecting…");
+      if (tile.hidden || document.hidden) {
+        clearCelebrations(tile);
+        stopPeer(tile);
+        tile.frame = null;
+      }
+      if (tile.frame) display(tile);
+      else show(tile, null, "Connecting…");
     });
     poll();
   }
