@@ -15,6 +15,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 
 from .art import art_item, evaluate
+from .coview import recent_response
 from .models import SkillSample
 from .progression import Progress, item_score
 from .practice import CURRENT_LESSONS, CURRENT_VERSION, FIVE_PROMPT_ROUNDS, LESSONS, build_round, round_count
@@ -323,6 +324,14 @@ def play(request, pk):
                         "score": score if accepted else 0,
                         "ms_per_key": key_pace(request, catalog, item) if accepted else None,
                     })
+        if updated:
+            if skip:
+                action = "Skipped"
+            elif lesson["kind"] in {"key", "choice", "type"}:
+                action = "Answered " + request.POST.get("answer", "")[:80]
+            else:
+                action = "Finished" if advance else "Tried again"
+            transaction.on_commit(lambda: recent_response(row.learner_id, lesson["title"], row.step, action), robust=True)
         if done and updated:
             messages.success(request, artwork["feedback"] if artwork else f"Finished {lesson['title']}! Well done.")
         if advance or not updated:

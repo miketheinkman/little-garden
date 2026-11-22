@@ -145,3 +145,24 @@ footer{border-top:1px solid var(--line);margin-top:2rem}
 }
 .preview-steps strong {background:var(--button); color:var(--button-text)}
 @media (max-width:480px) { .preview-steps span {flex-basis:100%} }
+
+.live-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,310px),1fr));gap:1rem;margin:1rem 0}
+.live-tile {min-width:0;margin:0}
+header.live-heading {display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:.4rem;padding:0 0 .65rem;margin:0;border-bottom:1px solid var(--line)}
+.live-heading h2 {margin:0}
+.live-status,.live-step,.live-presence {font-size:.9rem;color:var(--muted)}
+.is-live .live-status::before,.watching::before {content:"";display:inline-block;width:.6em;height:.6em;border-radius:50%;margin-right:.4em;background:var(--link)}
+.live-choices {display:flex;gap:.5rem;flex-wrap:wrap}
+.live-choices span {padding:.5rem 1rem;border-radius:.75rem;background:var(--button);color:var(--button-text)}
+.live-art,.live-trail {display:block;width:100%;height:auto;max-width:640px;border-radius:.6rem}
+.live-trail {max-height:240px;background:#d8ead4}
+.live-trail path {fill:none;stroke-linecap:round;stroke-linejoin:round}
+.live-guide {stroke:#a3c29a;stroke-width:16}
+.live-ink {stroke:#426b46;stroke-width:8}
+.live-trail circle {fill:#f2bc46;stroke:#82592a}
+.live-pointer {position:absolute;width:14px;height:14px;border:2px solid white;border-radius:50%;background:#244d39;transform:translate(-50%,-50%)}
+.live-writing output {min-height:2.6rem;display:block;padding:.5rem;border:1px solid var(--edge);border-radius:.5rem;background:var(--input);white-space:pre-wrap;overflow-wrap:anywhere}
+.live-scene {overflow-wrap:anywhere}
+main:has(#live-room) {max-width:1600px}
+.live-tile:only-child,.live-grid:has(> [hidden]) .live-tile {max-width:860px;width:100%}
+.live-response {font-size:.92rem;border-top:1px solid var(--line);padding-top:.6rem;color:var(--muted)}

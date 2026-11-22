@@ -4,6 +4,7 @@ from pathlib import Path
 
 from django.contrib.auth import get_user_model
 from django.contrib.staticfiles.testing import StaticLiveServerTestCase
+from django.test import Client, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from playwright.sync_api import expect, sync_playwright
@@ -12,6 +13,8 @@ from pilot.models import Learner, SkillSample
 from pilot.views import assign_lesson
 
 
+@override_settings(CACHES={key: {"BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                                "LOCATION": f"visual-review-{key}"} for key in ("default", "coview")})
 class VisualReview(StaticLiveServerTestCase):
     def setUp(self):
         password = "garden-qa-only"
@@ -47,6 +50,94 @@ class VisualReview(StaticLiveServerTestCase):
                     kept.refresh_from_db()
                     self.assertEqual(kept.skipped, 2)
                     self.assertGreater(kept.samples.get(step=0).ms_per_key, 0)
+
+    def test_family_co_view(self):
+        from django.core.cache import caches
+        fern = Learner.objects.get(pk=self.child_id)
+        ash = Learner.objects.create(parent=fern.parent, nickname="Ash")
+        art = assign_lesson(fern, "color-v1")
+        typing_rows = iter([assign_lesson(ash, "signs-v1", variation=0) for _ in range(4)])
+        trail = assign_lesson(fern, "lines-v1")
+        parent = Client()
+        parent.force_login(fern.parent)
+        cookies = [parent.cookies["sessionid"].value]
+        for child in (fern, ash):
+            device = Client()
+            device.force_login(child.parent)
+            device.post(reverse("manage", args=[child.pk]), {"action": "play"})
+            cookies.append(device.cookies["sessionid"].value)
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for size, width in (("desktop", 1200), ("phone", 375)):
+                for theme in ("light", "dark"):
+                    typing = next(typing_rows)
+                    caches["coview"].clear()
+                    self.variant = f"{size}-{theme}"
+                    with self.subTest(size=size, theme=theme):
+                        contexts = []
+                        pages = []
+                        for cookie in cookies:
+                            context = browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme)
+                            contexts.append(context)
+                            context.add_cookies([{"name": "sessionid", "value": cookie, "url": self.live_server_url}])
+                            pages.append(context.new_page())
+                        try:
+                            viewer, painter, typist = pages
+                            viewer.goto(self.live_server_url)
+                            viewer.get_by_role("link", name="Watch live").click()
+                            picker = viewer.get_by_label("Show", exact=True)
+                            picker.select_option("all")
+                            fern_tile = viewer.locator(f'[data-child="{fern.pk}"]')
+                            ash_tile = viewer.locator(f'[data-child="{ash.pk}"]')
+                            expect(fern_tile).to_contain_text("Waiting for an open garden")
+                            self.capture(viewer, "coview-waiting")
+                            painter.goto(self.live_server_url + reverse("play", args=[art.pk]))
+                            typist.goto(self.live_server_url + reverse("play", args=[typing.pk]))
+                            expect(painter.locator("#live-presence")).to_contain_text("watching along")
+                            painter.locator("#board").press("Space")
+                            typist.locator('input[name="answer"]').fill("sun")
+                            expect(ash_tile.locator("output")).to_have_text("sun")
+                            board = fern_tile.locator("canvas")
+                            expect(board).to_be_visible()
+                            viewer.wait_for_function(
+                                """() => document.querySelector('.live-art')?.getContext('2d')
+                                             .getImageData(321,241,1,1).data[0] === 212""")
+                            self.capture(viewer, "coview-together")
+                            picker.select_option(str(ash.pk))
+                            expect(fern_tile).to_be_hidden()
+                            typist.locator('input[name="answer"]').fill("fern bed")
+                            expect(ash_tile.locator("output")).to_have_text("fern bed")
+                            self.capture(viewer, "coview-single")
+                            typist.locator('input[name="answer"]').fill("red pot")
+                            typist.get_by_role("button", name="Check sign").click()
+                            expect(ash_tile).to_contain_text("Answered red pot")
+                            expect(ash_tile).to_contain_text("Step 2 of 3")
+                            picker.select_option(str(fern.pk))
+                            painter.goto(self.live_server_url + reverse("play", args=[trail.pk]))
+                            expect(fern_tile.locator(".live-trail")).to_be_visible()
+                            points = painter.locator("#guide").evaluate("""path => [0, 8, 16, 24, 32].map(n => {
+                                const p = path.getPointAtLength(n).matrixTransform(path.getScreenCTM());
+                                return [p.x, p.y];
+                            })""")
+                            painter.mouse.move(*points[0])
+                            painter.mouse.down()
+                            for point in points[1:]:
+                                painter.mouse.move(*point)
+                            painter.mouse.up()
+                            viewer.wait_for_function("""() => {
+                                const ink = document.querySelector('.live-ink');
+                                return ink && parseFloat(ink.style.strokeDashoffset) < ink.getTotalLength() - 5;
+                            }""")
+                            painter.goto(self.live_server_url)
+                            expect(fern_tile).to_contain_text("My lessons")
+                            if size == "phone" and theme == "dark":
+                                painter.close()
+                                expect(fern_tile).to_contain_text("Waiting for an open garden", timeout=12500)
+                                expect(fern_tile.get_by_role("heading", name="My lessons")).to_have_count(0)
+                        finally:
+                            for context in contexts:
+                                context.close()
+            browser.close()
 
     def exercise(self, page, theme, kept_id):
         errors = []

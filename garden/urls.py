@@ -2,7 +2,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth import views as auth
 from django.urls import path
 from django.views.generic import TemplateView
-from pilot import views
+from pilot import coview, views
 from pilot.dashboard import dashboard
 
 urlpatterns = [
@@ -11,6 +11,9 @@ urlpatterns = [
     path("mission/", TemplateView.as_view(template_name="mission.html"), name="mission"),
     path("signup/", views.signup, name="signup"),
     path("login/", LoginView.as_view(template_name="account.html"), name="login"),
+    path("co-view/", coview.room, name="coview"),
+    path("co-view/watch/", coview.watch, name="coview_watch"),
+    path("co-view/share/<int:pk>/", coview.broadcast, name="coview_broadcast"),
     path("dashboard/", dashboard, name="dashboard"),
     path("feedback/preferences/", views.feedback_preferences, name="feedback_preferences"),
     path("feedback/", views.feedback_history, name="feedback_history"),

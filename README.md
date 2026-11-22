@@ -85,3 +85,9 @@ The suite exercises a disposable family’s parent, child, library, art, feedbac
 ## Welcome and brand assets
 
 The signed-out home page opens an illustrated garden. Visit `/welcome/` to replay it from any account. Entry is available throughout the animation and the reduced-motion setting displays the finished scene. The mission page links to the downloadable Book Sprout brand kit, including source SVGs, light and dark wordmarks, PNG icons, a favicon, palette, attribution, and license. Original brand and opening-scene artwork is released under CC BY-SA 4.0.
+
+## Watching a learner live
+
+Choose **Watch live** in the parent’s Family garden. Open each learner’s garden on another device or in a separate browser profile. Choose one learner or **All learners together**. Wide screens tile the selected gardens. A child sees a notice while their garden is being watched.
+
+Co-viewing recreates the visible Little Garden activity, including the prompt, typed answer, basket, tracing path, artwork, and the latest submitted response. The parent view is read-only. Visible pages exchange updates roughly once a second during viewing. Leaving the child page or losing its connection causes the live frame to expire after eight seconds. Temporary snapshots are scoped to the household and shared between the two Linux pilot listeners through the user’s private runtime directory. The app does not capture the device screen, camera, microphone, or activity in other tabs.

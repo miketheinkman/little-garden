@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Watch live · Little Garden{% endblock %}
+{% block content %}
+<a href="/">Family garden</a>
+<h1>Watch live</h1>
+{% if children %}
+<p>Open a learner’s garden on another device or in a separate browser profile. Their lesson will appear here as they play.</p>
+<div id="live-room" data-url="{% url 'coview_watch' %}" data-token="{{ csrf_token }}">
+<label for="live-select">Show</label>
+<select id="live-select" disabled>
+{% if children|length > 1 %}<option value="all">All learners together</option>{% endif %}
+{% for child in children %}<option value="{{ child.pk }}">{{ child.nickname }}</option>{% endfor %}
+</select>
+<div class="live-grid">
+{% for child in children %}
+<article class="live-tile" data-child="{{ child.pk }}">
+<header class="live-heading"><h2>{{ child.nickname }}</h2><span class="live-status" role="status">Connecting…</span></header>
+<div class="live-scene"></div>
+<p class="live-response" hidden></p>
+</article>
+{% endfor %}
+</div></div>
+<script defer src="{% static 'drawing.js' %}"></script>
+<script defer src="{% static 'trace-shapes.js' %}"></script>
+<script defer src="{% static 'watch-garden.js' %}"></script>
+{% else %}<p>Add a learner in the Family garden to watch their lessons here.</p>{% endif %}
+{% endblock %}

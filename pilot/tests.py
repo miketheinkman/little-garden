@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from .models import Assignment, Learner
 from .views import LESSONS
@@ -423,3 +423,58 @@ class QueueAndPaceTests(TestCase):
         self.assertEqual(fit(samples(5000,2)),fit(samples(60000,2)))
         self.assertGreater(fit(samples(5000,6)),fit(samples(60000,6)))
         self.assertEqual(fit(samples(None,6)),fit(samples(5000,6)))
+
+
+@override_settings(CACHES={key: {"BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+                                "LOCATION": f"coview-tests-{key}"} for key in ("default", "coview")})
+class CoViewTests(TestCase):
+    def setUp(self):
+        from django.core.cache import caches
+        from django.test import Client
+        caches["coview"].clear()
+        user = get_user_model().objects.create_user("watching-parent")
+        self.client.force_login(user)
+        self.child = Learner.objects.create(parent=user, nickname="Fern")
+        self.device = Client()
+        session = self.device.session
+        session["child"] = self.child.pk
+        session.save()
+        self.share = f"/co-view/share/{self.child.pk}/"
+        self.row = self.child.assignment_set.create(lesson="signs-v1")
+        self.payload = {"screen": "lesson", "assignment": self.row.pk, "step": 0, "typed": "<b>sun</b>"}
+
+    def test_live_frame_lifetime_and_read_only_progress(self):
+        from django.core.cache import caches
+        self.assertFalse(self.device.post(self.share, self.payload).json()["watching"])
+        self.assertIsNone(caches["coview"].get(f"frame:{self.child.pk}"))
+        def watch():
+            return self.client.post("/co-view/watch/", {"child": "all"}).json()["children"][str(self.child.pk)]
+        self.assertIsNone(watch())
+        self.assertTrue(self.device.post(self.share, self.payload).json()["watching"])
+        frame = watch()
+        self.assertEqual(frame["state"]["typed"], "<b>sun</b>")
+        self.assertNotIn("<b>sun</b>", frame["html"])
+        self.row.refresh_from_db()
+        self.assertEqual(self.row.step, 0)
+        self.assertFalse(self.row.samples.exists())
+        self.row.step = 1
+        self.row.save()
+        self.assertIsNone(watch())
+        self.assertEqual(self.device.post(self.share, self.payload).status_code, 404)
+        self.device.post(self.share, {"screen": "garden"})
+        self.assertIn("My lessons", watch()["html"])
+        caches["coview"].delete(f"watch:{self.child.pk}")
+        self.assertFalse(self.device.post(self.share, {"screen": "garden"}).json()["watching"])
+        self.assertIsNone(watch())
+
+    def test_household_and_child_boundaries(self):
+        outsider = get_user_model().objects.create_user("other-family")
+        other = Learner.objects.create(parent=outsider, nickname="Clover")
+        wrong = other.assignment_set.create(lesson="keys-v1")
+        self.assertEqual(self.client.post("/co-view/watch/", {"child": other.pk}).status_code, 404)
+        self.assertEqual(self.device.post("/co-view/watch/", {"child": "all"}).status_code, 302)
+        self.assertEqual(self.client.post(self.share, self.payload).status_code, 404)
+        self.assertEqual(self.device.post(f"/co-view/share/{other.pk}/", self.payload).status_code, 404)
+        frames = self.client.post("/co-view/watch/", {"child": "all"}).json()["children"]
+        self.assertEqual(list(frames), [str(self.child.pk)])
+        self.assertEqual(self.device.post(self.share, dict(self.payload, assignment=wrong.pk)).status_code, 404)

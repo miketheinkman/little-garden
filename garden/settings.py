@@ -157,3 +157,12 @@ EMAIL_BACKEND = (
 if not EMAIL_HOST:
     EMAIL_FILE_PATH.mkdir(mode=0o700, exist_ok=True)
     EMAIL_FILE_PATH.chmod(0o700)
+
+# Both pilot listeners share short-lived co-view frames through the user's runtime directory.
+CACHES = {
+    "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"},
+    "coview": {
+        "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+        "LOCATION": (Path(os.environ.get("XDG_RUNTIME_DIR", BASE_DIR)) if LOCAL_PILOT else BASE_DIR) / ".little-garden-live",
+    },
+}
