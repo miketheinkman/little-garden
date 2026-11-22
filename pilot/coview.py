@@ -64,12 +64,12 @@ def broadcast(request, pk):
             step = int(request.POST["step"])
         except (KeyError, ValueError):
             return HttpResponseBadRequest()
-        row = Assignment.objects.filter(pk=row_id, learner_id=pk, step=step, completed=None, removed_at=None).first()
-        if row:
-            state = None if source and request.POST.get("metadata") == "1" else lesson_state(LESSONS[row.lesson]["kind"], request.POST)
-            live.set(f"frame:{pk}", {"screen": "lesson", "row": row.pk, "step": step, "state": state, "source": source}, LEASE_SECONDS)
-        elif not live.get(f"celebration:{pk}:{row_id}:{step}"):
-            raise Http404
+        row = get_object_or_404(Assignment, pk=row_id, learner_id=pk, removed_at=None)
+        if row.completed or row.step != step:
+            if row.step != step + 1 or not live.get(f"celebration:{pk}:{row_id}:{step}"):
+                raise Http404
+        state = None if source and request.POST.get("metadata") == "1" else lesson_state(LESSONS[row.lesson]["kind"], request.POST)
+        live.set(f"frame:{pk}", {"screen": "lesson", "row": row.pk, "step": step, "state": state, "source": source}, LEASE_SECONDS)
     else:
         return HttpResponseBadRequest()
     signal = matchmaker.child_signal(pk, source, request.POST) if watching else {}
@@ -92,21 +92,25 @@ def current_frame(child, signal):
         rows = child.assignment_set.filter(completed=None, removed_at=None)
         titles = [(row.round_snapshot or LESSONS[row.lesson])["title"] for row in rows]
         return {"source": frame.get("source", ""), "html": render_to_string("coview_scene.html", {"garden": True, "titles": titles})}
-    row = child.assignment_set.filter(pk=frame["row"], step=frame["step"], completed=None, removed_at=None).first()
+    step = frame["step"]
+    row = child.assignment_set.filter(pk=frame["row"], removed_at=None).first()
     if not row:
-        result = caches["coview"].get(f"celebration:{child.pk}:{frame['row']}:{frame['step']}")
-        if result:
-            return {"source": frame.get("source", ""), "html": render_to_string("coview_scene.html", {"celebration": result})}
         return None
+    result = None
+    if row.completed or row.step != step:
+        # The answer is saved before the child finishes watching their animation.
+        result = caches["coview"].get(f"celebration:{child.pk}:{row.pk}:{step}")
+        if row.step != step + 1 or not result:
+            return None
     source = frame.get("source", "")
     if source and signal.get("source") == source and signal.get("direct") is True:
-        return {"source": source, "reuse": True}
+        return {"source": source, "reuse": True, "celebration": result}
     lesson = row.round_snapshot or LESSONS[row.lesson]
-    item = lesson["items"][row.step]
+    item = lesson["items"][step]
     if "shape" in item:
         item = art_item(item)
-    return {"source": frame.get("source", ""), "html": render_to_string("coview_scene.html", {"lesson": lesson, "item": item, "step": row.step}),
-            "state": frame["state"]}
+    html = render_to_string("coview_scene.html", {"lesson": lesson, "item": item, "step": step, "seed": row.pk + step})
+    return {"source": source, "html": html, "state": frame["state"], "celebration": result}
 
 
 @never_cache

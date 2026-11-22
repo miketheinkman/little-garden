@@ -45,11 +45,15 @@
     if (tile.sceneHTML !== html) {
       // The server renders this fragment from household-scoped curriculum and escaped text.
       scene.innerHTML = html;
-      const answer = scene.querySelector("[data-answer-result]");
-      if (answer) answer.append(gardenAnswerNote(answer.dataset.answerResult));
       tile.sceneHTML = html;
     }
     if (frame?.state) draw(scene, frame.state);
+    const slot = scene.querySelector("[data-success-seed]");
+    const result = frame?.celebration || frame?.state?.celebration || "";
+    if (slot && result !== (slot.dataset.result || "")) {
+      slot.dataset.result = result;
+      slot.replaceChildren(...(result ? [gardenAnswerNote(result, Number(slot.dataset.successSeed))] : []));
+    }
     const response = tile.querySelector(".live-response");
     response.textContent = frame?.response || "";
     response.hidden = !frame?.response;
@@ -93,6 +97,7 @@
         tile.direct = {
           typed: typeof data.typed === "string" ? data.typed.slice(0, 80) : "",
           pixels: typeof data.pixels === "string" && /^[0-5]{768}$/.test(data.pixels) ? data.pixels : "",
+          celebration: ["correct", "finished"].includes(data.celebration) ? data.celebration : "",
           retry: data.retry === "1", count: bound(data.count, 12), percent: bound(data.percent, 100),
           x: data.x == null ? null : bound(data.x, 100), y: data.y == null ? null : bound(data.y, 100)
         };
@@ -108,7 +113,7 @@
   }
   function receive(tile, frame, reply) {
     if (frame?.reuse && frame.source === tile.frame?.source) {
-      frame = {...tile.frame, response: frame.response};
+      frame = {...tile.frame, response: frame.response, celebration: frame.celebration};
     }
     tile.frame = frame;
     connect(tile, frame?.source || "");

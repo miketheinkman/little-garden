@@ -56,6 +56,7 @@ class VisualReview(StaticLiveServerTestCase):
         fern = Learner.objects.get(pk=self.child_id)
         ash = Learner.objects.create(parent=fern.parent, nickname="Ash")
         art = assign_lesson(fern, "color-v1")
+        seen_variants = set()
         typing_rows = iter([assign_lesson(ash, "signs-v1", variation=0) for _ in range(4)])
         trail = assign_lesson(fern, "lines-v1")
         parent = Client()
@@ -132,9 +133,28 @@ class VisualReview(StaticLiveServerTestCase):
                                 expect(ash_tile.locator(".live-status")).to_have_text("Live · Server relay")
                                 expect(ash_tile.locator("output")).to_have_text("relay works", timeout=8000)
                                 self.capture(viewer, "coview-relay-recovery")
+                            prompt = ash_tile.locator(".live-scene h3")
+                            prompt_text = prompt.inner_text()
+                            question_node = prompt.element_handle()
                             typist.locator('input[name="answer"]').fill("red pot")
                             typist.get_by_role("button", name="Check sign").click()
-                            expect(ash_tile.locator(".answer-party")).to_be_visible()
+                            child_party = typist.locator(".answer-party")
+                            expect(child_party).to_be_visible()
+                            variant = child_party.get_attribute("data-variant")
+                            seen_variants.add(variant)
+                            party = ash_tile.locator(".answer-party")
+                            expect(party).to_have_attribute("data-variant", variant)
+                            expect(prompt).to_have_text(prompt_text)
+                            self.assertTrue(party.evaluate("""el => el.getBoundingClientRect().top >=
+                                el.closest(".live-scene").querySelector("h3").getBoundingClientRect().bottom"""))
+                            self.assertTrue(question_node.evaluate("(el) => el.isConnected"))
+                            expect(ash_tile.locator("output")).to_have_text("red pot")
+                            self.assertGreater(party.evaluate("el => el.getAnimations({subtree: true}).length"), 1)
+                            # Capture the actual animation mid-flight on the mirror.
+                            party.evaluate("""el => el.getAnimations({subtree:true}).forEach(anim => {
+                                anim.pause(); anim.currentTime = 520;
+                            })""")
+                            ash_tile.screenshot(path=self.out / f"{self.variant}-mirror-success.png")
                             expect(ash_tile).to_contain_text("Answered red pot")
                             expect(ash_tile).to_contain_text("Step 2 of 3")
                             picker.select_option(str(fern.pk))
@@ -163,6 +183,7 @@ class VisualReview(StaticLiveServerTestCase):
                             for context in contexts:
                                 context.close()
             browser.close()
+        self.assertEqual(seen_variants, {"popper", "bloom", "stars", "butterfly"})
 
     def exercise(self, page, theme, kept_id):
         errors = []

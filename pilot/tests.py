@@ -502,6 +502,33 @@ class CoViewTests(TestCase):
         self.assertEqual(list(frames), [str(self.child.pk)])
         self.assertEqual(self.device.post(self.share, dict(self.payload, assignment=wrong.pk)).status_code, 404)
 
+    def test_mirror_keeps_the_answered_step_until_celebration_ends(self):
+        from django.core.cache import caches
+        def watch():
+            return self.client.post("/co-view/watch/", {"child": "all"}).json()["children"][str(self.child.pk)]
+        items = LESSONS[self.row.lesson]["items"]
+        last_step = self.row.step = len(items) - 1
+        answer = items[last_step]["answer"]
+        self.row.save()
+        watch()
+        payload = dict(self.payload, step=last_step, typed=answer)
+        self.device.post(self.share, payload)
+        original = watch()["html"]
+        with self.captureOnCommitCallbacks(execute=True):
+            reply = self.device.post(f"/play/{self.row.pk}/", {"step": last_step, "answer": answer},
+                                     HTTP_ACCEPT="application/json")
+        self.assertEqual(reply.json()["result"], "correct")
+        self.row.refresh_from_db()
+        self.assertIsNotNone(self.row.completed)
+        self.assertEqual(self.device.post(self.share, payload).status_code, 200)
+        frame = watch()
+        self.assertEqual(frame["html"], original)
+        self.assertEqual(frame["celebration"], "correct")
+        self.assertEqual(frame["state"]["typed"], answer)
+        caches["coview"].delete(f"celebration:{self.child.pk}:{self.row.pk}:{last_step}")
+        self.assertIsNone(watch())
+        self.assertEqual(self.device.post(self.share, payload).status_code, 404)
+
     def test_peer_match_is_scoped_to_the_live_page_and_viewer(self):
         import json
         from django.core.cache import caches

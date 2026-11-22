@@ -38,7 +38,7 @@
       }
       if (!reply.next) throw new Error();
       if (reply.result === "correct" || reply.result === "finished") {
-        feedback.replaceChildren(gardenAnswerNote(reply.result));
+        feedback.replaceChildren(gardenAnswerNote(reply.result, Number(feedback.dataset.successSeed)));
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
       location.assign(reply.next);

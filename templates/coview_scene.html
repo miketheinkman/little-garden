@@ -1,10 +1,10 @@
-{% if celebration %}<div data-answer-result="{{ celebration }}"></div>
-{% elif garden %}
+{% if garden %}
 <h3>My lessons</h3>
 {% if titles %}<ul>{% for title in titles %}<li>{{ title }}</li>{% endfor %}</ul>{% else %}<p>Time for a garden break!</p>{% endif %}
 {% else %}
 <p class="live-step">{{ lesson.title }} · Step {{ step|add:1 }} of {{ lesson.items|length }}</p>
 <h3>{{ item.prompt }}</h3>
+<div data-success-seed="{{ seed }}" aria-live="polite"></div>
 {% if lesson.participation == "Parent required" %}<p>Parent required · {{ lesson.prep }}</p>{% endif %}
 {% if item.display %}<p class="display">{{ item.display }}</p>{% endif %}
 {% if item.mask %}

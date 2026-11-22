@@ -64,6 +64,8 @@
     const data = {};
     if (!form || !watching) return data;
     if (document.querySelector('#native-retry, #answer-feedback .retry-note')) data.retry = "1";
+    const party = document.querySelector("#answer-feedback .answer-party");
+    if (party) data.celebration = party.dataset.result;
     switch (form.dataset.kind) {
       case "draw": case "mirror": case "color": data.pixels = form.elements.pixels.value; break;
       case "type": data.typed = form.elements.answer.value.slice(0, 80); break;
