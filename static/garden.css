@@ -342,4 +342,4 @@ main:has(#live-room) {max-width:1600px}
   display:grid;place-items:center;min-height:12rem;margin:1.25rem 0;
   background:var(--wash);border:1px solid var(--line);border-radius:1.4rem;
 }
-.tier-preview .answer-party {position:static;transform:none;z-index:auto}
+.tier-preview .answer-party[data-variant="beanstalk"] {position:static;transform:none;z-index:auto;max-width:100%;text-wrap:balance}
