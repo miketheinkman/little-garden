@@ -91,6 +91,12 @@ class VisualReview(StaticLiveServerTestCase):
                         self.capture(page, "library-filter-queued")
                         kid.goto(self.live_server_url)
                         expect(kid.get_by_role("link", name="Start lesson")).to_have_count(6)
+                        page.goto(library + "middle-sound-v1/preview/0/?v=1")
+                        page.get_by_role("button", name="Hear directions").click()
+                        page.wait_for_function("document.querySelector('#directions-audio').currentTime > 0")
+                        page.get_by_role("button", name="Hear the word").click()
+                        page.wait_for_function("document.querySelector('.word-station audio').currentTime > 0")
+                        self.capture(page, "piper-preview")
                         page.goto(library + "case-match-v1/preview/0/")
                         page.get_by_role("button", name="Add to Pip’s queue").click()
                         expect(page.locator(".preview-tools")).to_contain_text("added to Pip’s queue")
@@ -105,7 +111,7 @@ class VisualReview(StaticLiveServerTestCase):
                             expect(tile.locator("h3")).to_have_text(item["prompt"], timeout=10000)
                             if key in ("middle-sound-v1", "digraphs-v1"):
                                 kid.get_by_role("button", name="Hear the word").click()
-                                kid.wait_for_function("document.querySelector('audio').currentTime > 0")
+                                kid.wait_for_function("document.querySelector('.word-station audio').currentTime > 0")
                                 expect(tile).to_contain_text("Spoken word · " + item["word"])
                             if key == "ten-v1":
                                 cells = kid.locator(".ten-frame span")
@@ -165,10 +171,7 @@ class VisualReview(StaticLiveServerTestCase):
                     for ctx, session in zip(contexts, (household, device)):
                         ctx.add_cookies([{"name": "sessionid", "value": session.cookies["sessionid"].value,
                                           "url": self.live_server_url}])
-                    contexts[1].add_init_script("""window.spoken = [];
-                        Object.defineProperty(window, "speechSynthesis", {value: {
-                          cancel() {}, speak(msg) {window.spoken.push([msg.text, msg.voice, msg.rate, msg.pitch])}
-                        }});""")
+                    contexts[1].add_init_script('Object.defineProperty(window, "speechSynthesis", {value: undefined})')
                     viewer, kid = [ctx.new_page() for ctx in contexts]
                     errors = []
                     for page in (viewer, kid):
@@ -195,11 +198,23 @@ class VisualReview(StaticLiveServerTestCase):
                             expect(board.locator("output")).to_have_text(item["answer"])
                         elif name in ("rhymes", "syllables"):
                             kid.get_by_role("button", name="Hear directions").click()
+                            kid.wait_for_function("document.querySelector('#directions-audio').currentTime > 0")
                             kid.get_by_role("button", name="Hear the word").click()
-                            directions, word = kid.evaluate("window.spoken")
-                            self.assertEqual(directions[0], item["prompt"])
-                            self.assertEqual(word[0], item["word"])
-                            self.assertEqual(directions[1:], word[1:])
+                            kid.wait_for_function("document.querySelector('.word-station audio').currentTime > 0")
+                            self.assertTrue(kid.locator("#directions-audio").evaluate("el => el.paused"))
+                            path = kid.locator(".word-station audio").get_attribute("src")
+                            self.assertTrue(path.endswith("/words/" + item["word"] + ".ogg"))
+                            if name == "rhymes":
+                                kid.route("**/phonics/words/*.ogg*", lambda route: route.abort())
+                                kid.locator(".word-station audio").evaluate("audio => audio.src += '?offline-test'")
+                                kid.get_by_role("button", name="Hear the word").click()
+                                expect(kid.locator("#audio-status")).to_be_visible()
+                                expect(kid.locator(".word-station details p")).to_be_visible()
+                                self.capture(kid, "piper-word-offline")
+                                kid.unroute("**/phonics/words/*.ogg*")
+                                kid.get_by_role("button", name="Hear the word").click()
+                                kid.wait_for_function("document.querySelector('.word-station audio').currentTime > 0")
+                                expect(kid.locator("#audio-status")).to_be_hidden()
                             if name == "syllables":
                                 board.get_by_role("button", name="Tap the drum").click()
                         elif name == "magic-e":

@@ -8,9 +8,7 @@
 {% elif item.word %}
 {% if mirror %}<p class="display">Spoken word · {{ item.word }}</p>{% else %}
 <div class="word-station">
-  {% with asset='phonics/'|add:item.word|add:'.wav' %}
-  <audio controls preload="none" aria-label="Hear the word"><source src="{% static asset %}" type="audio/wav"></audio>
-  {% endwith %}
+  <audio controls preload="none" aria-label="Hear the word" src="{% static word_clip %}"></audio>
   <button type="button" data-hear-word="{{ item.word }}" hidden>Hear the word</button>
   <details><summary>Show the word</summary><p>{{ item.word }}</p></details>
 </div>{% endif %}

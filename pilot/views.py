@@ -15,6 +15,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 
 from .themes import THEMES, THEME_CHOICES, assignment_lesson, summary, themed_round
+from .audio import lesson_clips
 from .art import art_item, evaluate
 from .coview import recent_response
 from .models import SkillSample
@@ -253,6 +254,7 @@ def preview(request, pk, key, step):
     if "shape" in item:
         item = art_item(item)
     context["item"] = item
+    context.update(lesson_clips(item))
     if request.method == "POST":
         if request.POST.get("action") == "skip":
             return redirect(preview_url(step+1))
@@ -426,4 +428,4 @@ def play(request, pk):
         if request.headers.get("Accept") == "application/json":
             return JsonResponse({"result": "retry"})
         error = "Take another look. You can try again."
-    return render(request, "play.html", {"assignment_id": row.pk, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})
+    return render(request, "play.html", {**lesson_clips(item), "assignment_id": row.pk, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})

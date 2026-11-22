@@ -12,6 +12,7 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements-visual.txt
       - run: python -m playwright install --with-deps chromium
+      - run: python manage.py lesson_audio_catalog --check
       - run: python manage.py test
       - run: python manage.py test qa.visual
       - uses: actions/upload-artifact@v4

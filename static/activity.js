@@ -1,44 +1,58 @@
 function startActivity(form, signal) {
-  const listen = document.querySelector("#listen");
-  const audio = document.querySelector(".word-station audio");
+  const directions = document.querySelector("#directions-audio");
+  const word = document.querySelector(".word-station audio");
+  const status = document.querySelector("#audio-status") || document.createElement("span");
   const synth = window.speechSynthesis;
-  let utterance;
+  let playback = 0;
 
-  function speak(text, fallback) {
-    utterance = null;
-    audio?.pause();
-    if (!synth || !window.SpeechSynthesisUtterance) { fallback?.(); return; }
-    try {
-      synth.cancel();
-      const message = new SpeechSynthesisUtterance(text);
-      utterance = message;
-      message.rate = 0.93;
-      message.pitch = 1.13;
-      message.onerror = event => {
-        if (utterance === message && form.isConnected && !["interrupted", "canceled"].includes(event.error)) fallback?.();
-      };
-      synth.speak(message);
-    } catch { fallback?.(); }
-  }
-
-  if (synth && window.SpeechSynthesisUtterance) {
-    listen.hidden = false;
-    listen.onclick = () => speak(document.querySelector("#prompt").textContent);
-  }
-  if (audio) {
-    const playWord = document.querySelector("[data-hear-word]");
-    playWord.hidden = false;
-    audio.controls = false;
-    playWord.onclick = () => speak(playWord.dataset.hearWord, () => {
-      audio.currentTime = 0;
-      audio.play().catch(() => { audio.closest(".word-station").querySelector("details").open = true; });
-    });
-  }
-  signal.addEventListener("abort", () => {
-    utterance = null;
+  function stopPlayback() {
+    playback++;
+    directions?.pause();
+    word?.pause();
     synth?.cancel();
-    audio?.pause();
-  }, {once: true});
+  }
+
+  function connectAudio(button, audio, text) {
+    button.hidden = false;
+    if (audio) audio.controls = false;
+    button.onclick = async () => {
+      stopPlayback();
+      const attempt = playback;
+      status.hidden = true;
+      const stillHere = () => attempt === playback && form.isConnected && !signal.aborted;
+      function revealText() {
+        if (!stillHere()) return;
+        if (word && audio === word) word.closest(".word-station").querySelector("details").open = true;
+        status.textContent = audio === word ? "Audio unavailable. The word is shown below." : "Audio unavailable. Read the directions above.";
+        status.hidden = false;
+      }
+      try {
+        if (!audio) throw new Error("This saved page has no recording.");
+        if (audio.error) audio.load();
+        audio.currentTime = 0;
+        await audio.play();
+      } catch {
+        if (!stillHere()) return;
+        // Also covers old saved rounds whose prompt has since left the catalog.
+        if (!synth || !window.SpeechSynthesisUtterance) { revealText(); return; }
+        try {
+          const message = new SpeechSynthesisUtterance(text);
+          message.rate = .93;
+          message.pitch = 1.13;
+          message.onerror = revealText;
+          synth.speak(message);
+        } catch { revealText(); }
+      }
+    };
+  }
+
+  connectAudio(document.querySelector("#listen"), directions, document.querySelector("#prompt").textContent);
+  if (word) {
+    const button = document.querySelector("[data-hear-word]");
+    connectAudio(button, word, button.dataset.hearWord);
+  }
+  signal.addEventListener("abort", stopPlayback, {once: true});
+  window.addEventListener("pagehide", stopPlayback, {signal});
   const harvest = form.querySelector(".harvest");
   if (harvest) startHarvest(harvest, form);
 

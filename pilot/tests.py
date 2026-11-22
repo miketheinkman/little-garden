@@ -652,7 +652,7 @@ class LessonThemeTests(TestCase):
                             if item["answer"].isdigit() and key != "key-check-v1":
                                 self.assertEqual(before["answer"], item["answer"])
                             if "word" in item:
-                                self.assertTrue((Path(settings.BASE_DIR)/"static"/"phonics"/(item["word"] + ".wav")).is_file())
+                                self.assertTrue((Path(settings.BASE_DIR)/"static"/"phonics"/"words"/(item["word"] + ".ogg")).is_file())
                             if "pictures" in item:
                                 self.assertIn(item["answer"], [pic["label"] for pic in item["pictures"]])
                             if "shape" in item:
