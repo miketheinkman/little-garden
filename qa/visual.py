@@ -331,6 +331,21 @@ class VisualReview(StaticLiveServerTestCase):
                         page.get_by_text("How lesson tiers and fit work").click()
                         expect(page.locator('[data-lesson="ten-v1"]')).to_be_visible()
                         self.capture(page, "tier-filters")
+                        preview = page.get_by_role("link", name="Preview the tier celebration")
+                        preview_url = self.live_server_url + reverse("tier_preview")
+                        expect(preview).to_have_attribute("href", reverse("tier_preview"))
+                        # Use the direct link as a signed-out visitor. Replaying recreates the real animation.
+                        with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme,
+                                                 reduced_motion="reduce" if theme == "dark" else "no-preference") as guest:
+                            demo = guest.new_page()
+                            demo.goto(preview_url)
+                            note = demo.locator('.tier-preview [data-variant="beanstalk"]')
+                            expect(note).to_contain_text("Up to tier 3!")
+                            first_note = note.element_handle()
+                            demo.get_by_role("button", name="Replay the climb").click()
+                            self.assertFalse(first_note.evaluate("el => el.isConnected"))
+                            self.assertEqual(note.locator(".climber").evaluate("el => el.getAnimations().length"), int(theme == "light"))
+                            self.capture(demo, "tier-preview")
                         page.get_by_role("button", name="Add all (", exact=False).click()
                         expect(page.locator("[data-empty]")).to_be_visible()
                         kid.goto(self.live_server_url)

@@ -8,6 +8,7 @@ from pilot.dashboard import dashboard
 urlpatterns = [
     path("", views.home, name="home"),
     path("welcome/", TemplateView.as_view(template_name="welcome.html"), name="welcome"),
+    path("preview/tier-promotion/", TemplateView.as_view(template_name="tier_preview.html"), name="tier_preview"),
     path("mission/", TemplateView.as_view(template_name="mission.html"), name="mission"),
     path("signup/", views.signup, name="signup"),
     path("login/", LoginView.as_view(template_name="account.html"), name="login"),

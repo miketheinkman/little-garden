@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Tier celebration preview · Little Garden{% endblock %}
+{% block content %}
+<h1>Tier celebration preview</h1>
+<p>Here’s what a learner sees when they reach a new tier in number sense.</p>
+<div class="tier-preview" role="status">
+  <noscript>Enable JavaScript to watch the beanstalk climb.</noscript>
+</div>
+<button id="replay-climb" type="button" hidden>Replay the climb</button>
+<script defer src="{% static 'answer-note.js' %}?v=20261122c"></script>
+<script defer src="{% static 'tier-preview.js' %}"></script>
+{% endblock %}
