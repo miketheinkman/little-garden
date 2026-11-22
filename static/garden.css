@@ -137,3 +137,11 @@ footer{border-top:1px solid var(--line);margin-top:2rem}
 
 .brand img{vertical-align:middle;margin-right:.15rem}
 .skip-step{margin-top:1rem;border-top:1px solid var(--line);padding-top:.4rem}
+
+.preview-steps {display:flex; align-items:center; flex-wrap:wrap; gap:.25rem}
+.preview-steps a, .preview-steps strong {
+  display:grid; place-items:center; min-width:2.75rem; min-height:2.75rem;
+  border-radius:.6rem; background:var(--wash);
+}
+.preview-steps strong {background:var(--button); color:var(--button-text)}
+@media (max-width:480px) { .preview-steps span {flex-basis:100%} }

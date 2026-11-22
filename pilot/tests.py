@@ -43,7 +43,8 @@ class FamilyPilotTests(TestCase):
         self.assertEqual(self.client.post(self.manage, {"action": "play"}).status_code, 404)
 
     def test_library_and_reordering(self):
-        for key in LESSONS:
+        from .practice import CURRENT_LESSONS
+        for key in CURRENT_LESSONS:
             self.client.post(self.manage, {"action": "assign", "lesson": key})
         last = self.child.assignment_set.last()
         self.client.post(self.manage, {"action": "first", "row": last.pk})
@@ -227,6 +228,24 @@ class PracticeRoundTests(TestCase):
             self.assertNotEqual(examples[1], examples[2], key)
         self.assertEqual(LESSONS, original)
 
+    def test_five_prompt_rounds_preserve_level_and_spaced_recall(self):
+        from .practice import CURRENT_VERSION, build_round
+
+        for original, current in CURRENT_VERSION.items():
+            for number in (0, 1, 17, 999):
+                lesson = build_round(current, number)
+                items = lesson["items"]
+                self.assertEqual(items[:3], build_round(original, number)["items"])
+                self.assertEqual(len(items), 5)
+                self.assertEqual(items[3]["answer"], items[0]["answer"])
+                if lesson["kind"] == "key":
+                    self.assertNotIn(items[4]["answer"], [item["answer"] for item in items[:3]])
+                else:
+                    self.assertEqual(items[4]["answer"], items[1]["answer"])
+                    for old, new in zip(items[:2], items[3:]):
+                        self.assertNotEqual(old["display"], new["display"])
+                        self.assertEqual(len(new["display"].split()), int(new["answer"]))
+
     def test_preview_assign_resume_repeat(self):
         from .practice import build_round
         parent = get_user_model().objects.create_user("practice-parent")
@@ -345,7 +364,7 @@ class ProgressionTests(TestCase):
         self.open_child()
         self.assertContains(self.client.get("/"), "My progress")
         self.assertContains(self.client.get("/"), "9 scored steps across 3 rounds")
-        self.assertNotIn("count1-v1",[s["key"] for s in progress.recommendations()])
+        self.assertNotIn("count1-v2",[s["key"] for s in progress.recommendations()])
         self.assertEqual(progress.label(LESSONS["keys-v1"]),"Placement pending")
 
     def test_weak_strand_is_prioritized_and_checkins_come_due(self):

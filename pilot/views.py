@@ -17,7 +17,7 @@ from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 from .art import art_item, evaluate
 from .models import SkillSample
 from .progression import Progress, item_score
-from .practice import LESSONS, build_round, round_count
+from .practice import CURRENT_LESSONS, CURRENT_VERSION, FIVE_PROMPT_ROUNDS, LESSONS, build_round, round_count
 
 
 def lesson_response(request, lesson, item):
@@ -109,7 +109,8 @@ def requested_round(key, value):
 
 
 def next_round(child, key):
-    last = child.assignment_set.filter(lesson=key).order_by("-pk").values_list("variation", flat=True).first()
+    versions = [key, key.replace("-v2", "-v1")] if key in FIVE_PROMPT_ROUNDS else [key]
+    last = child.assignment_set.filter(lesson__in=versions).order_by("-pk").values_list("variation", flat=True).first()
     return 0 if last is None else (last+1) % round_count(key)
 
 
@@ -140,10 +141,11 @@ def library(request, pk):
     help_mode = request.GET.get("participation", "")
     upcoming = {}
     for key, number in child.assignment_set.order_by("pk").values_list("lesson", "variation"):
+        key = CURRENT_VERSION.get(key, key)
         upcoming[key] = (number+1) % round_count(key)
     progress = Progress(child)
     groups = {}
-    for key, lesson in LESSONS.items():
+    for key, lesson in CURRENT_LESSONS.items():
         if category and lesson["category"] != category:
             continue
         if help_mode and lesson["participation"] != help_mode:

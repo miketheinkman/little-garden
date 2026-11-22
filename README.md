@@ -60,6 +60,8 @@ For a local Gmail sender with Google 2-Step Verification and app passwords enabl
 
 ## Practice rounds
 
+New rounds of Meet the letter keys, Number key scavenger hunt, Count the seeds, and Count the sprouts have five prompts. The fourth revisits the first target. Key hunts finish with a new key, and counting rounds revisit a familiar quantity with different pictures. The original three-step versions remain available to saved assignments and feedback links.
+
 Parents can remove one copy of an assignment from a learner’s queue, including after it has started. Previously scored answers remain in the skill history. A learner can skip any question, including a check-in question. Skipping adds no answer score or retry. The weekly record lists answered and skipped steps separately.
 
 The first assignment uses the original round. Reassigning a lesson from the library advances from the learner’s most recently assigned round. In preview, browse rounds and assign the exact one on screen. Assignments store their questions and answers together so retries and resumed sessions are consistent. Older assignments continue using their original version. Stories and guided investigations rotate through three authored sequences. Practice activities use repeatable variations within the lesson’s skill and difficulty range. Preview feedback records the round and step.

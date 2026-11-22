@@ -9,6 +9,7 @@ from django.utils import timezone
 from playwright.sync_api import expect, sync_playwright
 
 from pilot.models import Learner, SkillSample
+from pilot.views import assign_lesson
 
 
 class VisualReview(StaticLiveServerTestCase):
@@ -34,8 +35,8 @@ class VisualReview(StaticLiveServerTestCase):
                 with self.subTest(device=device, theme=theme):
                     self.variant = f"{device}-{theme}"
                     learner = Learner.objects.get(pk=self.child_id)
-                    kept = learner.assignment_set.create(lesson="keys-v1")
-                    duplicate = learner.assignment_set.create(lesson="keys-v1")
+                    kept = assign_lesson(learner, "keys-v2", variation=0)
+                    duplicate = assign_lesson(learner, "keys-v2", variation=0)
                     with sync_playwright() as pw:
                         browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
                         with browser.new_context(viewport={"width": width, "height": 820}, color_scheme="light") as ctx:
@@ -45,7 +46,7 @@ class VisualReview(StaticLiveServerTestCase):
                     self.assertIsNotNone(duplicate.removed_at)
                     kept.refresh_from_db()
                     self.assertEqual(kept.skipped, 2)
-                    self.assertGreater(kept.samples.get().ms_per_key, 0)
+                    self.assertGreater(kept.samples.get(step=0).ms_per_key, 0)
 
     def exercise(self, page, theme, kept_id):
         errors = []
@@ -75,6 +76,12 @@ class VisualReview(StaticLiveServerTestCase):
 
         page.get_by_role("link", name="Browse lesson library").click()
         self.capture(page, "library")
+        card = page.locator("article").filter(has=page.get_by_role("heading", name="Count the seeds", exact=True))
+        expect(card).to_contain_text("5 steps")
+        card.get_by_role("link", name="Preview lesson").click()
+        page.get_by_role("navigation", name="Preview steps").get_by_role("link", name="5").click()
+        expect(page.get_by_text("Step 5 of 5", exact=True)).to_be_visible()
+        self.capture(page, "five-count-preview")
         page.goto(self.live_server_url + reverse("preview", args=[self.child_id,"color-v1",0]))
         board = page.locator("#board")
         board.focus()
@@ -101,9 +108,14 @@ class VisualReview(StaticLiveServerTestCase):
         self.capture(page, "skip-question")
         page.locator("body").click(position={"x": 1, "y": 1})
         page.keyboard.press("s")
-        expect(page.get_by_text("Step 2 of 3", exact=True)).to_be_visible()
+        expect(page.get_by_text("Step 2 of 5", exact=True)).to_be_visible()
         page.get_by_role("button", name="Skip this question").click()
         page.get_by_role("button", name="Skip this question").click()
+        expect(page.get_by_text("Step 4 of 5", exact=True)).to_be_visible()
+        page.keyboard.press("s")
+        expect(page.get_by_text("Step 5 of 5", exact=True)).to_be_visible()
+        self.capture(page, "five-key-finish")
+        page.keyboard.press("m")
         expect(page).to_have_url(self.live_server_url + "/")
         page.get_by_role("link", name="Parent sign in").click()
         page.locator("#id_username").fill("reviewer")

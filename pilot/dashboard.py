@@ -16,7 +16,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 
 from .models import Assignment, LessonFeedback, FeedbackEmailPreference, FeedbackReply
-from .views import LESSONS
+from .practice import CURRENT_VERSION, FIVE_PROMPT_ROUNDS, LESSONS
 
 
 def review_feedback(request):
@@ -73,7 +73,12 @@ def dashboard(request):
         return review_feedback(request)
     selected = request.GET.get("lesson", "")
     flag = request.GET.get("flag", "")
-    lessons = {key: lesson for key, lesson in LESSONS.items() if not selected or selected == key}
+    catalog = {
+        key: dict(lesson, title=f"{lesson['title']} ({len(lesson['items'])} prompts)")
+        if key in CURRENT_VERSION or key in FIVE_PROMPT_ROUNDS else lesson
+        for key, lesson in LESSONS.items()
+    }
+    lessons = {key: lesson for key, lesson in catalog.items() if not selected or selected == key}
     assignments = Assignment.objects.filter(lesson__in=lessons, removed_at=None)
     notes = LessonFeedback.objects.filter(lesson__in=lessons)
     metrics = {
@@ -111,6 +116,6 @@ def dashboard(request):
         note.title = lessons[note.lesson]["title"]
         note.submission = uuid.uuid4()
     return render(request, "dashboard.html", {
-        "lessons": LESSONS, "selected": selected, "flags": LessonFeedback.Kind.choices,
+        "lessons": catalog, "selected": selected, "flags": LessonFeedback.Kind.choices,
         "flag": flag, "state": state, "rows": rows, "notes": page, "totals": totals,
     })

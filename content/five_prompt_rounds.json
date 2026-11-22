@@ -1,0 +1,18 @@
+{
+  "keys-v2": [
+    {"prompt": "Find S again.", "display": "S", "answer": "S", "choices": ["A", "S", "T"]},
+    {"prompt": "Can you find the M key?", "display": "M", "answer": "M", "choices": ["M", "N", "S"]}
+  ],
+  "number-keys-v2": [
+    {"prompt": "Find 5 again.", "display": "5", "answer": "5", "choices": ["7", "5", "2"]},
+    {"prompt": "Can you find the 3 key?", "display": "3", "answer": "3", "choices": ["5", "2", "3"]}
+  ],
+  "count1-v2": [
+    {"prompt": "How many flowers are open?", "display": "🌼", "answer": "1", "choices": ["2", "1", "3"]},
+    {"prompt": "Count the leaves. How many do you see?", "display": "🍃 🍃", "answer": "2", "choices": ["1", "3", "2"]}
+  ],
+  "count2-v2": [
+    {"prompt": "How many flowers are open?", "display": "🌼 🌼 🌼", "answer": "3", "choices": ["4", "3", "5"]},
+    {"prompt": "Count the leaves. How many do you see?", "display": "🍃 🍃 🍃 🍃", "answer": "4", "choices": ["3", "5", "4"]}
+  ]
+}

@@ -9,6 +9,18 @@ LESSONS = json.loads((CONTENT / "lessons.json").read_text())
 AUTHORED = json.loads((CONTENT / "variations.json").read_text())
 
 
+# The original IDs remain available to saved assignments and feedback links.
+FIVE_PROMPT_ROUNDS = json.loads((CONTENT / "five_prompt_rounds.json").read_text())
+CURRENT_VERSION = {key.replace("-v2", "-v1"): key for key in FIVE_PROMPT_ROUNDS}
+CURRENT_LESSONS = {}
+for key, lesson in LESSONS.items():
+    current = CURRENT_VERSION.get(key, key)
+    if current in FIVE_PROMPT_ROUNDS:
+        lesson = dict(lesson, items=lesson["items"] + FIVE_PROMPT_ROUNDS[current])
+    CURRENT_LESSONS[current] = lesson
+LESSONS.update(CURRENT_LESSONS)
+
+
 def round_count(key):
     return 1 + len(AUTHORED[key]) if key in AUTHORED else 1000
 
@@ -19,11 +31,36 @@ def options(rng, answer, pool):
     return list(map(str, choices))
 
 
+def five_prompt_round(key, number, rng):
+    original = build_round(key.replace("-v2", "-v1"), number)
+    items = original["items"]
+    first, second, third = [item["answer"] for item in items]
+    if original["kind"] == "key":
+        pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if key == "keys-v2" else "0123456789"
+        fresh = rng.choice(sorted(set(pool) - {first, second, third}))
+        extra = [
+            dict(prompt=prompt, display=target, answer=target, choices=options(rng, target, pool))
+            for prompt, target in [(f"Find {first} again.", first), (f"Can you find the {fresh} key?", fresh)]
+        ]
+    else:
+        extra = []
+        for item in items[:2]:
+            # Count the same quantity in a different collection.
+            pictures = [("🌼", "flowers"), ("🍃", "leaves"), ("🌱", "sprouts")]
+            symbol, noun = rng.choice([pair for pair in pictures if pair[0] not in item["display"]])
+            count = item["answer"]
+            extra.append(dict(prompt=f"How many {noun} do you see?", display=" ".join([symbol] * int(count)),
+                              answer=count, choices=options(rng, count, [first, second, third])))
+    return dict(original, items=items + extra)
+
+
 def build_round(key, number):
     lesson = LESSONS[key]
     if number == 0:
         return lesson
     rng = random.Random(f"{key}/{number}")
+    if key in FIVE_PROMPT_ROUNDS:
+        return five_prompt_round(key, number, rng)
     items = [item.copy() for item in lesson["items"]]
     if key in AUTHORED:
         for item, changes in zip(items, AUTHORED[key][number-1], strict=True):

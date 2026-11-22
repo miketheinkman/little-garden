@@ -7,7 +7,7 @@ from statistics import median
 from django.utils import timezone
 
 from .models import SkillSample
-from .practice import LESSONS
+from .practice import CURRENT_LESSONS, CURRENT_VERSION, LESSONS
 
 
 def fit(samples):
@@ -64,6 +64,7 @@ class Progress:
         completed = child.assignment_set.exclude(completed=None).filter(skipped=0).order_by("-completed","-pk").values_list("lesson","completed")
         self.recent = []
         for key, when in completed:
+            key = CURRENT_VERSION.get(key, key)
             self.attempted[key].append(when)
             self.recent.append(key)
         self.estimates = {strand: fit(samples) for strand, samples in self.samples.items()}
@@ -118,9 +119,10 @@ class Progress:
         # Give fluent rounds a rest, even when there is no harder lesson in that strand yet.
         by_lesson = defaultdict(list)
         for samples in self.sessions.values():
-            by_lesson[samples[0]["assignment__lesson"]].append(samples)
+            key = samples[0]["assignment__lesson"]
+            by_lesson[CURRENT_VERSION.get(key, key)].append(samples)
         review_cutoff = timezone.now() - timedelta(days=14)
-        for key, lesson in LESSONS.items():
+        for key, lesson in CURRENT_LESSONS.items():
             if lesson.get("checkin") or lesson["participation"] != "Independent":
                 continue
             strand, level = lesson["strand"], lesson["level"]
@@ -130,7 +132,7 @@ class Progress:
                 continue
             recent_rounds = by_lesson[key][-2:]
             if len(recent_rounds) == 2 and all(
-                len(session) == len(lesson["items"]) and min(s["score"] for s in session) >= 90
+                len(session) == len(LESSONS[session[0]["assignment__lesson"]]["items"]) and min(s["score"] for s in session) >= 90
                 and session[-1]["measured"] > review_cutoff for session in recent_rounds
             ):
                 continue
@@ -160,7 +162,7 @@ class Progress:
 
     def checkins(self):
         result = []
-        for key, lesson in LESSONS.items():
+        for key, lesson in CURRENT_LESSONS.items():
             if not lesson.get("checkin"):
                 continue
             recent = self.attempted[key]

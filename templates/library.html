@@ -13,7 +13,7 @@
 {% for subject, entries in groups.items %}
 <section><h2>{{ subject }}</h2><div class="shelf">
 {% for key, lesson, variation, fit in entries %}
-<article><h3>{{ lesson.title }}</h3><p class="meta">{{ fit }}{% if not lesson.checkin %} · Tier {{ lesson.level }}{% endif %} · {{ lesson.participation }} · Ages {{ lesson.age }}</p><p>{{ lesson.skill }}</p>
+<article><h3>{{ lesson.title }}</h3><p class="meta">{{ fit }}{% if not lesson.checkin %} · Tier {{ lesson.level }}{% endif %} · {{ lesson.participation }} · Ages {{ lesson.age }} · {{ lesson.items|length }} step{{ lesson.items|length|pluralize }}</p><p>{{ lesson.skill }}</p>
 {% if lesson.prep %}<p>{{ lesson.prep }}</p>{% endif %}
 <div class="card-actions"><a href="{% url 'preview' child.pk key 0 %}?v={{ variation }}">Preview lesson</a><form method="post">{% csrf_token %}<button name="lesson" value="{{ key }}" aria-label="Add {{ lesson.title }} to {{ child.nickname }}’s queue">Add to queue</button></form></div></article>
 {% endfor %}</div></section>
