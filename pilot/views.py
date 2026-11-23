@@ -7,7 +7,9 @@ from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from .forms import ParentSignupForm, RecoveryEmailForm
 from django.db import connection, transaction
-from django.db.models import F, Max
+from django.core.paginator import Paginator
+from django.db.models import Case, F, Max, Q, Value, When
+from django.db.models.functions import Coalesce
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -237,16 +239,63 @@ def library(request, pk):
     for key, number in child.assignment_set.order_by("pk").values_list("lesson", "variation"):
         key = CURRENT_VERSION.get(key, key)
         upcoming[key] = (number+1) % round_count(key)
+    today = timezone.localdate()
     groups = {}
     for key, lesson in matching.items():
         if key not in active:
-            groups.setdefault(lesson["category"], []).append((key, summary(key, lesson, child.lesson_theme), upcoming.get(key, 0), progress.label(lesson)))
+            info = dict(summary(key, lesson, child.lesson_theme))
+            completions = progress.attempted.get(key)
+            if completions:
+                info["last_completed"] = completions[0]
+                days = (today - timezone.localdate(completions[0])).days
+                info["last_completed_label"] = {0: "today", 1: "yesterday"}.get(days, f"{days} days ago")
+            groups.setdefault(lesson["category"], []).append((key, info, upcoming.get(key, 0), progress.label(lesson)))
     return render(request, "library.html", {
         "tier": tier, "tiers": ["1", "2", "3", "4", "5"], "fit_label": fit_label, "fits": FIT_LABELS,
         "child": child, "groups": groups, "category": category, "help_mode": help_mode,
         "world": THEMES[child.lesson_theme], "available": len(matching.keys() - active), "matches": bool(matching),
         "categories": sorted({lesson["category"] for lesson in CURRENT_LESSONS.values()}),
         "modes": ["Independent", "Parent required"],
+    })
+
+
+@login_required
+def assignment_history(request, pk):
+    child = get_object_or_404(Learner, parent=request.user, pk=pk)
+    rows = child.assignment_set.annotate(
+        history_date=Coalesce("removed_at", "completed", "assigned_at"),
+        status=Case(
+            When(removed_at__isnull=False, then=Value("Removed")),
+            When(completed__isnull=False, skipped__gt=0, then=Value("Finished with skips")),
+            When(completed__isnull=False, then=Value("Completed")),
+            When(Q(step__gt=0) | Q(retries__gt=0) | Q(round_snapshot__has_key="_opened_theme"),
+                 then=Value("In progress")),
+            default=Value("Queued"),
+        ),
+    )
+    versions = {}
+    for key in rows.order_by().values_list("lesson", flat=True).distinct():
+        versions.setdefault(CURRENT_VERSION.get(key, key), []).append(key)
+    lesson_options = sorted(((key, summary(key, LESSONS[key], child.lesson_theme)["title"]) for key in versions),
+                            key=lambda option: option[1])
+    months = rows.datetimes("history_date", "month", order="DESC")
+    month_options = {date.strftime("%Y-%m"): date for date in months}
+    month = request.GET.get("month", "")
+    lesson = request.GET.get("lesson", "")
+    status = request.GET.get("status", "")
+    if month:
+        date = month_options.get(month)
+        rows = rows.filter(history_date__year=date.year, history_date__month=date.month) if date else rows.none()
+    if lesson:
+        rows = rows.filter(lesson__in=versions.get(lesson, []))
+    if status:
+        rows = rows.filter(status=status)
+    page = Paginator(rows.order_by(F("history_date").desc(nulls_last=True), "-pk"), 20).get_page(request.GET.get("page"))
+    page.object_list = decorate(page.object_list, child)
+    return render(request, "assignment_history.html", {
+        "child": child, "page": page, "lesson_options": lesson_options, "month_options": month_options,
+        "statuses": ("Completed", "Finished with skips", "In progress", "Queued", "Removed"),
+        "month": month, "lesson": lesson, "status": status,
     })
 
 

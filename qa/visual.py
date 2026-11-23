@@ -53,6 +53,43 @@ class VisualReview(StaticLiveServerTestCase):
                     self.assertEqual(kept.skipped, 2)
                     self.assertGreater(kept.samples.get(step=0).ms_per_key, 0)
 
+    def test_assignment_history(self):
+        from datetime import timedelta
+
+        child = Learner.objects.get(pk=self.child_id)
+        new_learner = Learner.objects.create(parent=child.parent, nickname="Pip")
+        recent = timezone.now() - timedelta(days=7)
+        child.assignment_set.update(completed=recent, assigned_at=recent)
+        child.assignment_set.create(lesson="keys-v2", variation=1, completed=timezone.now(), step=5, skipped=1)
+        family = Client()
+        family.force_login(child.parent)
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for device, width in (("phone", 375), ("desktop", 1200)):
+                for theme in ("light", "dark"):
+                    with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                        self.variant = f"{device}-{theme}"
+                        ctx.add_cookies([{"name": "sessionid", "value": family.cookies["sessionid"].value,
+                                         "url": self.live_server_url}])
+                        page = ctx.new_page()
+                        page.goto(self.live_server_url)
+                        page.locator(f'[data-learner="{new_learner.pk}"]').get_by_role("link", name="Assignment history").click()
+                        expect(page.get_by_role("heading", name="No assignments yet")).to_be_visible()
+                        self.capture(page, "history-empty")
+                        page.goto(self.live_server_url + reverse("library", args=[child.pk]))
+                        card = page.locator('[data-lesson="keys-v2"]')
+                        card.screenshot(path=self.out / f"{self.variant}-history-card.png")
+                        card.get_by_role("link", name="Last completed 7 days ago").click()
+                        expect(page.get_by_role("combobox", name="Lesson", exact=True)).to_have_value("keys-v2")
+                        expect(page.locator(".history-list li")).to_have_count(3)
+                        self.capture(page, "history-rounds")
+                        page.get_by_role("combobox", name="Status", exact=True).select_option("Removed")
+                        page.get_by_role("button", name="Apply filters").click()
+                        expect(page.get_by_role("heading", name="No matching assignments")).to_be_visible()
+                        page.get_by_role("link", name="Clear filters").click()
+                        expect(page.locator(".history-status").get_by_text("Finished with skips")).to_be_visible()
+            browser.close()
+
     def test_open_lesson_refreshes_an_older_player(self):
         child = Learner.objects.get(pk=self.child_id)
         row = assign_lesson(child, "sounds-v1", 0)
@@ -195,6 +232,37 @@ class VisualReview(StaticLiveServerTestCase):
         for _, _, row in variants:
             self.assertEqual(row.samples.get(step=0).score, 0)
 
+    def test_child_memory_retry_keeps_next_pair(self):
+        child = Learner.objects.get(pk=self.child_id)
+        row = assign_lesson(child, "letter-memory-v1", variation=0)
+        device = Client()
+        device.force_login(child.parent)
+        device.post(reverse("manage", args=[child.pk]), {"action": "play"})
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            page = browser.new_page()
+            page.context.add_cookies([{"url": self.live_server_url, "name": "sessionid",
+                                       "value": device.cookies["sessionid"].value}])
+            page.goto(self.live_server_url + reverse("play", args=[row.pk]))
+            first = page.locator('[data-card="0"]')
+            second = page.locator('[data-card="1"]')
+            first.first.click()
+            second.first.click()
+            expect(page.locator('[data-face="down"]')).to_have_count(4)
+            first.first.click()
+            second.first.click()
+            # A third card can start the next turn before the automatic cover.
+            first.last.click()
+            first.first.click()
+            second.first.click()
+            second.last.click()
+            expect(page.locator('[data-face="matched"]')).to_have_count(4)
+            page.get_by_role("button", name="Continue").click()
+            expect(page.get_by_text("Step 2 of 5")).to_be_visible()
+            browser.close()
+        row.refresh_from_db()
+        self.assertEqual((row.step, row.retries), (1, 0))
+
     def test_card_table_and_seesaw(self):
         child = Learner.objects.get(pk=self.child_id)
         family = Client()
@@ -220,14 +288,24 @@ class VisualReview(StaticLiveServerTestCase):
                         page.locator("[data-clues]").check()
                         self.capture(page, "memory-miss")
                         page.locator(".garden-tool").screenshot(path=self.out / f"{self.variant}-memory-miss-board.png")
-                        page.locator("[data-cover]").click()
+                        expect(page.locator('[data-face="down"]')).to_have_count(4)
+                        expect(page.locator("[data-cover]")).to_be_hidden()
+                        expect(page.locator('[name="tool_state"]')).to_have_value("")
                         for pair in (first, second):
                             pair.first.click()
                             pair.last.click()
                         page.locator("[data-finish]").click()
                         expect(page.locator(".preview-steps [aria-current]")).to_have_text("3")
                         preview("letter-memory-v1", 4)
-                        page.locator("[data-card]").first.click()
+                        cards = page.locator("[data-card]")
+                        for index in (0, 1):
+                            page.locator('[data-card="0"]').nth(index).click()
+                        for pair in (1, 2):
+                            page.locator(f'[data-card="{pair}"]').first.click()
+                        expect(page.locator('[data-face="up"]')).to_have_count(2)
+                        expect(page.locator('[data-face="up"]')).to_have_count(0)
+                        expect(page.locator('[data-face="matched"]')).to_have_count(2)
+                        expect(cards.locator(".card-back:visible")).to_have_count(6)
                         self.capture(page, "words")
                         page.locator(".garden-tool").screenshot(path=self.out / f"{self.variant}-words-board.png")
                         preview("seesaw-v1", 1)

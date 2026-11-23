@@ -268,9 +268,13 @@ function startTableGame(board, steps, update, signal) {
       if (id === playId && !signal.aborted) board.querySelector("[data-audio-error]").textContent = "Try Hear again, or turn on sound clues.";
     });
   }
+  let coverTimer;
   function cover() {
+    clearTimeout(coverTimer);
+    if (!memoryState(cards, steps).miss) return;
     steps.splice(-2);
-    stop(); last = null;
+    // A spoken clue may outlast the reveal. Let it finish under the covered card.
+    last = null;
     if (repeat) repeat.disabled = true;
     update();
   }
@@ -281,7 +285,9 @@ function startTableGame(board, steps, update, signal) {
     steps.push(index);
     listen(card);
     update();
+    if (memoryState(cards, steps).miss) coverTimer = setTimeout(cover, 1200);
   });
+  signal.addEventListener("abort", () => clearTimeout(coverTimer), {once:true});
   board.querySelector("[data-cover]").onclick = cover;
   if (audio) {
     repeat.onclick = () => listen(last);

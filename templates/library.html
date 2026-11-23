@@ -5,6 +5,7 @@
 <h1>Lesson library</h1>
 <p>Choose activities for <strong>{{ child.nickname }}</strong>. Independent lessons can be finished on screen. Parent-required lessons include a job for a grown-up.</p>
 {% if child.lesson_theme != "garden" %}<p>{{ world.actor.icon }} {{ world.label }}</p>{% endif %}
+<p><a href="{% url 'assignment_history' child.pk %}">View assignment history for {{ child.nickname }}</a></p>
 {% include "tier_key.html" %}
 <form method="get" class="inline library-filters">
   <label>Subject <select name="category"><option value="">All subjects</option>{% for c in categories %}<option {% if category == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>
@@ -22,6 +23,7 @@
 {% for key, lesson, variation, fit in entries %}
 <article data-lesson="{{ key }}"><h3>{{ lesson.title }}</h3><p class="meta">{{ fit }}{% if not lesson.checkin %} · Tier {{ lesson.level }}{% endif %} · {{ lesson.strand }} · {{ lesson.participation }} · Ages {{ lesson.age }} · {{ lesson.items|length }} step{{ lesson.items|length|pluralize }}</p><p>{{ lesson.skill }}</p>
 {% if lesson.prep %}<p>{{ lesson.prep }}</p>{% endif %}
+<p class="completion-note">{% if lesson.last_completed %}<a href="{% url 'assignment_history' child.pk %}?lesson={{ key }}">Last completed <time datetime="{{ lesson.last_completed|date:'c' }}" title="{{ lesson.last_completed|date:'F j, Y, g:i a T' }}">{{ lesson.last_completed_label }}</time></a>{% else %}No completions yet{% endif %}</p>
 <div class="card-actions"><a href="{% url 'preview' child.pk key 0 %}?v={{ variation }}">{% if lesson.letters %}Choose letters and preview{% else %}Preview lesson{% endif %}</a><form method="post" data-queue-form>{% csrf_token %}<input type="hidden" name="lesson" value="{{ key }}"><button aria-label="Add {{ lesson.title }} to {{ child.nickname }}’s queue">Add to queue</button></form></div></article>
 {% endfor %}</div></section>
 {% endfor %}

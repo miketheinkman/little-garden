@@ -37,6 +37,7 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("children/<int:pk>/library/<slug:key>/preview/<int:step>/", views.preview, name="preview"),
     path("children/<int:pk>/library/", views.library, name="library"),
+    path("children/<int:pk>/history/", views.assignment_history, name="assignment_history"),
     path("children/add/", views.add_child, name="add_child"),
     path("children/<int:pk>/", views.manage, name="manage"),
     path("suggestions/start/", views.start_suggestion, name="start_suggestion"),

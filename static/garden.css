@@ -395,3 +395,16 @@ main:has(#live-room) {max-width:1600px}
 .look-editor input[type=color]{height:2.7rem;width:4.5rem;padding:.15rem}
 [data-look-preview]{width:100%;border:1px solid var(--line);background:var(--wash);padding:.65rem 1rem;border-radius:.8rem}
 [data-look-preview] span{display:inline-block;margin-left:.5rem;background:var(--button);color:var(--button-text);padding:.2rem .7rem;border-radius:.5rem}
+
+.completion-note,.history-list small{color:var(--muted);font-size:.9rem}
+.history-shortcut{display:inline-block;padding:.6rem}
+.history-nav,.history-list li>div{display:flex;align-items:center;gap:.5rem 1rem;flex-wrap:wrap}
+.history-filters label,.history-filters select{max-width:100%;min-width:0}
+.history-day{margin:1.5rem 0}
+.history-day h2{font-size:1.35rem}
+.history-list{margin:.5rem 0;padding:0;list-style:none;border:1px solid var(--line);border-radius:1rem;background:var(--surface)}
+.history-list li{padding:.75rem 1rem}
+.history-list li+li{border-top:1px solid var(--line)}
+.history-list li>div{justify-content:space-between}
+.history-list p{margin:.15rem 0}
+.history-status{background:var(--wash);border-radius:.5rem;padding:.15rem .55rem;font-size:.85rem;font-weight:650}

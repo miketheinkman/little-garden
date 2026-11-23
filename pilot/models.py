@@ -2,6 +2,7 @@ import re
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 
 FONT_CHOICES = (("default", "Garden default"), ("sans", "Simple sans serif"), ("serif", "Book serif"),
@@ -38,6 +39,7 @@ class Assignment(models.Model):
     step = models.PositiveIntegerField(default=0)
     puzzle_help = models.PositiveSmallIntegerField(default=0)
     retries = models.PositiveIntegerField(default=0)
+    assigned_at = models.DateTimeField(default=timezone.now, null=True, editable=False)
     completed = models.DateTimeField(null=True)
     removed_at = models.DateTimeField(null=True)
     skipped = models.PositiveIntegerField(default=0)
