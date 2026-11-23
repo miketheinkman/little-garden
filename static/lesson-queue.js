@@ -46,7 +46,7 @@
         const html = new DOMParser().parseFromString(await response.text(), "text/html");
         const updated = html.querySelector('[data-learner="' + card.dataset.learner + '"]');
         if (!updated) throw new Error();
-        const anchor = card.querySelector("details summary");
+        const anchor = card.querySelector("[data-placement-panel] > summary");
         const top = anchor.getBoundingClientRect().top;
         for (const selector of ["[data-current-queue]", "[data-suggested-lessons]", "[data-available-checkins]"]) {
           card.querySelector(selector).replaceWith(updated.querySelector(selector));

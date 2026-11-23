@@ -4,7 +4,7 @@
 <input type="hidden" name="action" value="assign"><button name="lesson" value="{{ pick.key }}">Add {{ pick.title }}</button>
 <span>{{ pick.band }} · {{ pick.reason }}</span></form>{% endfor %}
 {% endif %}</div>
-<details><summary>Skill placement and progress</summary>
+<details data-placement-panel><summary>Skill placement and progress</summary>
 {% include "tier_key.html" %}
 <p>Each scored step counts once. Answer-based lessons use first tries. Coloring and reflection use shape overlap.</p>
 {% include "skill_charts.html" %}
