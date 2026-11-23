@@ -1,0 +1,27 @@
+<section class="paint-studio">
+  <div class="paint-label"><strong>🎨 Paint tray</strong><span>{{ lesson.world.site|default:"garden bed"|capfirst }}</span></div>
+  {% if lesson.tool != "paint-name" %}
+  <div class="paint-paper">
+    <div class="paint-sample" style="--pigment:{{ item.target.color }}">
+      <span class="paint-dab" role="img" aria-label="{{ item.target.name }} paint sample"></span>
+      <span>{% if lesson.tool == "paint-mix" %}Make {{ item.target.name }}{% else %}Match this dab{% endif %}</span>
+    </div>
+    {% if lesson.tool == "paint-mix" %}<div class="paint-sample" data-mixture>
+      <span class="paint-dab empty" aria-hidden="true"></span><output aria-live="polite">Your mix</output>
+    </div>{% endif %}
+  </div>{% endif %}
+  {% if lesson.tool == "paint-mix" %}
+    {{ item.recipes|json_script }}
+  {% endif %}
+  <div class="paint-pots" role="group" aria-label="Paint pots">
+    {% for pot in item.paints %}<button {% if lesson.tool == "paint-mix" %}type="button" data-pigment="{{ pot.name }}"{% else %}type="submit" name="answer" value="{{ pot.name }}"{% endif %} style="--pigment:{{ pot.color }}" aria-label="{{ pot.name|capfirst }} paint">
+      <i aria-hidden="true"></i>{% if lesson.tool == "paint-mix" %}<span>{{ pot.name|capfirst }}</span>{% endif %}
+    </button>{% endfor %}
+  </div>
+  {% if lesson.tool == "paint-mix" %}
+  <p data-paint-recipe aria-live="polite">Choose your first paint.</p>
+  {% if not mirror %}<div class="paint-actions"><button type="button" data-action="undo" disabled>↶ Undo</button><button name="answer" data-check disabled>Check my mix</button></div>{% endif %}
+  {% else %}
+  <details class="paint-key"><summary>Color names</summary><p>{% if lesson.tool == "paint-match" %}The dab is {{ item.target.name }}. {% endif %}Pots from left to right: {% for pot in item.paints %}{{ pot.name }}{% if not forloop.last %}, {% else %}.{% endif %}{% endfor %}</p></details>
+  {% endif %}
+</section>

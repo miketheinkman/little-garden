@@ -90,9 +90,11 @@ class Progress:
             if not s["puzzle_help"]:
                 self.samples[s["strand"]].append(s)
             self.sessions.setdefault(s["assignment_id"], []).append(s)
-        completed = child.assignment_set.exclude(completed=None).filter(skipped=0).order_by("-completed","-pk").values_list("lesson","completed")
+        completed = child.assignment_set.exclude(completed=None).filter(skipped=0).order_by("-completed","-pk").values_list("pk", "lesson", "completed", "step")
         self.recent = []
-        for key, when in completed:
+        self.completed_steps = {}
+        for pk, key, when, steps in completed:
+            self.completed_steps[pk] = steps
             key = CURRENT_VERSION.get(key, key)
             self.attempted[key].append(when)
             self.recent.append(key)
@@ -164,7 +166,7 @@ class Progress:
                 continue
             recent_rounds = by_lesson[key][-2:]
             if len(recent_rounds) == 2 and all(
-                len(session) == len(LESSONS[session[0]["assignment__lesson"]]["items"]) and all(s["score"] >= 90 and not s["puzzle_help"] for s in session)
+                len(session) == self.completed_steps.get(session[0]["assignment_id"]) and all(s["score"] >= 90 and not s["puzzle_help"] for s in session)
                 and session[-1]["measured"] > review_cutoff for session in recent_rounds
             ):
                 continue

@@ -78,6 +78,121 @@ class VisualReview(StaticLiveServerTestCase):
             page.wait_for_function("document.querySelector('#directions-audio').currentTime > 0")
             browser.close()
 
+    def test_animals_sorting_letters_and_appearance(self):
+        family = Client()
+        parent = get_user_model().objects.get(username="reviewer")
+        family.force_login(parent)
+        variants = [(width, theme, Learner.objects.create(parent=parent, nickname="Kit"))
+                    for width in (375, 1200) for theme in ("light", "dark")]
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width, theme, child in variants:
+                with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                    ctx.add_cookies([{"name": "sessionid", "value": family.cookies["sessionid"].value,
+                                      "url": self.live_server_url}])
+                    self.variant = f"discovery-{width}-{theme}"
+                    page = ctx.new_page()
+                    def preview(key, step=0):
+                        page.goto(self.live_server_url + reverse("preview", args=[child.pk, key, step]))
+                    page.goto(self.live_server_url)
+                    card = page.locator(f'article[data-learner="{child.pk}"]')
+                    card.locator(".look-editor summary").click()
+                    editor = card.locator("[data-look-form]")
+                    editor.locator("[name=accent]").fill("#7955c2")
+                    editor.locator("[name=font]").select_option("mono")
+                    editor.screenshot(path=self.out / f"{self.variant}-editor.png")
+                    editor.get_by_role("button", name="Save appearance").click()
+                    preview("animal-calls-v1")
+                    expect(page.locator("main")).to_have_attribute("data-font", "mono")
+                    expect(page.locator("main")).to_have_attribute("data-accent", "")
+                    page.get_by_role("button", name="Hear animal call").click()
+                    page.wait_for_function("document.querySelector('[data-call-audio]').currentTime > 0")
+                    page.locator(".garden-tool").screenshot(path=self.out / f"{self.variant}-animals.png")
+                    animal = LESSONS["animal-calls-v1"]["items"][0]["answer"]
+                    page.get_by_role("button", name=animal.capitalize(), exact=True).click()
+                    expect(page.locator(".preview-steps [aria-current]")).to_have_text("2")
+                    preview("animal-lookout-v1")
+                    expect(page.locator(".picture-choices button")).to_have_count(3)
+                    preview("animal-words-v1")
+                    page.locator("[data-hear-word]").click()
+                    page.wait_for_function("document.querySelector('.word-station audio').currentTime > 0")
+                    expect(page.locator(".animal-fragment")).to_contain_text("_")
+                    preview("alphabet-gap-v1")
+                    expect(page.locator(".display")).to_contain_text("＿")
+                    preview("sort-baskets-v1")
+                    pieces = LESSONS["sort-baskets-v1"]["items"][0]["pieces"]
+                    check = page.locator("[data-sort-check]")
+                    expect(check).to_be_disabled()
+                    for i, piece in enumerate(pieces):
+                        page.locator(f'[data-piece="{i}"]').press("Space")
+                        page.locator(f'[data-bin="{piece["bin"]}"]').click()
+                    page.locator(".sort-board").screenshot(path=self.out / f"{self.variant}-baskets.png")
+                    check.click()
+                    expect(page.locator(".preview-steps [aria-current]")).to_have_text("2")
+                    preview("my-letters-v1")
+                    page.get_by_label("Letters to practice").fill("R I O N")
+                    page.get_by_role("button", name="Preview these letters").click()
+                    expect(page.get_by_label("Letters to practice")).to_have_value("RION")
+                    page.locator(".preview-tools").screenshot(path=self.out / f"{self.variant}-letters.png")
+                    page.get_by_role("button", name="Add to Kit’s queue").click()
+                    expect(page.locator("[data-queue-status]")).to_contain_text("added to Kit")
+                    self.capture(page, "custom-round")
+            browser.close()
+        for _, _, child in variants:
+            self.assertEqual(child.assignment_set.get().round_snapshot["letters"], "RION")
+
+    def test_paint_tray(self):
+        child = Learner.objects.get(pk=self.child_id)
+        family = Client()
+        family.force_login(child.parent)
+        device = Client()
+        device.force_login(child.parent)
+        device.post(reverse("manage", args=[child.pk]), {"action": "play"})
+        variants = [(width, theme, assign_lesson(child, "mix-paint-v1", 0))
+                    for width in (375, 1200) for theme in ("light", "dark")]
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width, theme, row in variants:
+                with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                    def login(client):
+                        ctx.add_cookies([{"name": "sessionid", "value": client.cookies["sessionid"].value,
+                                          "url": self.live_server_url}])
+                    self.variant = f"paint-{width}-{theme}"
+                    login(family)
+                    page = ctx.new_page()
+                    for key in ("match-paint-v1", "name-paint-v1"):
+                        page.goto(self.live_server_url + reverse("preview", args=[child.pk, key, 0]))
+                        item = LESSONS[key]["items"][0]
+                        if key == "name-paint-v1":
+                            page.get_by_role("button", name="Hear directions").click()
+                            page.wait_for_function("document.querySelector('#directions-audio').currentTime > 0")
+                        page.locator(".paint-studio").screenshot(path=self.out / f"{self.variant}-{key}.png")
+                        page.get_by_role("button", name=item["answer"].capitalize() + " paint", exact=True).click()
+                        expect(page.locator(".preview-steps [aria-current]")).to_have_text("2")
+                    login(device)
+                    page.goto(self.live_server_url + reverse("play", args=[row.pk]))
+                    item = LESSONS["mix-paint-v1"]["items"][0]
+                    first, second = next((r["first"], r["second"]) for r in item["recipes"]
+                                         if r["result"]["name"] == item["answer"])
+                    check = page.get_by_role("button", name="Check my mix")
+                    expect(check).to_be_disabled()
+                    pot = page.locator(f'[data-pigment="{first}"]')
+                    pot.click()
+                    pot.click()
+                    check.click()
+                    expect(page.locator("#answer-feedback .retry-note")).to_be_visible()
+                    page.get_by_role("button", name="Undo").click()
+                    expect(check).to_be_disabled()
+                    page.locator(f'[data-pigment="{second}"]').press("Space")
+                    expect(page.locator("[data-mixture] output")).to_have_text(item["answer"])
+                    page.locator(".paint-studio").screenshot(path=self.out / f"{self.variant}-mix.png")
+                    self.capture(page, "lesson")
+                    check.click()
+                    expect(page.get_by_text("Step 2 of 5")).to_be_visible()
+            browser.close()
+        for _, _, row in variants:
+            self.assertEqual(row.samples.get(step=0).score, 0)
+
     def test_card_table_and_seesaw(self):
         child = Learner.objects.get(pk=self.child_id)
         family = Client()

@@ -1,3 +1,4 @@
+<div {% include 'appearance_attrs.html' %}>
 {% if garden %}
 <h3>My lessons</h3>
 {% if titles %}<ul>{% for title in titles %}<li>{{ title }}</li>{% endfor %}</ul>{% else %}<p>Time for a garden break!</p>{% endif %}
@@ -19,3 +20,4 @@
 {% else %}<div class="live-choices">{% for choice in item.choices %}<span>{{ choice }}</span>{% endfor %}</div>{% endif %}
 <div data-retry hidden></div>
 {% endif %}
+</div>

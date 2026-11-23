@@ -52,6 +52,49 @@ class FamilyPilotTests(TestCase):
         self.assertEqual(row.samples.get(step=1).puzzle_help, 0)
         self.assertIn("Causal reasoning", Progress(self.child).estimates)
 
+    def test_appearance_is_per_child_validated_and_resettable(self):
+        response = self.client.post(self.manage, {"action": "appearance", "accent": "#ffee11",
+                                                 "font": "mono", "use_accent": "on"})
+        self.assertEqual(response.status_code, 302)
+        self.child.refresh_from_db()
+        self.assertEqual(self.child.appearance, {"accent": "#ffee11", "ink": "#000000", "font": "mono"})
+        self.assertEqual(self.sibling.appearance["accent"], "")
+        response = self.client.post(self.manage, {"action": "appearance", "accent": "url(no)",
+                                                 "font": "mono", "use_accent": "on"})
+        self.assertEqual(response.status_code, 400)
+        self.client.post(self.manage, {"action": "reset-appearance"})
+        self.child.refresh_from_db()
+        self.assertEqual((self.child.font, self.child.accent), ("default", ""))
+
+    def test_parent_letter_selection_survives_preview_and_assignment(self):
+        key = "my-letters-v1"
+        library = self.manage + "library/"
+        url = library + key + "/preview/6/?v=2&letters=abcdefg"
+        preview = self.client.get(url)
+        self.assertContains(preview, "Step 7 of 7")
+        answer = preview.context["item"]["answer"]
+        self.assertIn("letters=ABCDEFG", self.client.post(url, {"answer": answer})["Location"])
+        self.assertEqual(self.client.post(library, {"lesson": key, "letters": "12"}).status_code, 400)
+        self.assertFalse(self.child.assignment_set.exists())
+        self.client.post(library, {"lesson": key, "letters": "a, b, b, c d e f g", "variation": 2})
+        row = self.child.assignment_set.get()
+        self.assertEqual(row.round_snapshot["items"], preview.context["lesson"]["items"])
+        self.assertEqual({i["answer"] for i in row.round_snapshot["items"]}, set("ABCDEFG"))
+
+    def test_paint_recipes_are_solvable_in_either_order(self):
+        from .paint import mixture_matches, paint_lesson
+        for variation in range(32):
+            lesson = paint_lesson("mix-paint-v1", variation)
+            self.assertEqual(len({item["answer"] for item in lesson["items"]}), 5)
+            for item in lesson["items"]:
+                recipe = next(r for r in item["recipes"] if r["result"]["name"] == item["answer"])
+                names = [pot["name"] for pot in item["paints"]]
+                a, b = names.index(recipe["first"]), names.index(recipe["second"])
+                for pair in (f"{a},{b}", f"{b},{a}"):
+                    self.assertTrue(mixture_matches(item, pair))
+                for invalid in ("", "0", "0,0", "1,2,3", "-1,0", "0,99"):
+                    self.assertFalse(mixture_matches(item, invalid))
+
     def test_table_games_validate_real_pairs_and_weights(self):
         memory = self.child.assignment_set.create(lesson="sound-memory-v1")
         balance = self.child.assignment_set.create(lesson="seesaw-v1")
@@ -208,6 +251,12 @@ class LibraryTests(TestCase):
                 url = f"{self.library}{key}/preview/{step}/"
                 self.assertContains(self.client.get(url), item["prompt"], html=True)
                 data = {"answer": item["answer"], "pixels": "0"*16+"1"+"0"*751}
+                if "pieces" in item:
+                    data["tool_state"] = ",".join(str(p["bin"]) for p in item["pieces"])
+                if "recipes" in item:
+                    recipe = next(r for r in item["recipes"] if r["result"]["name"] == item["answer"])
+                    data["tool_state"] = ",".join(str(i) for i, pot in enumerate(item["paints"])
+                                                  if pot["name"] in (recipe["first"], recipe["second"]))
                 if "deck" in item:
                     pairs = sorted(range(len(item["deck"])), key=lambda i: item["deck"][i]["pair"])
                     data["tool_state"] = ",".join(map(str, pairs))

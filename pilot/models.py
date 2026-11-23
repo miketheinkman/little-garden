@@ -1,11 +1,31 @@
+import re
+
 from django.conf import settings
 from django.db import models
+
+
+FONT_CHOICES = (("default", "Garden default"), ("sans", "Simple sans serif"), ("serif", "Book serif"),
+                ("mono", "Evenly spaced"))
 
 
 class Learner(models.Model):
     parent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     nickname = models.CharField(max_length=40)
     lesson_theme = models.CharField(max_length=20, default="garden")
+
+    accent = models.CharField(max_length=7, blank=True, default="")
+    font = models.CharField(max_length=12, choices=FONT_CHOICES, default="default")
+
+    @property
+    def appearance(self):
+        accent = self.accent if re.fullmatch(r"#[0-9a-fA-F]{6}", self.accent) else ""
+        ink = ""
+        if accent:
+            rgb = [int(accent[i:i+2], 16) / 255 for i in (1, 3, 5)]
+            linear = [v / 12.92 if v <= .04045 else ((v + .055) / 1.055) ** 2.4 for v in rgb]
+            luminance = sum(v * weight for v, weight in zip(linear, (.2126, .7152, .0722)))
+            ink = "#000000" if luminance > .179 else "#ffffff"
+        return {"accent": accent, "ink": ink, "font": self.font}
 
 
 class Assignment(models.Model):

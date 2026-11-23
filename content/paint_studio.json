@@ -1,0 +1,22 @@
+{
+  "lessons": {
+    "match-paint-v1": {"title": "Match the Paint", "skill": "Match a color across different shapes", "age": "4–6", "level": 1, "tool": "paint-match"},
+    "name-paint-v1": {"title": "Find That Color", "skill": "Connect a spoken color name to its swatch", "age": "4–6", "level": 1, "tool": "paint-name"},
+    "mix-paint-v1": {"title": "Paint Mixing Studio", "skill": "Mix primary colors and explore how white makes a tint", "age": "5–8", "level": 2, "tool": "paint-mix"}
+  },
+  "colors": {
+    "red": "#CF3547", "yellow": "#F7CE36", "blue": "#376CBD",
+    "orange": "#ED882E", "green": "#39865C", "purple": "#834F9B",
+    "pink": "#F5A1B4", "sky blue": "#9BCAEB", "pale yellow": "#FFF0A6", "white": "#FFFCF4"
+  },
+  "recipes": [
+    ["red", "yellow", "orange"], ["blue", "yellow", "green"], ["red", "blue", "purple"],
+    ["red", "white", "pink"], ["blue", "white", "sky blue"], ["yellow", "white", "pale yellow"]
+  ],
+  "prompts": {
+    "paint-match": "Look at the paint on the paper. Tap the pot with the same color.",
+    "paint-name": "Find the {color} paint.",
+    "paint-mix": "Can you make {color}? Pick two paints and watch them mix.",
+    "tint": "Make {color}. Try adding white to a color to make it lighter."
+  }
+}

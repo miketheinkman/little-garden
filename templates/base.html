@@ -5,7 +5,7 @@
 <link rel="icon" href="{% static 'brand/book-sprout.svg' %}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="{% static 'brand/apple-touch-icon.png' %}">
 <script src="{% static 'theme.js' %}"></script>
-<link rel="stylesheet" href="{% static 'garden.css' %}?v=table1">
+<link rel="stylesheet" href="{% static 'garden.css' %}?v=paints1">
 <link rel="stylesheet" href="{% static 'route-puzzles.css' %}">
 </head><body>
 <header>
@@ -15,6 +15,6 @@
   {% if user.is_authenticated %}<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="link">Sign out</button></form>
   {% elif request.session.child %}<a href="{% url 'login' %}">Parent sign in</a>{% endif %}</nav>
 </header>
-<main>{% block content %}{% endblock %}</main>
+<main {% include 'appearance_attrs.html' %}>{% block content %}{% endblock %}</main>
 <footer>Little Garden · Free for every family · <a href="{% url 'welcome' %}">Garden opening</a>{% if user.is_authenticated or not request.session.child %} · <a href="{% url 'mission' %}">Mission statement</a>{% endif %}</footer>
 </body></html>

@@ -86,7 +86,7 @@ def lesson_html(row, step):
     item = lesson["items"][step]
     if "shape" in item:
         item = art_item(item)
-    return render_to_string("coview_scene.html", {"lesson": lesson, "item": item, "step": step, "seed": row.pk + step})
+    return render_to_string("coview_scene.html", {"appearance": row.learner.appearance, "lesson": lesson, "item": item, "step": step, "seed": row.pk + step})
 
 
 def recent_response(row, title, action, celebration, submitted, tier_gain=None):
@@ -115,7 +115,7 @@ def current_frame(child, signal):
         rows = child.assignment_set.filter(completed=None, removed_at=None)
         titles = [assignment_lesson(row, child.lesson_theme)["title"] for row in rows]
         return {"source": frame.get("source", ""), "scene": "garden",
-                "html": render_to_string("coview_scene.html", {"garden": True, "titles": titles})}
+                "html": render_to_string("coview_scene.html", {"appearance": child.appearance, "garden": True, "titles": titles})}
     step = frame["step"]
     row = child.assignment_set.filter(pk=frame["row"], removed_at=None).first()
     if not row:

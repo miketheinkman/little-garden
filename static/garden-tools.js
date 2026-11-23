@@ -1,6 +1,7 @@
 // The same drawing code updates a child's board and its read-only parent mirror.
 function paintGardenTool(board, encoded = "") {
   const steps = /^(\d{1,2},){0,39}\d{1,2}$/.test(encoded) ? encoded.split(",").map(Number) : [];
+  if (board.dataset.tool === "sort") return paintSort(board, steps);
   if (board.dataset.tool === "memory") return paintMemory(board, steps);
   if (board.dataset.tool === "balance") return paintBalance(board, steps);
   const count = steps.length;
@@ -9,6 +10,9 @@ function paintGardenTool(board, encoded = "") {
   if (undo) undo.disabled = !count;
   let value = "";
   switch (board.dataset.tool) {
+    case "paint-mix":
+      value = paintMixture(board, steps);
+      break;
     case "shift": {
       const active = steps[0] === 1;
       const shift = board.querySelector('[data-action="shift"]');
@@ -88,6 +92,26 @@ function startGardenTool(board, form, answer, signal) {
     form.elements.tool_state.value = steps.join(",");
     paintGardenTool(board, form.elements.tool_state.value);
   }
+  if (tool === "sort") {
+    steps = Array(board.querySelectorAll("[data-piece]").length).fill(0);
+    let selected = null;
+    board.addEventListener("click", event => {
+      const piece = event.target.closest("[data-piece]");
+      const bin = event.target.closest("[data-bin]");
+      if (piece) {
+        selected = Number(piece.dataset.piece);
+        board.querySelectorAll("[data-piece]").forEach(p => p.setAttribute("aria-pressed", String(p === piece)));
+        board.querySelector("[data-sort-status]").textContent = piece.textContent.trim() + " selected. Choose a basket.";
+      } else if (bin && selected !== null) {
+        steps[selected] = Number(bin.dataset.bin);
+        board.querySelector('[aria-pressed="true"]').setAttribute("aria-pressed", "false");
+        selected = null;
+        update();
+      }
+    });
+    update();
+    return;
+  }
   if (tool === "balance" || tool === "memory") {
     startTableGame(board, steps, update, signal);
     update();
@@ -112,6 +136,10 @@ function startGardenTool(board, form, answer, signal) {
   board.addEventListener("click", event => {
     const button = event.target.closest('button[type="button"]');
     if (!button || form.inert) return;
+    if (button.hasAttribute("data-pigment")) {
+      if (steps.length === 2) steps = [];
+      steps.push([...board.querySelectorAll("[data-pigment]")].indexOf(button));
+    }
     if (button.dataset.direction) { move(button.dataset.direction); return; }
     if (button.dataset.letter) {
       typeInitial(steps[0] === 1 ? button.dataset.letter.toUpperCase() : button.dataset.letter);
@@ -263,4 +291,37 @@ function startTableGame(board, steps, update, signal) {
     signal.addEventListener("abort", stop, {once:true});
     window.addEventListener("pagehide", stop, {signal});
   }
+}
+
+function paintMixture(board, steps) {
+  const pots = [...board.querySelectorAll("[data-pigment]")];
+  const chosen = steps.slice(0, 2).map(i => pots[i]).filter(Boolean);
+  const names = chosen.map(pot => pot.dataset.pigment);
+  const recipes = board.paintRecipes ??= JSON.parse(board.querySelector('script[type="application/json"]').textContent);
+  const mix = recipes.find(r => names.includes(r.first) && names.includes(r.second));
+  const name = mix?.result.name || names[0] || "";
+  const color = mix?.result.color || chosen[0]?.style.getPropertyValue("--pigment") || "transparent";
+  const sample = board.querySelector("[data-mixture]");
+  sample.style.setProperty("--pigment", color);
+  sample.querySelector(".paint-dab").classList.toggle("empty", !chosen.length);
+  sample.querySelector("output").textContent = name || "Your mix";
+  board.querySelector("[data-paint-recipe]").textContent = chosen.length === 2
+    ? names.join(" + ") + " makes " + name + "."
+    : chosen.length ? names[0] + " + … Choose another paint." : "Choose your first paint.";
+  return chosen.length === 2 ? name : "";
+}
+
+function paintSort(board, steps) {
+  const pieces = [...board.querySelectorAll("[data-piece]")];
+  const areas = board.querySelectorAll("[data-area]");
+  let count = 0;
+  for (const piece of pieces) {
+    const area = areas[steps[Number(piece.dataset.piece)]] || areas[0];
+    if (piece.parentElement !== area) area.append(piece);
+    if (area !== areas[0]) count++;
+  }
+  const check = board.querySelector("[data-sort-check]");
+  if (check) check.disabled = count < pieces.length;
+  board.querySelector("[data-sort-status]").textContent = count === pieces.length
+    ? "All items placed. Check your baskets, or move an item." : "Choose an item, then a basket.";
 }

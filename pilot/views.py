@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 
 from django.urls import reverse
@@ -16,11 +17,13 @@ from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 
 from .themes import THEMES, THEME_CHOICES, assignment_lesson, summary, themed_round
 from .puzzles import parse_moves, simulate, hint
+from .discovery import PATCH, DEFAULT_LETTERS, discovery_round, letter_selection
+from .paint import mixture_matches
 from .table_games import table_answer
 from .audio import lesson_clips
 from .art import art_item, evaluate
 from .coview import recent_response
-from .models import SkillSample
+from .models import FONT_CHOICES, SkillSample
 from .progression import FIT_LABELS, Progress, item_score, record_tier
 from .practice import CURRENT_LESSONS, CURRENT_VERSION, FIVE_PROMPT_ROUNDS, LESSONS, build_round, round_count
 
@@ -41,6 +44,10 @@ def puzzle_action(request, item, row=None):
 
 
 def lesson_response(request, lesson, item):
+    if lesson.get("tool") == "sort":
+        return request.POST.get("tool_state") == ",".join(str(p["bin"]) for p in item["pieces"]), None
+    if lesson.get("tool") == "paint-mix":
+        return mixture_matches(item, request.POST.get("tool_state", "")), None
     if lesson["kind"] in {"balance", "memory"}:
         return table_answer(item, request.POST.get("tool_state", "")), None
     if "board" in item:
@@ -114,14 +121,14 @@ def home(request):
             child.timeline = progress.timeline()
             child.record = decorate(child.assignment_set.filter(
                 completed__gte=timezone.now()-timedelta(days=7)).order_by("-completed"))
-        return render(request, "parent.html", {"learners": learners, "lessons": LESSONS, "theme_choices": THEME_CHOICES})
+        return render(request, "parent.html", {"learners": learners, "lessons": LESSONS, "theme_choices": THEME_CHOICES, "fonts": FONT_CHOICES})
     child = Learner.objects.filter(pk=request.session.get("child")).first()
     if child:
         queue = decorate(child.assignment_set.filter(completed=None, removed_at=None), child)
         progress = Progress(child)
         child.charts = progress.charts()
         child.round_count = len(progress.recent)
-        return render(request, "child.html", {"child": child, "world": THEMES[child.lesson_theme], "queue": queue,
+        return render(request, "child.html", {"child": child, "appearance": child.appearance, "world": THEMES[child.lesson_theme], "queue": queue,
                       "suggestions": [] if queue else progress.recommendations()})
     return render(request, "welcome.html")
 
@@ -160,13 +167,13 @@ def next_round(child, key):
 
 
 @transaction.atomic
-def assign_lesson(child, key, variation=None):
+def assign_lesson(child, key, variation=None, letters=None):
     if variation is None:
         variation = next_round(child, key)
     Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))
     last = child.assignment_set.aggregate(last=Max("position"))["last"] or 0
     return child.assignment_set.create(lesson=key, position=last+1, variation=variation,
-                                round_snapshot=build_round(key, variation))
+                                round_snapshot=discovery_round(key, variation, letters) if key == PATCH and letters else build_round(key, variation))
 
 
 def active_lesson_keys(child):
@@ -175,7 +182,7 @@ def active_lesson_keys(child):
 
 
 @transaction.atomic
-def queue_available(child, keys, variation=None):
+def queue_available(child, keys, variation=None, letters=None):
     # Serialize single and bulk adds before reading the queue, including on SQLite.
     Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))
     active = active_lesson_keys(child)
@@ -183,7 +190,7 @@ def queue_available(child, keys, variation=None):
     for key in keys:
         current = CURRENT_VERSION.get(key, key)
         if current not in active:
-            assign_lesson(child, key, variation)
+            assign_lesson(child, key, variation, letters)
             active.add(current)
             added.append(key)
     return added, active
@@ -212,7 +219,11 @@ def library(request, pk):
             if key not in LESSONS:
                 return HttpResponseBadRequest("Choose a lesson from the library.")
             variation = requested_round(key, request.POST["variation"]) if "variation" in request.POST else None
-            added, active = queue_available(child, [key], variation)
+            try:
+                letters = letter_selection(request.POST.get("letters", DEFAULT_LETTERS)) if key == PATCH else None
+            except ValueError as error:
+                return HttpResponseBadRequest(str(error))
+            added, active = queue_available(child, [key], variation, letters)
             title = summary(key, LESSONS[key], child.lesson_theme)["title"]
             note = (f"{title} added to {child.nickname}’s queue." if added else
                     f"{title} is already in {child.nickname}’s queue.")
@@ -244,18 +255,26 @@ def library(request, pk):
 def preview(request, pk, key, step):
     child = get_object_or_404(Learner, parent=request.user, pk=pk)
     lesson = LESSONS.get(key)
-    if not lesson or step > len(lesson["items"]):
+    if not lesson:
         raise Http404
     number = requested_round(key, request.GET.get("v", 0))
-    lesson = themed_round(key, build_round(key, number), child.lesson_theme, number)
+    try:
+        letters = letter_selection(request.GET.get("letters", DEFAULT_LETTERS)) if key == PATCH else None
+    except ValueError as error:
+        return HttpResponseBadRequest(str(error))
+    raw = discovery_round(key, number, letters) if letters else build_round(key, number)
+    if step > len(raw["items"]):
+        raise Http404
+    lesson = themed_round(key, raw, child.lesson_theme, number)
+    letter_query = f"&letters={letters}" if letters else ""
     def preview_url(target):
         url = reverse("preview", args=[pk, key, target])
-        return f"{url}?v={number}" if number else url
+        return f"{url}?v={number}{letter_query}" if number or letters else url
 
     finished = step == len(lesson["items"])
     context = {
-        "preview": True, "child": child, "key": key, "step": step, "lesson": lesson,
-        "feedback_kinds": LessonFeedback.Kind.choices, "finished": finished, "variation": number,
+        "preview": True, "appearance": child.appearance, "child": child, "key": key, "step": step, "lesson": lesson,
+        "letter_query": letter_query, "feedback_kinds": LessonFeedback.Kind.choices, "finished": finished, "variation": number,
         "next_variant": (number+1) % round_count(key),
         "already_queued": CURRENT_VERSION.get(key, key) in active_lesson_keys(child),
     }
@@ -322,6 +341,16 @@ def manage(request, pk):
     if action == "play":
         request.session.flush()
         request.session["child"] = child.pk
+    elif action in {"appearance", "reset-appearance"}:
+        accent, font = "", "default"
+        if action == "appearance":
+            accent = request.POST.get("accent", "") if request.POST.get("use_accent") else ""
+            font = request.POST.get("font", "default")
+            if (accent and not re.fullmatch(r"#[0-9a-fA-F]{6}", accent)) or font not in dict(FONT_CHOICES):
+                return HttpResponseBadRequest("Choose a valid color and font.")
+        child.accent, child.font = accent.lower(), font
+        child.save(update_fields=["accent", "font"])
+        messages.success(request, f"Saved {child.nickname}’s lesson appearance.")
     elif action == "theme":
         theme = request.POST.get("theme")
         if theme not in THEMES:
@@ -449,6 +478,8 @@ def play(request, pk):
         if updated:
             if skip:
                 action = "Skipped"
+            elif lesson.get("tool") == "sort":
+                action = "Sorted the baskets" if accepted else "Tried sorting the baskets"
             elif lesson["kind"] in {"key", "choice", "type"}:
                 action = "Answered " + request.POST.get("answer", "")[:80]
             else:
@@ -463,4 +494,4 @@ def play(request, pk):
         if request.headers.get("Accept") == "application/json":
             return JsonResponse({"result": "retry"})
         error = "Take another look. You can try again."
-    return render(request, "play.html", {**lesson_clips(item), "assignment_id": row.pk, "puzzle_help": row.puzzle_help, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})
+    return render(request, "play.html", {**lesson_clips(item), "appearance": row.learner.appearance, "assignment_id": row.pk, "puzzle_help": row.puzzle_help, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})

@@ -1,5 +1,6 @@
 function startActivity(form, signal) {
   const directions = document.querySelector("#directions-audio");
+  const call = document.querySelector("[data-call-audio]");
   const word = document.querySelector(".word-station audio");
   const status = document.querySelector("#audio-status") || document.createElement("span");
   let playback = 0;
@@ -8,6 +9,7 @@ function startActivity(form, signal) {
     playback++;
     directions?.pause();
     word?.pause();
+    call?.pause();
   }
 
   function connectAudio(button, audio) {
@@ -25,13 +27,14 @@ function startActivity(form, signal) {
       } catch {
         if (attempt !== playback || !form.isConnected || signal.aborted) return;
         if (word && audio === word) word.closest(".word-station").querySelector("details").open = true;
-        status.textContent = audio === word ? "Audio unavailable. The word is shown below." : "Audio unavailable. Read the directions above.";
+        status.textContent = audio === call ? "Audio unavailable. Open the sound clue or try again." : audio === word ? "Audio unavailable. The word is shown below." : "Audio unavailable. Read the directions above.";
         status.hidden = false;
       }
     };
   }
 
   connectAudio(document.querySelector("#listen"), directions);
+  if (call) connectAudio(document.querySelector("[data-hear-call]"), call);
   if (word) {
     const button = document.querySelector("[data-hear-word]");
     connectAudio(button, word);

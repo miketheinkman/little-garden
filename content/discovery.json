@@ -1,0 +1,22 @@
+{
+  "lessons": {
+    "animal-calls-v1": ["Animal Sound Safari", "Match an animal call to its picture", "4–6", "Science & discovery", "Animal recognition", 1, "calls"],
+    "animal-lookout-v1": ["Animal Lookout", "Identify an animal from its name", "4–6", "Science & discovery", "Animal recognition", 1, "animal-id"],
+    "animal-words-v1": ["Finish the Animal Word", "Fill in a missing letter in an animal name", "5–7", "Reading & language", "Letter sounds", 2, "animal-word"],
+    "alphabet-gap-v1": ["Alphabet Stepping Stones", "Find the missing letter in an alphabet sequence", "4–7", "Reading & language", "Alphabet knowledge", 2, "gap"],
+    "my-letters-v1": ["My Letter Patch", "Find letters chosen by a parent", "4–7", "Reading & language", "Alphabet knowledge", 1, "letter-patch"],
+    "sort-baskets-v1": ["Sorting Baskets", "Sort a collection by the rule on the baskets", "4–7", "Numbers & patterns", "Classification", 2, "sort"]
+  },
+  "animals": {
+    "owl": ["🦉","Hoo, hoo!"], "bee": ["🐝","Bzzzz!"], "frog": ["🐸","Croak, croak!"],
+    "cricket": ["🦗","Chirp, chirp, chirp!"], "songbird": ["🐦","Tweet, tweedle!"],
+    "dog": ["🐕",""], "cat": ["🐈",""], "pig": ["🐖",""], "duck": ["🦆",""], "fish": ["🐟",""]
+  },
+  "sorts": [
+    {"prompt":"Sort the shapes. Put circles in one basket and triangles in the other.", "bins":["Circles","Triangles"], "groups":[[["🔵","blue circle"],["🟠","orange circle"],["🟣","purple circle"]],[["▲","upright triangle"],["▼","downward triangle"],["▶","sideways triangle"]]]},
+    {"prompt":"Sort the pictures into animals and plants.", "bins":["Animals","Plants"], "groups":[[["🐢","turtle"],["🦋","butterfly"],["🐇","rabbit"]],[["🌻","sunflower"],["🌲","pine tree"],["🌷","tulip"]]]},
+    {"prompt":"Sort the symbols. Which are letters and which are numbers?", "bins":["Letters","Numbers"], "groups":[[["A","A"],["S","S"],["T","T"]],[["3","3"],["6","6"],["8","8"]]]},
+    {"prompt":"Sort the animals. Look for wings or fins.", "bins":["Wings","Fins"], "groups":[[["🦉","owl"],["🐦","bird"],["🦋","butterfly"]],[["🐠","fish"],["🦈","shark"],["🐬","dolphin"]]]},
+    {"prompt":"Sort these things into clothes and food.", "bins":["Clothes","Food"], "groups":[[["👕","shirt"],["🧦","socks"],["🧢","cap"]],[["🍎","apple"],["🍞","bread"],["🥕","carrot"]]]}
+  ]
+}

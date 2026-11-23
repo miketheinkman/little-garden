@@ -25,6 +25,8 @@ class Command(BaseCommand):
                         directions.update(c["spoken"] for c in item.get("deck", ()) if "spoken" in c)
                         if item.get("word"):
                             words.add(item["word"])
+        # Parents may choose any letter when assigning My Letter Patch.
+        directions.update(f"Find the {letter} key." for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
         catalog = {clip_path(kind, text): text for kind, texts in (("directions", directions), ("word", words))
                    for text in texts}
         if len(catalog) != len(directions) + len(words):
