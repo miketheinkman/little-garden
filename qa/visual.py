@@ -53,6 +53,32 @@ class VisualReview(StaticLiveServerTestCase):
                     self.assertEqual(kept.skipped, 2)
                     self.assertGreater(kept.samples.get(step=0).ms_per_key, 0)
 
+    def test_technical_dashboard(self):
+        from unittest.mock import patch
+
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for device, width in (("phone", 375), ("desktop", 1200)):
+                for theme in ("light", "dark"):
+                    self.variant = f"{device}-{theme}"
+                    with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                        page = ctx.new_page()
+                        page.goto(self.live_server_url + reverse("login"))
+                        page.locator("[name=username]").fill("reviewer")
+                        page.locator("[name=password]").fill("garden-qa-only")
+                        page.get_by_role("button", name="Sign in", exact=True).click()
+                        page.get_by_role("link", name="Admin dashboard").click()
+                        page.get_by_role("link", name="Technical", exact=True).click()
+                        expect(page.locator('.ops-grid div').filter(has=page.get_by_text("Fully completed", exact=True)).locator("dd")).to_contain_text("2")
+                        expect(page.locator(".ops-week li")).to_have_count(7)
+                        self.capture(page, "technical")
+                        with patch("pilot.operations.cpu_ticks", side_effect=OSError):
+                            page.get_by_role("link", name="Refresh snapshot").click()
+                            expect(page.locator(".ops-grid dd").first).to_contain_text("Unavailable")
+                        page.get_by_role("link", name="Lesson review", exact=True).click()
+                        expect(page.get_by_role("heading", name="Lesson review")).to_be_visible()
+            browser.close()
+
     def test_assignment_history(self):
         from datetime import timedelta
 

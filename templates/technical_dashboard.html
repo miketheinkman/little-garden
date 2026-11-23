@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Technical dashboard · Little Garden{% endblock %}
+{% block content %}
+{% include "dashboard_nav.html" %}
+<h1>Technical dashboard</h1>
+<p>Updated <time datetime="{{ now|date:'c' }}">{{ now|date:"M j, Y · g:i:s a T" }}</time> · <a href="{% url 'technical_dashboard' %}">Refresh snapshot</a></p>
+<section><h2>Server health</h2>
+<dl class="ops-grid">
+<div><dt>CPU in use</dt><dd>{% if health.cpu != None %}{{ health.cpu }}%{% else %}Unavailable{% endif %}<small>Brief sample across all cores</small></dd></div>
+<div><dt>Memory in use</dt><dd>{% if health.memory %}{{ health.memory.percent }}%<small>{{ health.memory.used|filesizeformat }} of {{ health.memory.total|filesizeformat }}</small>{% else %}Unavailable{% endif %}</dd></div>
+<div><dt>Disk space free</dt><dd>{% if health.disk %}{{ health.disk.free|filesizeformat }}<small>Of {{ health.disk.total|filesizeformat }} on the app’s drive</small>{% else %}Unavailable{% endif %}</dd></div>
+<div><dt>Host uptime</dt><dd>{{ health.uptime|default_if_none:"Unavailable" }}<small>Since the server last booted</small></dd></div>
+</dl></section>
+<section><h2>Families and sessions</h2>
+<dl class="ops-grid ops-families">
+<div><dt>Registered accounts</dt><dd>{{ usage.accounts.registered }}<small>Parent and staff accounts</small></dd></div>
+<div><dt>Learner profiles</dt><dd>{{ usage.learners }}<small>Across all families</small></dd></div>
+<div><dt>Unexpired sessions</dt><dd>{{ usage.sessions }}<small>Saved browser sessions, including idle ones</small></dd></div>
+<div><dt>New accounts</dt><dd>{{ usage.accounts.new }}<small>Registered in the last 30 days</small></dd></div>
+<div><dt>Practicing families</dt><dd>{{ usage.active }}<small>At least one practice day in the last 30 days</small></dd></div>
+<div><dt>Returning families</dt><dd>{{ usage.returning }}<small>Two or more practice days in the last 30 days</small></dd></div>
+</dl><p class="meta">A practice day counts when a learner submits a scored answer or finishes a round. Siblings count as one family.</p></section>
+<section><h2>Lesson completions</h2>
+<dl class="ops-grid">
+<div><dt>Fully completed</dt><dd>{{ usage.totals.completed }}<small>All time · every step answered</small></dd></div>
+<div><dt>Finished with skips</dt><dd>{{ usage.totals.with_skips }}<small>All time · one or more steps skipped</small></dd></div>
+<div><dt>Last seven days</dt><dd>{{ usage.week_total }}<small>Fully completed rounds, including today</small></dd></div>
+</dl>
+<figure class="ops-week"><figcaption>Daily completions</figcaption><ul>{% for day, total, pct in usage.week %}
+<li><time datetime="{{ day|date:'Y-m-d' }}">{{ day|date:"D, M j" }}</time><span aria-hidden="true"><i style="width:{{ pct }}%"></i></span><b>{{ total }}</b></li>{% endfor %}</ul></figure></section>
+{% endblock %}

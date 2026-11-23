@@ -1,0 +1,4 @@
+<nav aria-label="Dashboard sections" class="dashboard-sections">
+<a href="{% url 'dashboard' %}" {% if request.resolver_match.url_name == 'dashboard' %}aria-current="page"{% endif %}>Lesson review</a>
+<a href="{% url 'technical_dashboard' %}" {% if request.resolver_match.url_name == 'technical_dashboard' %}aria-current="page"{% endif %}>Technical</a>
+</nav>

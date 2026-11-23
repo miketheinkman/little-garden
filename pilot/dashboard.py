@@ -7,7 +7,7 @@ from django.db import transaction
 from django.http import HttpResponseBadRequest
 from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.http import require_http_methods
+from django.views.decorators.http import require_http_methods, require_safe
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
@@ -15,6 +15,7 @@ from django.db.models import Count, Q, Sum
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 
+from .operations import pilot_usage, server_health
 from .models import Assignment, LessonFeedback, FeedbackEmailPreference, FeedbackReply
 from .practice import CURRENT_VERSION, FIVE_PROMPT_ROUNDS, LESSONS
 
@@ -63,12 +64,25 @@ def review_feedback(request):
     return redirect(request.get_full_path() + "#family-feedback")
 
 
+def require_dashboard_access(user):
+    if not (user.is_staff or user.has_perm("pilot.review_lessons")):
+        raise PermissionDenied
+
+
+@never_cache
+@login_required
+@require_safe
+def technical_dashboard(request):
+    require_dashboard_access(request.user)
+    now = timezone.now()
+    return render(request, "technical_dashboard.html", {"health": server_health(), "usage": pilot_usage(now), "now": now})
+
+
 @never_cache
 @login_required
 @require_http_methods(["GET", "POST"])
 def dashboard(request):
-    if not (request.user.is_staff or request.user.has_perm("pilot.review_lessons")):
-        raise PermissionDenied
+    require_dashboard_access(request.user)
     if request.method == "POST":
         return review_feedback(request)
     selected = request.GET.get("lesson", "")

@@ -3,7 +3,7 @@ from django.contrib.auth import views as auth
 from django.urls import path
 from django.views.generic import TemplateView
 from pilot import coview, views
-from pilot.dashboard import dashboard
+from pilot.dashboard import dashboard, technical_dashboard
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -16,6 +16,7 @@ urlpatterns = [
     path("co-view/watch/", coview.watch, name="coview_watch"),
     path("co-view/share/<int:pk>/", coview.broadcast, name="coview_broadcast"),
     path("dashboard/", dashboard, name="dashboard"),
+    path("dashboard/technical/", technical_dashboard, name="technical_dashboard"),
     path("feedback/preferences/", views.feedback_preferences, name="feedback_preferences"),
     path("feedback/", views.feedback_history, name="feedback_history"),
     path("account/email/", views.recovery_email, name="recovery_email"),
