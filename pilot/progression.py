@@ -70,7 +70,7 @@ def band(level, estimate):
 
 
 def item_score(kind, artwork):
-    if kind in {"choice", "key", "type", "basket"}:
+    if kind in {"choice", "key", "type", "basket", "balance"}:
         return 100
     if kind in {"color", "mirror"} and artwork:
         from .art import match_score

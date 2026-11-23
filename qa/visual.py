@@ -78,6 +78,55 @@ class VisualReview(StaticLiveServerTestCase):
             page.wait_for_function("document.querySelector('#directions-audio').currentTime > 0")
             browser.close()
 
+    def test_card_table_and_seesaw(self):
+        child = Learner.objects.get(pk=self.child_id)
+        family = Client()
+        family.force_login(child.parent)
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375, 1200):
+                for theme in ("light", "dark"):
+                    self.variant = f"table-{width}-{theme}"
+                    with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                        ctx.add_cookies([{"url": self.live_server_url, "name": "sessionid",
+                                          "value": family.cookies["sessionid"].value}])
+                        page = ctx.new_page()
+                        def preview(key, step):
+                            page.goto(self.live_server_url + reverse("preview", args=[child.pk, key, step]))
+                        preview("sound-memory-v1", 1)
+                        first, second = [
+                            page.locator(f'[data-card="{n}"]') for n in (0, 1)]
+                        first.first.click()
+                        page.wait_for_function("document.querySelector('[data-card-audio]').currentTime > 0")
+                        second.first.press("Space")
+                        expect(page.locator("[data-cover]")).to_be_visible()
+                        page.locator("[data-clues]").check()
+                        self.capture(page, "memory-miss")
+                        page.locator(".garden-tool").screenshot(path=self.out / f"{self.variant}-memory-miss-board.png")
+                        page.locator("[data-cover]").click()
+                        for pair in (first, second):
+                            pair.first.click()
+                            pair.last.click()
+                        page.locator("[data-finish]").click()
+                        expect(page.locator(".preview-steps [aria-current]")).to_have_text("3")
+                        preview("letter-memory-v1", 4)
+                        page.locator("[data-card]").first.click()
+                        self.capture(page, "words")
+                        page.locator(".garden-tool").screenshot(path=self.out / f"{self.variant}-words-board.png")
+                        preview("seesaw-v1", 1)
+                        target = page.locator(".seesaw").get_attribute("data-target")
+                        weight = page.locator(f'[data-weight="{target}"]')
+                        weight.click()
+                        expect(page.locator("[data-table-status]")).to_contain_text("Balanced!")
+                        weight.click()
+                        expect(page.locator("[data-weigh]")).to_be_disabled()
+                        weight.press("Space")
+                        self.capture(page, "seesaw")
+                        page.locator(".garden-tool").screenshot(path=self.out / f"{self.variant}-seesaw-board.png")
+                        page.locator("[data-weigh]").click()
+                        expect(page.locator(".preview-steps [aria-current]")).to_have_text("3")
+            browser.close()
+
     def test_logic_puzzles(self):
         child = Learner.objects.get(pk=self.child_id)
         child.lesson_theme = "space"

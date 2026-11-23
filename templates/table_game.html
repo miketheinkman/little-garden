@@ -1,0 +1,21 @@
+{% load static %}
+{% if lesson.tool == 'memory' %}
+<div class="match-deck" data-size="{{ item.deck|length }}" aria-label="Memory cards">
+{% for card in item.deck %}<button type="button" data-card="{{ card.pair }}" data-label="{{ card.label }}"{% if card.clip %} data-clip="{% static card.clip %}"{% endif %} aria-label="Card {{ forloop.counter }}, face down">
+<span class="card-back" aria-hidden="true">{{ lesson.world.actor.icon|default:'🌻' }}</span>
+<span class="card-face" hidden>{% if card.clip %}♫{% else %}{% if card.symbol %}<b>{{ card.symbol }}</b>{% endif %}{% if not card.dots %}{{ card.label }}{% endif %}{% endif %}</span></button>{% endfor %}
+</div>
+<p data-table-status role="status"></p>
+{% if not mirror %}
+{% if item.listening %}<audio data-card-audio preload="none"></audio><button type="button" data-repeat disabled>Hear again</button> <label><input type="checkbox" data-clues> Show sound clues</label><output data-audio-error></output>{% endif %}
+<button type="button" data-cover hidden>Turn these cards back</button><button type="submit" data-finish disabled>Continue</button>
+{% endif %}
+{% else %}
+<div class="seesaw" data-target="{{ item.target }}" aria-label="Equal-arm seesaw">
+<div class="scale-beam"><div class="scale-load left"><b>{{ item.target }}</b></div><div class="scale-load right"><output></output></div></div><div class="scale-pivot"></div>
+</div>
+<p data-table-status role="status"></p>
+<div class="weight-rack" aria-label="Weight blocks">
+{% for block in item.blocks %}<button type="button" data-weight="{{ block.weight }}" aria-pressed="false" aria-label="Weight {{ block.weight }}"><span aria-hidden="true">{{ block.icon }}</span>{{ block.weight }}</button>{% endfor %}</div>
+{% if not mirror %}<button type="submit" data-weigh disabled>Check balance</button>{% endif %}
+{% endif %}

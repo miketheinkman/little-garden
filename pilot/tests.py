@@ -52,6 +52,24 @@ class FamilyPilotTests(TestCase):
         self.assertEqual(row.samples.get(step=1).puzzle_help, 0)
         self.assertIn("Causal reasoning", Progress(self.child).estimates)
 
+    def test_table_games_validate_real_pairs_and_weights(self):
+        memory = self.child.assignment_set.create(lesson="sound-memory-v1")
+        balance = self.child.assignment_set.create(lesson="seesaw-v1")
+        self.client.post(self.manage, {"action": "play"})
+        def submit(row, state):
+            return self.client.post(f"/play/{row.pk}/", {"step": 0, "tool_state": state},
+                                    HTTP_ACCEPT="application/json").json()["result"]
+        deck = LESSONS[memory.lesson]["items"][0]["deck"]
+        order = sorted(range(len(deck)), key=lambda i: deck[i]["pair"])
+        for state in ("", "99", "0,0,0,0", ",".join(map(str, order[::2] + order[1::2]))):
+            self.assertEqual(submit(memory, state), "retry")
+        self.assertEqual(submit(memory, ",".join(map(str, order))), "correct")
+        self.assertFalse(memory.samples.exists())
+        item = LESSONS[balance.lesson]["items"][0]
+        ix = next(i for i, b in enumerate(item["blocks"]) if b["weight"] == item["target"])
+        self.assertEqual(submit(balance, str(ix)), "correct")
+        self.assertEqual(balance.samples.get().score, 100)
+
     def test_animation_follows_saved_outcome(self):
         keys = self.child.assignment_set.create(lesson="keys-v1")
         checkin = self.child.assignment_set.create(lesson="number-check-v1")
@@ -190,6 +208,15 @@ class LibraryTests(TestCase):
                 url = f"{self.library}{key}/preview/{step}/"
                 self.assertContains(self.client.get(url), item["prompt"], html=True)
                 data = {"answer": item["answer"], "pixels": "0"*16+"1"+"0"*751}
+                if "deck" in item:
+                    pairs = sorted(range(len(item["deck"])), key=lambda i: item["deck"][i]["pair"])
+                    data["tool_state"] = ",".join(map(str, pairs))
+                if "blocks" in item:
+                    from itertools import combinations
+                    ids = range(len(item["blocks"]))
+                    solution = next(ix for n in (1, 2) for ix in combinations(ids, n)
+                                    if sum(item["blocks"][i]["weight"] for i in ix) == item["target"])
+                    data["tool_state"] = ",".join(map(str, solution))
                 if "board" in item:
                     from .test_puzzles import winning_moves
                     data["moves"] = "".join(map(str, winning_moves(item["board"])[0]))

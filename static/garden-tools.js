@@ -1,6 +1,8 @@
 // The same drawing code updates a child's board and its read-only parent mirror.
 function paintGardenTool(board, encoded = "") {
   const steps = /^(\d{1,2},){0,39}\d{1,2}$/.test(encoded) ? encoded.split(",").map(Number) : [];
+  if (board.dataset.tool === "memory") return paintMemory(board, steps);
+  if (board.dataset.tool === "balance") return paintBalance(board, steps);
   const count = steps.length;
   const check = board.querySelector("[data-check]");
   const undo = board.querySelector('[data-action="undo"]');
@@ -86,6 +88,11 @@ function startGardenTool(board, form, answer, signal) {
     form.elements.tool_state.value = steps.join(",");
     paintGardenTool(board, form.elements.tool_state.value);
   }
+  if (tool === "balance" || tool === "memory") {
+    startTableGame(board, steps, update, signal);
+    update();
+    return;
+  }
   function typeInitial(letter) {
     const upper = letter === letter.toUpperCase();
     steps = [0, letter.toUpperCase().charCodeAt(0) - 64 + (upper ? 0 : 26)];
@@ -156,4 +163,104 @@ function startGardenTool(board, form, answer, signal) {
     }
   }
   update();
+}
+
+function memoryState(cards, steps) {
+  let matched = 0;
+  while (matched + 1 < steps.length && cards[steps[matched]].dataset.card === cards[steps[matched + 1]].dataset.card) matched += 2;
+  return {matched, miss: steps.length === matched + 2};
+}
+
+function paintMemory(board, raw) {
+  const cards = [...board.querySelectorAll("[data-card]")];
+  const steps = [...new Set(raw.filter(i => i < cards.length))];
+  const {matched, miss} = memoryState(cards, steps);
+  const clues = board.querySelector("[data-clues]")?.checked;
+  cards.forEach((card, i) => {
+    const pos = steps.indexOf(i), up = pos >= 0, found = up && pos < matched;
+    card.dataset.face = found ? "matched" : up ? "up" : "down";
+    const face = card.querySelector(".card-face");
+    face.hidden = !up;
+    card.querySelector(".card-back").hidden = up;
+    if (card.dataset.clip) face.textContent = clues ? card.dataset.label : "♫";
+    const front = card.dataset.clip && !clues ? "sound card" : card.dataset.label;
+    card.setAttribute("aria-label", "Card " + (i + 1) + ", " + (up ? front : "face down") + (found ? ", matched" : ""));
+  });
+  const status = matched / 2 + " of " + cards.length / 2 + " pairs found.";
+  board.querySelector("[data-table-status]").textContent = status + (miss ? " Try another pair." : "");
+  const finish = board.querySelector("[data-finish]");
+  if (finish) {
+    finish.disabled = matched !== cards.length;
+    board.querySelector("[data-cover]").hidden = !miss;
+  }
+}
+
+function paintBalance(board, raw) {
+  const weights = [...board.querySelectorAll("[data-weight]")];
+  const picks = [...new Set(raw.filter(i => i < weights.length))];
+  const total = picks.reduce((sum, i) => sum + Number(weights[i].dataset.weight), 0);
+  const scale = board.querySelector(".seesaw"), target = Number(scale.dataset.target);
+  scale.style.setProperty("--tilt", Math.max(-13, Math.min(13, (total - target) * 4)) + "deg");
+  weights.forEach((w, i) => w.setAttribute("aria-pressed", String(picks.includes(i))));
+  const load = scale.querySelector("output");
+  load.replaceChildren(...picks.map(i => {
+    const block = document.createElement("b");
+    block.textContent = weights[i].textContent.trim();
+    return block;
+  }));
+  if (!picks.length) load.textContent = "0";
+  board.querySelector("[data-table-status]").textContent = "Left " + target + " · Right " + total + ". " +
+    (total === target ? "Balanced!" : total < target ? "The left side is heavier." : "The right side is heavier.");
+  const check = board.querySelector("[data-weigh]");
+  if (check) check.disabled = !picks.length;
+}
+
+function startTableGame(board, steps, update, signal) {
+  const weights = [...board.querySelectorAll("[data-weight]")];
+  weights.forEach((w, index) => w.onclick = () => {
+    const old = steps.indexOf(index);
+    if (old === -1) steps.push(index);
+    else steps.splice(old, 1);
+    update();
+  });
+  if (weights.length) return;
+  const cards = [...board.querySelectorAll("[data-card]")];
+  const audio = board.querySelector("[data-card-audio]");
+  const repeat = board.querySelector("[data-repeat]");
+  let last = null, playId = 0;
+  function stop() { playId++; audio?.pause(); }
+  function listen(card) {
+    if (!audio || !card) return;
+    stop();
+    const id = playId;
+    last = card; repeat.disabled = false;
+    audio.src = card.dataset.clip;
+    board.querySelector("[data-audio-error]").textContent = "";
+    audio.play().catch(() => {
+      if (id === playId && !signal.aborted) board.querySelector("[data-audio-error]").textContent = "Try Hear again, or turn on sound clues.";
+    });
+  }
+  function cover() {
+    steps.splice(-2);
+    stop(); last = null;
+    if (repeat) repeat.disabled = true;
+    update();
+  }
+  cards.forEach((card, index) => card.onclick = () => {
+    const {miss} = memoryState(cards, steps);
+    if (steps.includes(index)) { listen(card); return; }
+    if (miss) cover();
+    steps.push(index);
+    listen(card);
+    update();
+  });
+  board.querySelector("[data-cover]").onclick = cover;
+  if (audio) {
+    repeat.onclick = () => listen(last);
+    board.querySelector("[data-clues]").onchange = update;
+    document.querySelector("#listen")?.addEventListener("click", stop, {signal});
+    audio.addEventListener("play", () => document.querySelector("#directions-audio")?.pause(), {signal});
+    signal.addEventListener("abort", stop, {once:true});
+    window.addEventListener("pagehide", stop, {signal});
+  }
 }

@@ -6,9 +6,12 @@ from django.conf import settings
 
 from .puzzles import PUZZLES, route_lesson
 
+from .table_games import GAMES, table_lesson
+
 CONTENT = settings.BASE_DIR / "content"
 LESSONS = json.loads((CONTENT / "lessons.json").read_text())
 LESSONS.update({key: route_lesson(key) for key in PUZZLES})
+LESSONS.update({key: table_lesson(key, 0) for key in GAMES})
 GARDEN_PRACTICE = json.loads((CONTENT / "garden_practice.json").read_text())
 AUTHORED = json.loads((CONTENT / "variations.json").read_text())
 
@@ -26,6 +29,8 @@ LESSONS.update(CURRENT_LESSONS)
 
 
 def round_count(key):
+    if key in GAMES:
+        return 32
     if key in PUZZLES:
         return 4
     if key in {"scissors-v1", "sink-float-v1"}:
@@ -73,6 +78,8 @@ def build_round(key, number):
     lesson = LESSONS[key]
     if number == 0:
         return lesson
+    if key in GAMES:
+        return table_lesson(key, number)
     if key in PUZZLES:
         return route_lesson(key, number % 4)
     rng = random.Random(f"{key}/{number}")

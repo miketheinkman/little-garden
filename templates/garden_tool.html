@@ -1,6 +1,7 @@
 {% load static %}
 <fieldset class="garden-tool" aria-label="{{ lesson.title }}" data-tool="{{ lesson.tool }}" {% if mirror %}disabled{% endif %}>
-{% if lesson.tool == 'shift' %}
+{% if lesson.tool == 'memory' or lesson.tool == 'balance' %}{% include 'table_game.html' %}
+{% elif lesson.tool == 'shift' %}
 <p class="garden-sign"><output data-initial>_</output>{{ item.name_tail }}</p>
 <div data-keyboard tabindex="0" aria-label="Capital letter keyboard">
 <button type="button" data-action="shift" aria-pressed="false">Shift ⇧</button>

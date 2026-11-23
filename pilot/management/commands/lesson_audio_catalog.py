@@ -22,6 +22,7 @@ class Command(BaseCommand):
                 for theme in THEMES:
                     for item in themed_round(key, base, theme, variation)["items"]:
                         directions.add(item["prompt"])
+                        directions.update(c["spoken"] for c in item.get("deck", ()) if "spoken" in c)
                         if item.get("word"):
                             words.add(item["word"])
         catalog = {clip_path(kind, text): text for kind, texts in (("directions", directions), ("word", words))

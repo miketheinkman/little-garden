@@ -1,0 +1,166 @@
+{
+  "lessons": {
+    "letter-memory-v1": {
+      "title": "Letter and Word Memory",
+      "skill": "Remember letters, letter teams and short words",
+      "category": "Reading & language",
+      "strand": "Visual memory",
+      "tool": "memory",
+      "topics": [
+        "letters",
+        "letters",
+        "case",
+        "teams",
+        "words"
+      ]
+    },
+    "picture-memory-v1": {
+      "title": "Shape and Number Memory",
+      "skill": "Match shapes, colors, quantities and sums",
+      "category": "Numbers & patterns",
+      "strand": "Visual memory",
+      "tool": "memory",
+      "topics": [
+        "shapes",
+        "colors",
+        "numbers",
+        "dots",
+        "sums"
+      ]
+    },
+    "sound-memory-v1": {
+      "title": "Sound Memory",
+      "skill": "Match spoken counts and short melodies by ear",
+      "category": "Music & listening",
+      "strand": "Auditory memory",
+      "tool": "memory",
+      "topics": [
+        "count",
+        "melody",
+        "count",
+        "melody",
+        "melody"
+      ]
+    },
+    "seesaw-v1": {
+      "title": "Seesaw Balance",
+      "skill": "Combine weights to make two sides equal",
+      "category": "Numbers & patterns",
+      "strand": "Number sense",
+      "tool": "balance",
+      "topics": []
+    }
+  },
+  "prompts": {
+    "letters": "Turn over two cards. Find the matching letters.",
+    "case": "Find the big and small letter that go together.",
+    "teams": "Turn over two cards. Find the matching letter teams.",
+    "words": "Turn over two cards. Find the same word.",
+    "numbers": "Turn over two cards. Find the matching numbers.",
+    "dots": "Match each number with its group of dots.",
+    "shapes": "Find two cards with the same shape.",
+    "colors": "Find two cards with the same color.",
+    "sums": "Match each sum with its number.",
+    "count": "Listen to two cards. Find the voices that count to the same number.",
+    "melody": "Listen to two cards. Find the tunes that go together.",
+    "animals": "Tap animal blocks to balance the seesaw. The numbers show their weights.",
+    "blocks": "Tap number blocks to balance the seesaw. Tap a block again to take it off."
+  },
+  "shapes": [
+    [
+      "●",
+      "circle"
+    ],
+    [
+      "▲",
+      "triangle"
+    ],
+    [
+      "■",
+      "square"
+    ],
+    [
+      "★",
+      "star"
+    ]
+  ],
+  "colors": [
+    [
+      "🟥",
+      "red"
+    ],
+    [
+      "🟨",
+      "yellow"
+    ],
+    [
+      "🟦",
+      "blue"
+    ],
+    [
+      "🟩",
+      "green"
+    ]
+  ],
+  "counts": [
+    "One.",
+    "One, two.",
+    "One, two, three.",
+    "One, two, three, four."
+  ],
+  "melodies": [
+    [
+      "up",
+      [
+        60,
+        64,
+        67
+      ]
+    ],
+    [
+      "down",
+      [
+        67,
+        64,
+        60
+      ]
+    ],
+    [
+      "up then down",
+      [
+        60,
+        67,
+        60
+      ]
+    ],
+    [
+      "down then up",
+      [
+        67,
+        60,
+        67
+      ]
+    ]
+  ],
+  "letters": "SATRML",
+  "teams": [
+    "sh",
+    "ch",
+    "th",
+    "ck",
+    "ee"
+  ],
+  "words": [
+    "cat",
+    "sun",
+    "cup",
+    "hen",
+    "pig"
+  ],
+  "animals": [
+    "🐭",
+    "🐇",
+    "🦊",
+    "🐻"
+  ]
+}

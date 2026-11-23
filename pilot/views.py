@@ -16,6 +16,7 @@ from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 
 from .themes import THEMES, THEME_CHOICES, assignment_lesson, summary, themed_round
 from .puzzles import parse_moves, simulate, hint
+from .table_games import table_answer
 from .audio import lesson_clips
 from .art import art_item, evaluate
 from .coview import recent_response
@@ -40,6 +41,8 @@ def puzzle_action(request, item, row=None):
 
 
 def lesson_response(request, lesson, item):
+    if lesson["kind"] in {"balance", "memory"}:
+        return table_answer(item, request.POST.get("tool_state", "")), None
     if "board" in item:
         moves = parse_moves(item["board"], request.POST.get("moves", ""))
         return moves is not None and simulate(item["board"], moves)["success"], None
