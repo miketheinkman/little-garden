@@ -53,6 +53,61 @@ class VisualReview(StaticLiveServerTestCase):
                     self.assertEqual(kept.skipped, 2)
                     self.assertGreater(kept.samples.get(step=0).ms_per_key, 0)
 
+    def test_exploration_lessons(self):
+        from pilot.explorations import EXPLORATIONS
+        from pilot.practice import build_round
+
+        child = Learner.objects.get(pk=self.child_id)
+        account = Client()
+        account.force_login(child.parent)
+        assignment = assign_lesson(child, "number-dots-v1", variation=2)
+        device = Client()
+        device.force_login(child.parent)
+        device.post(reverse("manage", args=[child.pk]), {"action": "play"})
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for viewport, width in (("phone", 375), ("desktop", 1200)):
+                for theme in ("light", "dark"):
+                    self.variant = f"{viewport}-{theme}"
+                    with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                        ctx.add_cookies([{"name":"sessionid", "value":account.cookies["sessionid"].value,
+                                         "url":self.live_server_url}])
+                        page = ctx.new_page()
+                        for key in EXPLORATIONS:
+                            step = 3 if key == "money-total-v1" else 0
+                            page.goto(self.live_server_url + reverse("preview", args=[child.pk, key, step]))
+                            board = page.locator(".garden-tool")
+                            item = build_round(key, 0)["items"][step]
+                            expect(page.locator("#prompt")).to_have_text(item["prompt"])
+                            self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"), key)
+                            if "dots" in item:
+                                dots = board.locator("[data-dot]")
+                                dots.nth(2).click()
+                                expect(page.locator(".retry-note")).to_be_visible()
+                                for dot in dots.all():
+                                    dot.press("Space")
+                                expect(board.locator("[data-dot-finish]")).to_be_enabled()
+                            elif key == "hear-number-v1":
+                                page.get_by_role("button", name="Hear the number").click()
+                                page.wait_for_function("document.querySelector('.word-station audio').currentTime > 0")
+                            elif "pieces" in item:
+                                for index, piece in enumerate(item["pieces"]):
+                                    board.locator(f'[data-piece="{index}"]').click()
+                                    board.locator(f'[data-bin="{piece["bin"]}"]').click()
+                                expect(board.locator("[data-sort-check]")).to_be_enabled()
+                            board.screenshot(path=self.out / f"{self.variant}-explore-{key}.png")
+                            if key == "inside-outside-v1":
+                                board.locator(f'button[value="{item["answer"]}"]').click()
+                                expect(page.locator(".preview-steps [aria-current]")).to_have_text("2")
+            page = browser.new_page(viewport={"width":320,"height":700}, has_touch=True)
+            page.context.add_cookies([{"name":"sessionid","value":device.cookies["sessionid"].value,"url":self.live_server_url}])
+            page.goto(self.live_server_url + reverse("play", args=[assignment.pk]))
+            for dot in page.locator("[data-dot]").all():
+                dot.tap()
+            page.get_by_role("button", name="Finish picture").tap()
+            expect(page.get_by_text("Step 2 of 5")).to_be_visible()
+            browser.close()
+
     def test_technical_dashboard(self):
         from unittest.mock import patch
 

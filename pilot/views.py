@@ -46,6 +46,8 @@ def puzzle_action(request, item, row=None):
 
 
 def lesson_response(request, lesson, item):
+    if lesson.get("tool") == "dots":
+        return request.POST.get("tool_state") == item["answer"], None
     if lesson.get("tool") == "sort":
         return request.POST.get("tool_state") == ",".join(str(p["bin"]) for p in item["pieces"]), None
     if lesson.get("tool") == "paint-mix":

@@ -1,0 +1,58 @@
+{
+  "lessons": {
+    "holiday-clues-v1": ["Name the Celebration", "Identify a holiday from a clue about its celebration", "5–8", "Calendar & culture", "Cultural awareness", 2, "pictures"],
+    "holiday-traditions-v1": ["Celebration Keepsakes", "Connect a tradition or object to a holiday that some families celebrate", "5–8", "Calendar & culture", "Cultural awareness", 2, "pictures"],
+    "color-baskets-v1": ["Color Baskets", "Sort objects by color even when their shapes differ", "4–6", "Art & drawing", "Color recognition", 1, "sort"],
+    "same-different-v1": ["Picture Twins", "Compare three objects to find a matching pair or the odd one out", "4–6", "Art & drawing", "Visual discrimination", 1, "twins"],
+    "hear-number-v1": ["Number Radio", "Listen to a number and find the matching numeral", "4–6", "Numbers & patterns", "Number sense", 1, "listen-number"],
+    "number-dots-v1": ["Number Dot Trails", "Connect numbered dots in counting order to draw an outline", "4–7", "Numbers & patterns", "Number sense", 2, "dots"],
+    "add-groups-v1": ["Put Two Groups Together", "Add two pictured groups to find a total within ten", "5–7", "Numbers & patterns", "Number sense", 2, "arithmetic"],
+    "take-away-v1": ["How Many Stay?", "Subtract within ten by counting what remains", "5–7", "Numbers & patterns", "Number sense", 2, "arithmetic"],
+    "money-id-v1": ["Meet U.S. Money", "Identify common U.S. coins and bills by name and value", "5–8", "Numbers & patterns", "Money sense", 2, "money-id"],
+    "money-total-v1": ["Count the Cash Tray", "Count U.S. coins, then combine bills and coins", "6–8", "Numbers & patterns", "Money sense", 3, "money-total"],
+    "letter-dots-v1": ["Alphabet Dot Trails", "Connect letters in alphabet order to draw an outline", "4–7", "Reading & language", "Alphabet knowledge", 2, "dots"],
+    "big-small-v1": ["Big and Small", "Compare two pictures of the same object by size", "4–6", "Size & measurement", "Measurement", 1, "compare"],
+    "tall-short-v1": ["Tall and Short", "Compare heights from the same starting line", "4–6", "Size & measurement", "Measurement", 1, "compare"],
+    "over-under-v1": ["Over or Under?", "Find an object above or beneath a bridge", "4–6", "Spatial awareness", "Spatial reasoning", 1, "position"],
+    "left-right-pics-v1": ["Which Side?", "Find an object on the left or right of a landmark", "4–7", "Spatial awareness", "Spatial reasoning", 2, "position"],
+    "inside-outside-v1": ["In or Out?", "Compare pictures to find an object inside or outside a container", "4–6", "Spatial awareness", "Spatial reasoning", 1, "position"],
+    "real-imaginary-v1": ["Could That Really Happen?", "Decide whether an animal, object, or event belongs in real life or make-believe", "4–7", "Thinking games", "Reasoning", 2, "pretend"]
+  },
+  "holidays": [
+    ["Diwali", "🪔", "For which holiday do some families light small oil lamps called diyas?", "a diya lamp", "🪔", "For Diwali, which object might a family light?"],
+    ["Hanukkah", "🕎", "Which Jewish holiday lasts eight nights and includes lighting a hanukkiah?", "a dreidel", "🌀", "Which spinning toy do some families play with at Hanukkah?"],
+    ["Lunar New Year", "🧧", "Which new year celebration includes red gift envelopes in some Chinese families?", "a red envelope", "🧧", "What might a child receive with lucky money at Lunar New Year?"],
+    ["Halloween", "🎃", "For which holiday might children dress up and say trick or treat?", "a carved pumpkin", "🎃", "Which decoration might you see glowing on a doorstep for Halloween?"],
+    ["Eid al-Fitr", "🌙", "Which celebration marks the end of Ramadan?", "a plate of sweets", "🍬", "Which treat might a family share with visitors at Eid al-Fitr?"],
+    ["U.S. Independence Day", "🎆", "Which U.S. holiday takes place on the fourth of July?", "a U.S. flag", "🇺🇸", "Which flag might people wave at a Fourth of July parade in the United States?"],
+    ["Thanksgiving in the U.S.", "🍂", "Which U.S. holiday falls on the fourth Thursday of November?", "a pumpkin pie", "🥧", "Which pie might a family bake from an orange squash for Thanksgiving?"],
+    ["Valentine’s Day", "💌", "On which February holiday might someone give a friend a heart-shaped card?", "a heart card", "💌", "Which paper gift might carry a friendship message on Valentine’s Day?"]
+  ],
+  "colors": {"red":"#c53940","blue":"#3472c7","yellow":"#f5c235","green":"#378554","purple":"#8855af","orange":"#ed842f"},
+  "shapes": {"circle":"●","square":"■","triangle":"▲","star":"★"},
+  "number_words": ["zero","one","two","three","four","five","six","seven","eight","nine","ten","eleven","twelve"],
+  "outlines": {
+    "house":[[15,80],[15,42],[50,14],[85,42],[85,80]],
+    "boat":[[12,52],[46,15],[46,50],[88,50],[70,79],[30,79]],
+    "crown":[[12,26],[33,47],[50,15],[68,47],[88,26],[78,81],[22,81]],
+    "tree":[[50,12],[79,47],[59,47],[85,82],[15,82],[39,47],[18,47]],
+    "fish":[[12,48],[36,18],[67,35],[87,17],[87,80],[67,61],[36,78]],
+    "kite":[[50,12],[86,39],[50,86],[14,39]],
+    "tent":[[12,80],[50,14],[88,80],[65,80],[50,52],[35,80]]
+  },
+  "money": [
+    ["penny",1,"copper"],["nickel",5,"silver"],["dime",10,"silver"],["quarter",25,"silver"],
+    ["one-dollar bill",100,"bill"],["five-dollar bill",500,"bill"],["ten-dollar bill",1000,"bill"]
+  ],
+  "real": [
+    ["🐋","A whale comes up for air."],["🦇","A bat flies in the dark."],["🪁","A kite flies on a windy day."],
+    ["🐧","A penguin swims underwater."],["🌱","A bean sprouts in damp soil."],["🦒","A giraffe reaches leaves high in a tree."],
+    ["🧊","An ice cube melts in the sunshine."],["🚂","A train carries people on tracks."]
+  ],
+  "pretend": [
+    ["🐉","A dragon breathes a stream of fire."],["🦄","A unicorn grows a rainbow from its horn."],
+    ["🧹","A broom flies by itself to the moon."],["🧸","A toy bear comes alive and eats breakfast."],
+    ["🥾","A pair of magic boots turns a child into a frog."],["🏰","A castle floats on a fluffy cloud."],
+    ["🌳","A tree walks to school in sneakers."],["🖍️","A crayon draws a door that opens into outer space."]
+  ]
+}

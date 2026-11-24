@@ -1,0 +1,7 @@
+<span class="money-piece money-{{ piece.material }} denomination-{{ piece.cents }}">
+{% if piece.material != 'bill' %}<svg viewBox="0 0 32 20" aria-hidden="true" focusable="false">
+{% if piece.cents == 1 %}<path d="M5 2h22v6c0 5-5 8-11 10C10 16 5 13 5 8Z M9 6h14 M12 8v6m4-6v8m4-8v6"/>
+{% elif piece.cents == 5 %}<path d="M2 17h28 M5 14h22 M7 14V9h18v5 M3 8h26L16 2Z M11 9v5m5-5v5m5-5v5"/>
+{% elif piece.cents == 10 %}<path d="M15 17V8h3v9ZM14 7c-3-3 2-3 2-6 5 4 5 6 1 6 M11 16 6 8m2 3L4 10m5 3 1-4m11 7 5-8m-2 4 4-2"/>
+{% else %}<path d="M3 3c7 0 10 3 13 5 4-3 8-5 13-5l-4 7-6 1-3 6-3-6-6-1Z"/>{% endif %}
+</svg>{% endif %}<strong>{{ piece.mark }}</strong></span>

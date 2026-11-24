@@ -251,6 +251,8 @@ class LibraryTests(TestCase):
                 url = f"{self.library}{key}/preview/{step}/"
                 self.assertContains(self.client.get(url), item["prompt"], html=True)
                 data = {"answer": item["answer"], "pixels": "0"*16+"1"+"0"*751}
+                if "dots" in item:
+                    data["tool_state"] = item["answer"]
                 if "pieces" in item:
                     data["tool_state"] = ",".join(str(p["bin"]) for p in item["pieces"])
                 if "recipes" in item:

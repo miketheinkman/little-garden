@@ -1,6 +1,7 @@
 // The same drawing code updates a child's board and its read-only parent mirror.
 function paintGardenTool(board, encoded = "") {
   const steps = /^(\d{1,2},){0,39}\d{1,2}$/.test(encoded) ? encoded.split(",").map(Number) : [];
+  if (board.dataset.tool === "dots") return paintDots(board, steps);
   if (board.dataset.tool === "sort") return paintSort(board, steps);
   if (board.dataset.tool === "memory") return paintMemory(board, steps);
   if (board.dataset.tool === "balance") return paintBalance(board, steps);
@@ -91,6 +92,19 @@ function startGardenTool(board, form, answer, signal) {
   function update() {
     form.elements.tool_state.value = steps.join(",");
     paintGardenTool(board, form.elements.tool_state.value);
+  }
+  if (tool === "dots") {
+    board.addEventListener("click", event => {
+      const dot = event.target.closest("[data-dot]");
+      if (!dot || form.inert) return;
+      const index = Number(dot.dataset.dot);
+      if (index < steps.length) return;
+      if (index !== steps.length) { answer("retry"); return; }
+      steps.push(index);
+      update();
+    });
+    update();
+    return;
   }
   if (tool === "sort") {
     steps = Array(board.querySelectorAll("[data-piece]").length).fill(0);
@@ -315,6 +329,19 @@ function paintMixture(board, steps) {
     ? names.join(" + ") + " makes " + name + "."
     : chosen.length ? names[0] + " + … Choose another paint." : "Choose your first paint.";
   return chosen.length === 2 ? name : "";
+}
+
+function paintDots(board, steps) {
+  const dots = [...board.querySelectorAll("[data-dot]")];
+  const points = dots.slice(0, steps.length).map(dot => dot.dataset.x + "," + dot.dataset.y);
+  const done = steps.length === dots.length;
+  if (done) points.push(points[0]);
+  board.querySelector("[data-dot-line]").setAttribute("points", points.join(" "));
+  dots.forEach((dot, i) => dot.setAttribute("aria-pressed", String(i < steps.length)));
+  const status = board.querySelector("[data-dot-status]");
+  status.textContent = done ? "You drew a " + status.dataset.outline + "!" : steps.length + " of " + dots.length + " dots joined.";
+  const finish = board.querySelector("[data-dot-finish]");
+  if (finish) finish.disabled = !done;
 }
 
 function paintSort(board, steps) {

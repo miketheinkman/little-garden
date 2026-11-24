@@ -8,8 +8,8 @@
 {% elif item.word %}
 {% if mirror %}<p class="display">Spoken word · {{ item.word }}</p>{% else %}
 <div class="word-station">
-  <audio controls preload="none" aria-label="Hear the word" src="{% static word_clip %}"></audio>
-  <button type="button" data-hear-word="{{ item.word }}" hidden>Hear the word</button>
-  <details><summary>Show the word</summary><p>{{ item.word }}</p></details>
+  <audio controls preload="none" aria-label="{% if lesson.tool == 'listen-number' %}Hear the number{% else %}Hear the word{% endif %}" src="{% static word_clip %}"></audio>
+  <button type="button" data-hear-word="{{ item.word }}" hidden>{% if lesson.tool == 'listen-number' %}Hear the number{% else %}Hear the word{% endif %}</button>
+  <details><summary>{% if lesson.tool == 'listen-number' %}Show the number word{% else %}Show the word{% endif %}</summary><p>{{ item.word }}</p></details>
 </div>{% endif %}
 {% elif item.display %}<p class="display">{{ item.display }}</p>{% endif %}

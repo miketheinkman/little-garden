@@ -5,6 +5,7 @@ import random
 from django.conf import settings
 
 from .discovery import DISCOVERY, discovery_round
+from .explorations import EXPLORATIONS, exploration_round
 from .paint import PAINT_LESSONS, paint_lesson
 from .puzzles import PUZZLES, route_lesson
 
@@ -16,6 +17,7 @@ LESSONS.update({key: route_lesson(key) for key in PUZZLES})
 LESSONS.update({key: table_lesson(key, 0) for key in GAMES})
 LESSONS.update({key: paint_lesson(key, 0) for key in PAINT_LESSONS})
 LESSONS.update({key: discovery_round(key, 0) for key in DISCOVERY})
+LESSONS.update({key: exploration_round(key, 0) for key in EXPLORATIONS})
 GARDEN_PRACTICE = json.loads((CONTENT / "garden_practice.json").read_text())
 AUTHORED = json.loads((CONTENT / "variations.json").read_text())
 
@@ -33,7 +35,7 @@ LESSONS.update(CURRENT_LESSONS)
 
 
 def round_count(key):
-    if key in GAMES or key in PAINT_LESSONS or key in DISCOVERY:
+    if key in GAMES or key in PAINT_LESSONS or key in DISCOVERY or key in EXPLORATIONS:
         return 32
     if key in PUZZLES:
         return 4
@@ -82,6 +84,8 @@ def build_round(key, number):
     lesson = LESSONS[key]
     if number == 0:
         return lesson
+    if key in EXPLORATIONS:
+        return exploration_round(key, number)
     if key in DISCOVERY:
         return discovery_round(key, number)
     if key in PAINT_LESSONS:

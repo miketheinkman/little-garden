@@ -1,6 +1,7 @@
 {% load static %}
 <fieldset class="garden-tool" aria-label="{{ lesson.title }}" data-tool="{{ lesson.tool }}" {% if mirror %}disabled{% endif %}>
 {% if item.animals or item.fragment or item.pieces %}{% include 'discovery_tool.html' %}
+{% elif lesson.tool == 'dots' or lesson.tool == 'twins' or lesson.tool == 'compare' or lesson.tool == 'position' or lesson.tool == 'arithmetic' or lesson.tool == 'money-id' or lesson.tool == 'money-total' or lesson.tool == 'pretend' or lesson.tool == 'listen-number' %}{% include 'exploration_tool.html' %}
 {% elif item.paints %}{% include 'paint_studio.html' %}
 {% elif lesson.tool == 'memory' or lesson.tool == 'balance' %}{% include 'table_game.html' %}
 {% elif lesson.tool == 'shift' %}
