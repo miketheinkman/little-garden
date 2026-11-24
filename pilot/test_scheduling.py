@@ -100,3 +100,50 @@ class PlannerTests(TestCase):
             plan = self.child.lessonplan_set.get()
             self.client.post(self.url, {"action":"cancel","plan":plan.pk})
             self.assertIsNone(self.child.assignment_set.get().removed_at)
+
+
+class FamilyCalendarTests(TestCase):
+    def setUp(self):
+        parent = get_user_model().objects.create_user("calendar-parent")
+        self.client.force_login(parent)
+        self.fern = Learner.objects.create(parent=parent, nickname="Fern")
+        self.ash = Learner.objects.create(parent=parent, nickname="Ash")
+        stranger = get_user_model().objects.create_user("calendar-neighbor")
+        self.other = Learner.objects.create(parent=stranger, nickname="Other")
+        self.url = reverse("family_calendar")
+
+    @patch("django.utils.timezone.localdate", return_value=date(2028, 2, 1))
+    def test_family_month_projection_and_filter(self, _):
+        start, leap = date(2028, 2, 1), date(2028, 2, 29)
+        self.fern.lessonplan_set.create(lesson="ten-v1", repeat="weekly", weekdays="1",
+                                        next_on=start, ends_on=leap)
+        self.ash.lessonplan_set.create(lesson="five-v1", repeat="once", next_on=leap)
+        self.other.lessonplan_set.create(lesson="five-v1", repeat="daily", next_on=start)
+        response = self.client.get(self.url, {"day":leap})
+        self.assertEqual(response.context["month_count"], 6)
+        self.assertEqual([item["child"] for item in response.context["selected_entries"]], [self.ash,self.fern])
+        self.assertEqual(response.context["following"], date(2028,3,1))
+        self.assertEqual(response.context["previous"], date(2028,1,1))
+        filtered = self.client.get(self.url, {"day":start, "child":self.fern.pk})
+        self.assertEqual(filtered.context["month_count"], 5)
+        self.assertEqual(filtered.context["selected_entries"][0]["status"], "In queue")
+        self.assertEqual(self.fern.assignment_set.count(), 1)
+        self.assertEqual(self.client.get(self.url, {"day":"2028-03-01"}).context["month_count"], 0)
+        self.assertEqual(self.client.get(self.url, {"child": self.other.pk}).status_code, 404)
+        self.assertEqual(self.client.get(self.url, {"day":"invalid"}).status_code, 404)
+        self.client.logout()
+        self.assertEqual(self.client.get(self.url).status_code, 302)
+
+    def test_past_calendar_and_saving_from_filtered_date(self):
+        past = timezone.localdate()-timedelta(days=6)
+        for changes in ({"completed":timezone.now()}, {"removed_at":timezone.now()}):
+            self.fern.assignment_set.create(lesson="ten-v1", scheduled_for=past, **changes)
+        self.fern.assignment_set.create(lesson="five-v1")
+        day = self.client.get(self.url, {"day":past}).context["selected_entries"]
+        self.assertEqual([item["status"] for item in day], ["Completed"])
+        future = timezone.localdate()+timedelta(days=14)
+        planner = reverse("planner", args=[self.fern.pk]) + f"?day={future}&calendar=child"
+        self.assertEqual(self.client.get(planner).context["form"].initial["start"], future)
+        response = self.client.post(planner, {"lesson":"ten-v1", "start":future, "repeat":"once", "submission":uuid.uuid4()})
+        self.assertEqual(response.url, f"{self.url}?day={future}&child={self.fern.pk}#day-plan")
+        self.assertEqual(self.client.get(response.url).context["selected_entries"][0]["status"], "Planned")

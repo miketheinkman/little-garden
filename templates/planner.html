@@ -1,7 +1,7 @@
 {% extends "base.html" %}{% load static %}
 {% block title %}Lesson planner · Little Garden{% endblock %}
 {% block content %}
-<nav aria-label="Family navigation"><a href="{% url 'home' %}">Family garden</a> · <a href="{% url 'library' child.pk %}">Lesson library</a></nav>
+<nav aria-label="Family navigation"><a href="{% url 'home' %}">Family garden</a> · <a href="{% url 'library' child.pk %}">Lesson library</a> · <a href="{% if calendar_back %}{{ calendar_back }}{% else %}{% url 'family_calendar' %}?child={{ child.pk }}&amp;day={{ calendar_date|date:'Y-m-d' }}{% endif %}">Family calendar</a></nav>
 <h1>Lesson planner</h1>
 <p>Choose when lessons appear in <strong>{{ child.nickname }}’s queue</strong>. Dates follow {{ zone }} time.</p>
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
@@ -18,7 +18,7 @@
 <div data-end>{{ form.end.label_tag }}{{ form.end }}{{ form.end.errors }}</div>
 <p data-repeat-note>Each repeat gets a fresh round. If a previous session from this plan is still in the queue, it stays there for {{ child.nickname }} to finish.</p>
 <button>{% if editing %}Save changes{% else %}Schedule lesson{% endif %}</button>
-{% if editing %}<a href="{% url 'planner' child.pk %}">Discard changes</a>{% endif %}
+{% if editing %}<a href="{% if calendar_back %}{{ calendar_back }}{% else %}{% url 'planner' child.pk %}{% endif %}">Discard changes</a>{% endif %}
 </form></article>
 {% if plans or agenda %}<section class="plan-agenda" id="lesson-dates" aria-label="Lesson dates">
 <h2>{{ week_start|date:"M j" }} – {{ week_end|date:"M j" }}</h2>
@@ -30,7 +30,7 @@
 <div><time datetime="{{ plan.next_on|date:'Y-m-d' }}">{{ plan.next_on|date:"D, M j, Y" }}</time>
 <h3>{{ plan.title }}</h3><p>{{ plan.cadence }}{% if plan.ends_on %} · Through {{ plan.ends_on|date:"M j, Y" }}{% endif %}</p></div>
 <div class="card-actions"><a href="{% url 'planner' child.pk %}?edit={{ plan.pk }}">Edit dates</a>
-<form method="post" action="{% url 'planner' child.pk %}">{% csrf_token %}<input type="hidden" name="plan" value="{{ plan.pk }}">
+<form method="post" action="{% url 'planner' child.pk %}{% if calendar_back %}?day={{ calendar_date.isoformat }}&amp;calendar={{ calendar_scope }}{% endif %}">{% csrf_token %}<input type="hidden" name="plan" value="{{ plan.pk }}">
 <button class="link" name="action" value="cancel">Cancel plan</button></form></div></article>
 {% empty %}<p>No upcoming plans for {{ child.nickname }}. Lessons scheduled for today appear in the <a href="{% url 'home' %}">family queue</a>.</p>{% endfor %}
 </section>

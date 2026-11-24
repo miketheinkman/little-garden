@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+from .calendar import scheduled_entries
 from .discovery import PATCH, letter_selection
 from .models import Learner, LessonPlan
 from .practice import CURRENT_LESSONS, LESSONS, round_count
@@ -80,6 +81,12 @@ def planner(request, pk):
         selected = date.fromisoformat(request.GET["day"]) if "day" in request.GET else None
     except ValueError:
         raise Http404
+    calendar_scope = request.GET.get("calendar")
+    calendar_url = reverse("family_calendar")
+    def calendar_day(day):
+        child_filter = f"&child={child.pk}" if calendar_scope == "child" else ""
+        return f"{calendar_url}?day={day.isoformat()}{child_filter}#day-plan"
+
     initial = {"lesson": key, "start": editing.next_on if editing else max(today, selected or today + timedelta(days=1)),
                "repeat": editing.repeat if editing else "once", "weekdays": list(editing.weekdays) if editing else [],
                "end": editing.ends_on if editing else None, "submission": editing.submission if editing else uuid.uuid4()}
@@ -98,6 +105,8 @@ def planner(request, pk):
             get_object_or_404(child.lessonplan_set, pk=request.POST["plan"])
             upcoming.filter(pk=request.POST["plan"]).update(next_on=None)
         messages.success(request, "Canceled the upcoming lesson dates.")
+        if calendar_scope in {"child", "family"}:
+            return redirect(calendar_day(selected or today))
         return redirect("planner", pk=pk)
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
@@ -113,8 +122,10 @@ def planner(request, pk):
                     **values, "first_variation": variation, "letters": letters})
             release_due(child, today)
         messages.success(request, "Updated the lesson schedule." if editing else "Lesson scheduled.")
+        if calendar_scope in {"child", "family"}:
+            return redirect(calendar_day(data["next_on"]))
         return redirect(reverse("planner", args=[pk]) + "?day=" + data["start"].isoformat())
-    plans = list(upcoming.order_by("next_on", "pk"))
+    plans = list(upcoming.select_related("learner").order_by("next_on", "pk"))
     for plan in plans:
         plan.title = summary(plan.lesson, LESSONS[plan.lesson], child.lesson_theme)["title"]
         plan.cadence = ", ".join(DAYS[int(d)][:3] for d in plan.weekdays) if plan.repeat == "weekly" else plan.get_repeat_display()
@@ -123,19 +134,12 @@ def planner(request, pk):
     week_start = anchor - timedelta(days=anchor.weekday())
     visible = min(7, date.max.toordinal() - week_start.toordinal() + 1)
     week_end = week_start + timedelta(days=visible - 1)
-    assigned = defaultdict(list)
-    for row in child.assignment_set.filter(scheduled_for__range=(week_start, week_end), removed_at=None):
-        title = summary(row.lesson, LESSONS[row.lesson], child.lesson_theme)["title"]
-        assigned[row.scheduled_for].append(f"{title} ({'completed' if row.completed else 'in queue'})")
-    agenda = []
-    for offset in range(visible):
-        day = week_start + timedelta(days=offset)
-        lessons = assigned[day] + [plan.title for plan in plans if day >= plan.next_on and
-                  (day == plan.next_on or plan.repeat != "once" and occurrence(plan, day) == day)]
-        if lessons:
-            agenda.append((day, lessons))
+    entries = scheduled_entries([child], plans, week_start, week_end)
+    agenda = [(day, [item["title"] if item.get("plan") else f'{item["title"]} ({item["status"].lower()})'
+                     for item in entries[day]]) for day in sorted(entries)]
     return render(request, "planner.html", {"child": child, "form": form, "plans": plans, "editing": editing, "agenda": agenda,
                                             "week_start": week_start, "week_end": week_end,
                                             "previous_week": week_start-timedelta(days=7) if week_start > today else None,
                                             "next_week": week_end+timedelta(days=1) if week_end < date.max else None,
-                                            "variation": variation, "letters": letters, "zone": "Central" if timezone.get_current_timezone_name() == "America/Chicago" else timezone.get_current_timezone_name()})
+                                            "calendar_back": calendar_day(selected or today) if calendar_scope in {"child", "family"} else None,
+                                            "calendar_scope": calendar_scope, "calendar_date": selected or anchor, "variation": variation, "letters": letters, "zone": "Central" if timezone.get_current_timezone_name() == "America/Chicago" else timezone.get_current_timezone_name()})

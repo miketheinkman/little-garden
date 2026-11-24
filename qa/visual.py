@@ -34,6 +34,55 @@ class VisualReview(StaticLiveServerTestCase):
         page.screenshot(path=self.out / f"{self.variant}-{name}.png", full_page=True, animations="disabled")
         self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"), name)
 
+    def test_family_calendar(self):
+        from datetime import timedelta
+        parent = get_user_model().objects.get(username="reviewer")
+        fern = Learner.objects.get(pk=self.child_id)
+        ash = Learner.objects.create(parent=parent, nickname="Ash")
+        today = timezone.localdate()
+        day = (today.replace(day=1) + timedelta(days=32)).replace(day=9)
+        fern.lessonplan_set.create(lesson="keys-v2", repeat="weekdays", next_on=day + timedelta(days=(7-day.weekday())%7))
+        ash.lessonplan_set.create(lesson="ten-v1", repeat="once", next_on=day)
+        family = Client()
+        family.force_login(parent)
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375,1200):
+                for theme in ("light","dark"):
+                    self.variant = f"calendar-{width}-{theme}"
+                    with browser.new_context(viewport={"width":width,"height":850}, color_scheme=theme) as ctx:
+                        ctx.add_cookies([{"name":"sessionid","value":family.cookies["sessionid"].value,"url":self.live_server_url}])
+                        page = ctx.new_page()
+                        page.goto(self.live_server_url)
+                        page.get_by_role("link", name="Family calendar", exact=True).click()
+                        expect(page.get_by_role("link",name="Today",exact=True)).to_be_visible()
+                        page.get_by_role("link", name="Next month").click()
+                        cell = page.locator(f'.month-grid a[href*="day={day}"]')
+                        cell.focus()
+                        cell.press("Enter")
+                        expect(page.locator("#day-plan")).to_contain_text("Make ten")
+                        self.capture(page, "month")
+                        page.get_by_label("Show lessons for").select_option(str(fern.pk))
+                        page.get_by_role("button",name="Show",exact=True).click()
+                        expect(page.locator("#day-plan")).not_to_contain_text("Make ten")
+                        page.get_by_role("link",name="Schedule for Fern").click()
+                        expect(page.get_by_label("First available")).to_have_value(day.isoformat())
+                        page.get_by_label("Lesson",exact=True).select_option("five-v1")
+                        page.get_by_role("button",name="Schedule lesson").click()
+                        expect(page.locator("#day-plan")).to_contain_text("Make five")
+                        expect(page.get_by_label("Show lessons for")).to_have_value(str(fern.pk))
+                        self.capture(page, "scheduled")
+                        page.get_by_role("link",name="Previous month").click()
+                        page.get_by_role("link",name="Today",exact=True).click()
+                        expect(page.locator("#day-plan")).to_contain_text("No lessons scheduled for this day.")
+                        self.capture(page, "empty")
+                        page.get_by_role("link",name="Next month").click()
+                        cell.click()
+                        page.locator("#day-plan li").filter(has_text="Make five").get_by_role("link",name="Edit plan").click()
+                        page.locator(".plan-row").filter(has_text="Make five").get_by_role("button",name="Cancel plan").click()
+                        expect(page.locator("#day-plan")).not_to_contain_text("Make five")
+            browser.close()
+
     def test_planner_and_tablet_questions(self):
         from datetime import timedelta
 

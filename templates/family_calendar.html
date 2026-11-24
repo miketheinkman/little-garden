@@ -1,0 +1,51 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Family calendar · Little Garden{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{% static 'family-calendar.css' %}">{% endblock %}
+{% block content %}
+<a href="{% url 'home' %}">Family garden</a>
+<h1>Family calendar</h1>
+{% if children %}
+{% if children|length > 1 %}
+<form method="get" class="calendar-filter">
+  <label for="calendar-child">Show lessons for</label>
+  <select id="calendar-child" name="child">
+    <option value="">All children</option>
+    {% for child in children %}<option value="{{ child.pk }}"{% if selected_child == child %} selected{% endif %}>{{ child.nickname }}</option>{% endfor %}
+  </select>
+  <input type="hidden" name="day" value="{{ selected.isoformat }}"><button>Show</button>
+</form>{% endif %}
+<section class="month-card" aria-labelledby="month-label">
+  <div class="month-tools">
+    <div><h2 id="month-label">{{ selected|date:"F Y" }}</h2>
+    <p>{{ month_count }} scheduled lesson{{ month_count|pluralize }}{% if selected_child %} for {{ selected_child.nickname }}{% endif %}</p></div>
+    <nav aria-label="Calendar months">
+      {% if previous %}<a aria-label="Previous month" href="?day={{ previous.isoformat }}{% if selected_child %}&amp;child={{ selected_child.pk }}{% endif %}"><span aria-hidden="true">←</span></a>{% endif %}
+      <a href="?day={{ today.isoformat }}{% if selected_child %}&amp;child={{ selected_child.pk }}{% endif %}">Today</a>
+      {% if following %}<a aria-label="Next month" href="?day={{ following.isoformat }}{% if selected_child %}&amp;child={{ selected_child.pk }}{% endif %}"><span aria-hidden="true">→</span></a>{% endif %}
+    </nav>
+  </div>
+  <table class="month-grid" aria-labelledby="month-label">
+    <thead><tr>{% for name in weekdays %}<th scope="col" abbr="{{ name }}">{{ name|slice:":3" }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for week in weeks %}<tr>{% for cell in week %}
+      {% if cell %}<td{% if cell.date == selected %} class="picked"{% endif %}>
+        <a href="?day={{ cell.date.isoformat }}{% if selected_child %}&amp;child={{ selected_child.pk }}{% endif %}#day-plan"
+           aria-label="{{ cell.date|date:'l, F j, Y' }}, {{ cell.entries|length }} scheduled lesson{{ cell.entries|length|pluralize }}{% if cell.date == selected %}, selected{% endif %}"{% if cell.date == today %} aria-current="date"{% endif %}>
+          <span class="day-number">{{ cell.date.day }}</span>
+          {% if cell.entries %}<span class="day-count" aria-hidden="true">{{ cell.entries|length }}</span>
+          <span class="day-titles" aria-hidden="true">{% for entry in cell.entries|slice:":2" %}<span>{{ entry.title }}</span>{% endfor %}</span>{% endif %}
+        </a>
+      </td>{% else %}<td class="outside-month"></td>{% endif %}
+    {% endfor %}</tr>{% endfor %}</tbody>
+  </table>
+</section>
+<section class="calendar-detail" id="day-plan" tabindex="-1" aria-labelledby="day-title">
+  {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
+  <h2 id="day-title">{{ selected|date:"l, F j" }}</h2>
+  {% if selected_entries %}<ul>{% for entry in selected_entries %}
+    <li><div><strong>{{ entry.title }}</strong><span class="calendar-meta">{{ entry.child.nickname }} · {{ entry.status }}{% if entry.plan and entry.plan.repeat != 'once' %} · {{ entry.plan.get_repeat_display }}{% endif %}</span></div>
+    {% if entry.plan %}<a href="{% url 'planner' entry.child.pk %}?edit={{ entry.plan.pk }}&amp;day={{ selected.isoformat }}&amp;calendar={% if selected_child %}child{% else %}family{% endif %}">Edit plan</a>{% endif %}</li>
+  {% endfor %}</ul>{% else %}<p>No lessons scheduled for this day.</p>{% endif %}
+  {% if selected >= today %}<div class="calendar-add">{% for child in visible_children %}<a class="button" href="{% url 'planner' child.pk %}?day={{ selected.isoformat }}&amp;calendar={% if selected_child %}child{% else %}family{% endif %}">Schedule for {{ child.nickname }}</a>{% endfor %}</div>{% endif %}
+</section>
+{% else %}<p>Add a child to start scheduling lessons.</p><a class="button" href="{% url 'home' %}">Back to family garden</a>{% endif %}
+{% endblock %}

@@ -1,0 +1,43 @@
+.calendar-filter,.month-tools,.month-tools nav,.calendar-add {display:flex;align-items:center;flex-wrap:wrap;gap:.5rem}
+.calendar-filter {margin:0 0 1.3rem}
+.calendar-filter select {max-width:min(100%,20rem)}
+.calendar-filter label {margin-right:.3rem}
+.month-card {background:var(--surface);border:1px solid var(--edge);border-radius:1rem;overflow:hidden}
+.month-tools {padding:1rem 1.2rem;justify-content:space-between;gap:.65rem;background:var(--wash)}
+.month-tools h2,.calendar-detail h2 {margin:0;line-height:1.2}
+.month-tools p,.calendar-meta {color:var(--muted);font-size:.9rem}
+.month-tools p {margin:.25rem 0 0}
+.month-tools nav a {display:grid;place-items:center;min-width:44px;min-height:44px;padding:0 .7rem;border:1px solid var(--edge);border-radius:.55rem;text-decoration:none;background:var(--surface);font-weight:650}
+.month-grid {table-layout:fixed;border-collapse:collapse;width:100%}
+.month-grid th {padding:.5rem .2rem;text-align:center;font-size:.83rem;color:var(--muted)}
+.month-grid td {vertical-align:top;padding:0;border:1px solid var(--line)}
+.month-grid tr td:first-child {border-left:0}
+.month-grid tr td:last-child {border-right:0}
+.month-grid tbody tr:last-child td {border-bottom:0}
+.month-grid .outside-month {background:var(--page)}
+.month-grid td a {min-height:5.7rem;height:100%;display:block;position:relative;padding:.35rem .4rem;color:var(--ink);text-decoration:none}
+.month-grid .picked {background:var(--wash);box-shadow:inset 0 0 0 2px var(--link)}
+.month-grid td a:focus-visible {outline-offset:-4px}
+.day-number,.day-count {font-variant-numeric:tabular-nums;font-weight:650}
+.day-number {display:inline-grid;place-items:center;min-width:1.65rem;height:1.65rem;border-radius:50%}
+[aria-current=date] .day-number {background:var(--button);color:var(--button-text)}
+.day-count {float:right;min-width:1.3rem;padding:.08rem .2rem;text-align:center;border-radius:.35rem;font-size:.72rem;background:var(--wash);color:var(--link);border:1px solid var(--line)}
+.day-titles {display:grid;gap:.2rem;margin-top:.35rem}
+.day-titles span {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-left:3px solid var(--edge);padding-left:.25rem;font-size:.74rem;line-height:1.35}
+.calendar-detail {margin:1.2rem 0;padding:1.2rem;background:var(--surface);border:1px solid var(--line);border-radius:1rem;scroll-margin-top:1rem}
+.calendar-detail:focus-visible {outline:2px solid var(--link);outline-offset:2px}
+.calendar-detail ul {margin:.7rem 0 0;padding:0;list-style:none}
+.calendar-detail li {display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.4rem 1rem;padding:.6rem 0;border-top:1px solid var(--line)}
+.calendar-detail li>div,.calendar-add a {min-width:0;overflow-wrap:anywhere}
+.calendar-meta {display:block}
+.calendar-add {margin-top:1rem}
+@media(max-width:650px) {
+  .calendar-filter {display:grid;grid-template-columns:minmax(0,1fr) auto}
+  .calendar-filter label {grid-column:1/-1}
+  .calendar-filter select {width:100%;max-width:none}
+  .day-titles {display:none}
+  .month-grid td a {min-height:3.45rem;text-align:center;padding:.15rem}
+  .day-count {float:none;display:block;width:max-content;margin:0 auto;padding:0 .2rem;line-height:1.25}
+  .month-tools {padding:.8rem}
+  .month-tools nav {gap:.25rem}
+}

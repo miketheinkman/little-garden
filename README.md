@@ -68,6 +68,8 @@ For a local Gmail sender with Google 2-Step Verification and app passwords enabl
 
 Open **Lesson planner** for a learner in the family garden or lesson library. Schedule one date, every day, weekdays, or selected days of the week, with an optional last date. **Schedule this round** in a lesson preview preserves the displayed first round and any chosen letters. Later sessions draw fresh rounds. The weekly view shows upcoming dates alongside scheduled sessions already in the queue or completed. Parents can edit or cancel upcoming dates separately from assignments already in the queue.
 
+Open **Family calendar** from the parent dashboard for a Monday-first month of scheduled lessons across all children. Select a child to filter, or select a date to see each lesson and its queue status. Current and future dates link to the planner with that date filled in. Past dates show scheduled sessions that reached the queue.
+
 The queue makes due lessons available when the family next opens it, using the pilot’s local calendar date. A one-time lesson waits for the learner even after a missed day. After time away, each recurring plan offers its latest due session. It keeps one unfinished session from that plan at a time.
 
 ## Practice rounds
