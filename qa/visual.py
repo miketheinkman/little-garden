@@ -659,6 +659,37 @@ class VisualReview(StaticLiveServerTestCase):
             self.assertEqual(child.assignment_set.get().variation, variation)
             self.assertEqual(child.lessonplan_set.get().first_variation, variation)
 
+    def test_envelope_trails(self):
+        family = Client()
+        family.force_login(get_user_model().objects.get(username="reviewer"))
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375, 1200):
+                for theme in ("light", "dark"):
+                    with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                        ctx.add_cookies([{"name": "sessionid", "value": family.cookies["sessionid"].value, "url": self.live_server_url}])
+                        page = ctx.new_page()
+                        for key, variation, step in (("letter-dots-v1", 34, 4), ("number-dots-v1", 32, 3)):
+                            page.goto(self.live_server_url + reverse("preview", args=[self.child_id, key, step]) + f"?v={variation}")
+                            board = page.locator(".garden-tool")
+                            dots = board.locator("[data-dot]")
+                            if key == "letter-dots-v1":
+                                self.assertEqual(dots.all_text_contents(), list("EFGHIJK"))
+                            line = board.locator("[data-dot-line]")
+                            for i, dot in enumerate(dots.all()):
+                                dot.click()
+                                if i < 6:
+                                    self.assertEqual(len(line.get_attribute("points").split()), i + 1)
+                            points = line.get_attribute("points").split()
+                            self.assertEqual(points[-3:], ["50,56", points[0], points[5]])
+                            self.assertEqual({points[0], points[5]}, {"12,24", "88,24"})
+                            self.assertEqual({points[2], points[3]}, {"12,76", "88,76"})
+                            expect(board.locator("[data-dot-status]")).to_have_text("You drew an envelope!")
+                            expect(board.locator("[data-dot-finish]")).to_be_enabled()
+                            if key == "letter-dots-v1":
+                                board.screenshot(path=self.out / f"envelope-{width}-{theme}.png")
+            browser.close()
+
     def test_exploration_lessons(self):
         from pilot.explorations import EXPLORATIONS
         from pilot.practice import build_round

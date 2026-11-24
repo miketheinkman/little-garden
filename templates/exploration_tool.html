@@ -1,8 +1,8 @@
-{% if lesson.tool == 'dots' %}
+{% load lesson_cues %}{% if lesson.tool == 'dots' %}
 <p class="dot-instruction">Start at <strong>{{ item.dots.0.label }}</strong>. Draw a line to the next dot or tap the dots in order.</p>
 <div class="dot-board" aria-label="Connect the dots">
 <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline data-dot-line /><line data-dot-pencil visibility="hidden" /></svg>
-{% for dot in item.dots %}<button type="button" data-dot="{{ forloop.counter0 }}" data-x="{{ dot.x }}" data-y="{{ dot.y }}" style="left:{{ dot.x }}%;top:{{ dot.y }}%" aria-label="Dot {{ dot.label }}">{{ dot.label }}</button>{% endfor %}
+{% for dot in item|trail_dots %}<button type="button" data-dot="{{ forloop.counter0 }}" data-x="{{ dot.x }}" data-y="{{ dot.y }}" style="left:{{ dot.x }}%;top:{{ dot.y }}%" aria-label="Dot {{ dot.label }}">{{ dot.label }}</button>{% endfor %}
 </div><p data-dot-status role="status" data-outline="{{ item.outline }}"></p>
 {% if not mirror %}<button type="submit" data-dot-finish disabled><span aria-hidden="true">✓</span> Finish picture</button>{% endif %}
 {% elif lesson.tool == 'twins' %}

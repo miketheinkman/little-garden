@@ -3,6 +3,8 @@ import re
 
 from django import template
 
+from pilot.explorations import EXTRA_OUTLINES
+
 register = template.Library()
 
 ACTION_GROUPS = {
@@ -89,3 +91,13 @@ def bundle_groups(display):
     counts = re.findall(r"\d+", display)
     if len(counts) == 2:
         return {"bags": range(int(counts[0])), "loose": range(int(counts[1]))}
+
+@register.filter
+def trail_dots(item):
+    nodes = item["dots"]
+    # Saved envelopes used to start across the top. Keep their labels and handedness.
+    if item["outline"] == "envelope" and nodes[0]["y"] == nodes[1]["y"]:
+        mirrored = nodes[0]["x"] > nodes[1]["x"]
+        return [dict(node, x=100-x if mirrored else x, y=y)
+                for node, (x, y) in zip(nodes, EXTRA_OUTLINES["envelope"])]
+    return nodes

@@ -409,11 +409,17 @@ function paintDots(board, steps) {
   const dots = [...board.querySelectorAll("[data-dot]")];
   const points = dots.slice(0, steps.length).map(dot => dot.dataset.x + "," + dot.dataset.y);
   const done = steps.length === dots.length;
-  if (done) points.push(points[0]);
+  const status = board.querySelector("[data-dot-status]");
+  const outline = status.dataset.outline;
+  if (done) {
+    points.push(points[0]);
+    // From the flap tip, the path returns to the first corner, then seals the top edge.
+    if (outline === "envelope") points.push(points[dots.length - 2]);
+  }
   board.querySelector("[data-dot-line]").setAttribute("points", points.join(" "));
   dots.forEach((dot, i) => dot.setAttribute("aria-pressed", String(i < steps.length)));
-  const status = board.querySelector("[data-dot-status]");
-  status.textContent = done ? "You drew a " + status.dataset.outline + "!" : steps.length + " of " + dots.length + " dots joined.";
+  const article = /^[aeiou]/i.test(outline) ? "an" : "a";
+  status.textContent = done ? `You drew ${article} ${outline}!` : steps.length + " of " + dots.length + " dots joined.";
   const finish = board.querySelector("[data-dot-finish]");
   if (finish) finish.disabled = !done;
 }

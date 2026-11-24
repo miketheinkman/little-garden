@@ -34,6 +34,18 @@ class ExplorationTests(TestCase):
                         expected = f"${cents/100:.2f}" if cents >= 100 else f"{cents}¢"
                         self.assertEqual(item["answer"], expected)
 
+    def test_saved_envelopes_keep_their_labels_and_direction(self):
+        from .templatetags.lesson_cues import trail_dots
+        coords = [(12,25), (88,25), (88,76), (12,76), (12,43), (50,62), (75,43)]
+        for mirror in (False, True):
+            nodes = [dict(x=100-x if mirror else x, y=y, label=label) for label, (x,y) in zip("EFGHIJK", coords)]
+            display = trail_dots({"outline": "envelope", "dots": nodes})
+            self.assertEqual([dot["label"] for dot in display], list("EFGHIJK"))
+            self.assertEqual(display[0]["x"], nodes[0]["x"])
+            self.assertEqual(display[0]["x"], display[1]["x"])
+            self.assertEqual(display[5]["y"], display[0]["y"])
+            self.assertEqual((display[6]["x"], display[6]["y"]), (50,56))
+
     def test_every_preview_accepts_solution_and_records_nothing(self):
         for key in EXPLORATIONS:
             for step, item in enumerate(build_round(key, 1)["items"]):
