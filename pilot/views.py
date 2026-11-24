@@ -22,7 +22,9 @@ from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 from .themes import THEMES, THEME_CHOICES, assignment_lesson, summary, themed_round
 from .puzzles import parse_moves, simulate, hint
 from .discovery import PATCH, discovery_round, letter_selection
-from .assignments import assign_lesson, suggested_round, question_set
+from .assessment import evidence_method, submitted_response
+from .models import Purpose
+from .assignments import active_lesson_keys, assign_lesson, queue_available, suggested_round, question_set
 from .scheduling import release_due
 from .paint import mixture_matches
 from .table_games import table_answer
@@ -170,26 +172,6 @@ def requested_round(key, value):
     return number
 
 
-def active_lesson_keys(child):
-    keys = child.assignment_set.filter(completed=None, removed_at=None).values_list("lesson", flat=True)
-    return {CURRENT_VERSION.get(key, key) for key in keys}
-
-
-@transaction.atomic
-def queue_available(child, keys, variation=None, letters=None):
-    # Serialize single and bulk adds before reading the queue, including on SQLite.
-    Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))
-    active = active_lesson_keys(child)
-    added = []
-    for key in keys:
-        current = CURRENT_VERSION.get(key, key)
-        if current not in active:
-            assign_lesson(child, key, variation, letters)
-            active.add(current)
-            added.append(key)
-    return added, active
-
-
 @login_required
 @require_http_methods(["GET", "POST"])
 def library(request, pk):
@@ -218,7 +200,10 @@ def library(request, pk):
                 letters = letter_selection(request.POST["letters"]) if key == PATCH and "letters" in request.POST else None
             except ValueError as error:
                 return HttpResponseBadRequest(str(error))
-            added, active = queue_available(child, [key], variation, letters)
+            purpose = request.POST.get("purpose", Purpose.PRACTICE)
+            if purpose not in Purpose.values:
+                return HttpResponseBadRequest("Choose a session purpose.")
+            added, active = queue_available(child, [key], variation, letters, purpose=purpose)
             title = summary(key, LESSONS[key], child.lesson_theme)["title"]
             note = (f"{title} added to {child.nickname}’s queue." if added else
                     f"{title} is already in {child.nickname}’s queue.")
@@ -314,15 +299,21 @@ def preview(request, pk, key, step):
     if step > len(raw["items"]):
         raise Http404
     lesson = themed_round(key, raw, child.lesson_theme, number)
-    letter_query = f"&letters={letters}" if letters else ""
+    purpose = request.GET.get("purpose", Purpose.PRACTICE)
+    if purpose not in Purpose.values:
+        raise Http404
+    round_query = f"&letters={letters}" if letters else ""
+    if purpose != Purpose.PRACTICE:
+        round_query += f"&purpose={purpose}"
     def preview_url(target):
         url = reverse("preview", args=[pk, key, target])
-        return f"{url}?v={number}{letter_query}" if number or letters else url
+        return f"{url}?v={number}{round_query}" if number or round_query else url
 
     finished = step == len(lesson["items"])
     context = {
         "preview": True, "appearance": child.appearance, "child": child, "key": key, "step": step, "lesson": lesson,
-        "letter_query": letter_query, "feedback_kinds": LessonFeedback.Kind.choices, "finished": finished, "variation": number,
+        "round_query": round_query, "purpose": purpose,
+        "session_purpose": Purpose(purpose).label if purpose != Purpose.PRACTICE else "", "feedback_kinds": LessonFeedback.Kind.choices, "finished": finished, "variation": number,
         "next_variant": (number+1) % round_count(key),
         "already_queued": CURRENT_VERSION.get(key, key) in active_lesson_keys(child),
     }
@@ -350,7 +341,8 @@ def preview(request, pk, key, step):
         if request.POST.get("action") == "skip":
             return redirect(preview_url(step+1))
         accepted, artwork = lesson_response(request, lesson, item)
-        if accepted or lesson.get("checkin") and request.POST.get("answer", "").strip():
+        checkin = (purpose != Purpose.PRACTICE or lesson.get("checkin")) and evidence_method(lesson) == "answer"
+        if accepted or checkin and submitted_response(request.POST, lesson, item):
             if artwork:
                 messages.success(request, artwork["feedback"])
             return answer_transition(request, preview_url(step+1), lesson, accepted)
@@ -494,8 +486,10 @@ def play(request, pk):
         skip = request.POST.get("action") == "skip"
         accepted, artwork = (False, None) if skip else lesson_response(request, lesson, item)
         catalog = LESSONS[row.lesson]
-        checkin = catalog.get("checkin", False)
-        if checkin and not skip and not request.POST.get("answer", "").strip():
+        assessing = row.purpose != Purpose.PRACTICE or catalog.get("checkin", False)
+        method = evidence_method(catalog)
+        checkin = assessing and method == "answer"
+        if checkin and not skip and not submitted_response(request.POST, lesson, item):
             return redirect("play", pk)
         advance = skip or accepted or checkin
         done = advance and row.step+1 == len(lesson["items"])
@@ -519,6 +513,8 @@ def play(request, pk):
                 if help_used:
                     saved.update(puzzle_help=0)
             score = item_score(lesson["kind"], artwork)
+            if method == "observation":
+                score = None
             if "board" in item:
                 score = 100 if accepted else None
             if updated and not skip and score is not None:
@@ -551,4 +547,4 @@ def play(request, pk):
         if request.headers.get("Accept") == "application/json":
             return JsonResponse({"result": "retry"})
         error = "Take another look. You can try again."
-    return render(request, "play.html", {**lesson_clips(item, row.lesson), "key": row.lesson, "autoplay_directions": row.learner.autoplay_directions and not error, "appearance": row.learner.appearance, "assignment_id": row.pk, "puzzle_help": row.puzzle_help, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})
+    return render(request, "play.html", {"session_purpose": row.get_purpose_display() if row.purpose != Purpose.PRACTICE else "", **lesson_clips(item, row.lesson), "key": row.lesson, "autoplay_directions": row.learner.autoplay_directions and not error, "appearance": row.learner.appearance, "assignment_id": row.pk, "puzzle_help": row.puzzle_help, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})

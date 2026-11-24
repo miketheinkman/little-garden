@@ -10,7 +10,7 @@ from django.utils import timezone
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_safe
 
-from .models import Assignment, Learner, LessonPlan
+from .models import Assignment, Learner, LessonPlan, Purpose
 from .practice import LESSONS
 from .scheduling import occurrence, release_due
 from .themes import summary
@@ -26,7 +26,7 @@ def scheduled_entries(children, plans, start, end):
         theme = base.get("_opened_theme", row.learner.lesson_theme)
         title = summary(row.lesson, base, theme)["title"]
         entries[row.scheduled_for].append(dict(child=row.learner, title=title,
-                                               status="Completed" if row.completed else "In queue"))
+                                               purpose=row.get_purpose_display(), status="Completed" if row.completed else "In queue"))
     for plan in plans:
         if plan.next_on > end:
             continue
@@ -36,7 +36,8 @@ def scheduled_entries(children, plans, start, end):
             day = occurrence(plan, max(start, plan.next_on))
         title = summary(plan.lesson, LESSONS[plan.lesson], plan.learner.lesson_theme)["title"]
         while day and day <= end:
-            entries[day].append(dict(child=plan.learner, title=title, status="Planned", plan=plan))
+            purpose = Purpose.REVIEW if plan.purpose == Purpose.PLACEMENT and day > plan.next_on else plan.purpose
+            entries[day].append(dict(child=plan.learner, title=title, status="Planned", purpose=Purpose(purpose).label, plan=plan))
             if day == end or plan.repeat == LessonPlan.Repeat.ONCE:
                 break
             day = occurrence(plan, day + timedelta(days=1))

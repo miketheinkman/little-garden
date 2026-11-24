@@ -34,6 +34,53 @@ class VisualReview(StaticLiveServerTestCase):
         page.screenshot(path=self.out / f"{self.variant}-{name}.png", full_page=True, animations="disabled")
         self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"), name)
 
+    def test_placement_and_review_coverage(self):
+        from datetime import timedelta
+        parent = get_user_model().objects.get(username="reviewer")
+        family = Client()
+        family.force_login(parent)
+        cases = [(width, theme, Learner.objects.create(parent=parent, nickname="Clover"))
+                 for width in (375,1200) for theme in ("light","dark")]
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width,theme,child in cases:
+                self.variant = f"reviews-{width}-{theme}"
+                with browser.new_context(viewport={"width":width,"height":820}, color_scheme=theme) as ctx:
+                    ctx.add_cookies([{"name":"sessionid","value":family.cookies["sessionid"].value,"url":self.live_server_url}])
+                    page = ctx.new_page()
+                    page.goto(self.live_server_url)
+                    page.locator(f'[data-learner="{child.pk}"]').get_by_role("link",name="Placement & reviews",exact=True).click()
+                    page.get_by_label("Skill area").select_option("Money sense")
+                    page.get_by_role("button",name="Show",exact=True).click()
+                    self.capture(page,"initial")
+                    card = page.locator('[data-lesson="money-id-v1"]')
+                    review_url = page.url
+                    card.get_by_role("link",name="Preview check").click()
+                    expect(page.locator(".preview-tools")).to_contain_text("Initial placement")
+                    expect(page.get_by_role("link",name="Schedule this round")).to_have_attribute("href", re.compile("purpose=placement"))
+                    page.goto(review_url)
+                    card.get_by_role("button",name="Queue placement").click()
+                    expect(card).to_contain_text("In queue · Initial placement")
+                    card.get_by_role("link",name="Schedule review").click()
+                    expect(page.get_by_label("Session purpose")).to_have_value("review")
+                    expect(page.get_by_label("Repeat",exact=True)).to_have_value("fourweeks")
+                    first = timezone.localdate()+timedelta(days=28)
+                    expect(page.get_by_label("First available")).to_have_value(first.isoformat())
+                    page.get_by_role("button",name="Schedule lesson").click()
+                    expect(page.locator(".plan-row")).to_contain_text("Skill review · Every four weeks")
+                    url = self.live_server_url + reverse("placement_reviews",args=[child.pk])
+                    page.goto(url+"?strand=Money+sense")
+                    expect(card).to_contain_text("Skill review scheduled")
+                    self.capture(page,"scheduled")
+                    page.get_by_label("Skill area").select_option("Auditory memory")
+                    page.get_by_role("button",name="Show",exact=True).click()
+                    expect(page.locator(".review-lesson")).to_contain_text("Parent observation")
+                    self.capture(page,"observation")
+                    page.get_by_label("Coverage",exact=True).select_option("Review due")
+                    page.get_by_role("button",name="Show",exact=True).click()
+                    expect(page.get_by_text("No activities match these filters.")).to_be_visible()
+            browser.close()
+
     def test_family_calendar(self):
         from datetime import timedelta
         parent = get_user_model().objects.get(username="reviewer")

@@ -42,7 +42,7 @@
   {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
   <h2 id="day-title">{{ selected|date:"l, F j" }}</h2>
   {% if selected_entries %}<ul>{% for entry in selected_entries %}
-    <li><div><strong>{{ entry.title }}</strong><span class="calendar-meta">{{ entry.child.nickname }} · {{ entry.status }}{% if entry.plan and entry.plan.repeat != 'once' %} · {{ entry.plan.get_repeat_display }}{% endif %}</span></div>
+    <li><div><strong>{{ entry.title }}</strong><span class="calendar-meta">{{ entry.child.nickname }} · {{ entry.status }}{% if entry.purpose != "Practice" %} · {{ entry.purpose }}{% endif %}{% if entry.plan and entry.plan.repeat != 'once' %} · {{ entry.plan.get_repeat_display }}{% endif %}</span></div>
     {% if entry.plan %}<a href="{% url 'planner' entry.child.pk %}?edit={{ entry.plan.pk }}&amp;day={{ selected.isoformat }}&amp;calendar={% if selected_child %}child{% else %}family{% endif %}">Edit plan</a>{% endif %}</li>
   {% endfor %}</ul>{% else %}<p>No lessons scheduled for this day.</p>{% endif %}
   {% if selected >= today %}<div class="calendar-add">{% for child in visible_children %}<a class="button" href="{% url 'planner' child.pk %}?day={{ selected.isoformat }}&amp;calendar={% if selected_child %}child{% else %}family{% endif %}">Schedule for {{ child.nickname }}</a>{% endfor %}</div>{% endif %}

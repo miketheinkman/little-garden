@@ -6,9 +6,15 @@ from statistics import median
 
 from django.utils import timezone
 
+from .assessment import evidence_method
 from .themes import summary
 from .models import SkillSample
 from .practice import CURRENT_LESSONS, CURRENT_VERSION, LESSONS
+
+
+
+# Preserve historical records of guided activities while using independent evidence for placement.
+OBSERVED_LESSONS = {key for key, lesson in LESSONS.items() if evidence_method(lesson) == "observation"}
 
 
 def fit(samples):
@@ -39,7 +45,7 @@ FIT_LABELS = ("On level", "Slightly above level", "Above level", "Slightly below
 def record_tier(sample, child_id):
     """Carry the high-water mark forward once per new scored observation."""
     earlier = SkillSample.objects.filter(assignment__learner_id=child_id, strand=sample.strand,
-                                         pk__lt=sample.pk, puzzle_help=0).order_by("-measured", "-pk")
+                                         pk__lt=sample.pk, puzzle_help=0).exclude(assignment__lesson__in=OBSERVED_LESSONS).order_by("-measured", "-pk")
     fields = ("level", "score", "ms_per_key", "peak_tier")
     previous = list(reversed(list(earlier.values(*fields)[:23])))
     peak = previous[-1]["peak_tier"] if previous else None
@@ -80,6 +86,7 @@ def item_score(kind, artwork):
 
 class Progress:
     def __init__(self, child):
+        self.child = child
         self.theme = child.lesson_theme
         self.samples = defaultdict(list)
         self.attempted = defaultdict(list)
@@ -87,7 +94,7 @@ class Progress:
         evidence = SkillSample.objects.filter(assignment__learner=child).order_by("measured", "pk").values(
             "assignment_id", "assignment__lesson", "strand", "level", "score", "measured", "ms_per_key", "puzzle_help")
         for s in evidence:
-            if not s["puzzle_help"]:
+            if not s["puzzle_help"] and s["assignment__lesson"] not in OBSERVED_LESSONS:
                 self.samples[s["strand"]].append(s)
             self.sessions.setdefault(s["assignment_id"], []).append(s)
         completed = child.assignment_set.exclude(completed=None).filter(skipped=0).order_by("-completed","-pk").values_list("pk", "lesson", "completed", "step")
@@ -195,17 +202,17 @@ class Progress:
         return result
 
     def checkins(self):
+        from .reviews import coverage
         result = []
-        for key, lesson in CURRENT_LESSONS.items():
-            if not lesson.get("checkin"):
-                continue
-            recent = self.attempted[key]
-            samples = self.samples.get(lesson["strand"], [])
-            if not recent:
-                reason = "Initial placement" if not samples else "Check current placement"
-            elif recent[0] < timezone.now()-timedelta(days=28) or len({s["assignment_id"] for s in samples if s["measured"]>recent[0]})>=8:
-                reason = "Recheck suggested"
-            else:
-                reason = "Available to repeat"
-            result.append(dict(key=key,title=lesson["title"],reason=reason))
+        for group in coverage(self.child, only_checkins=True):
+            for row in group["rows"]:
+                if row["status"] == "Review due":
+                    reason = "Recheck suggested"
+                elif row["last"]:
+                    reason = "Available to repeat"
+                elif self.samples.get(group["strand"]):
+                    reason = "Check current placement"
+                else:
+                    reason = "Initial placement"
+                result.append(dict(key=row["key"], title=row["title"], reason=reason))
         return result

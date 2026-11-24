@@ -1,0 +1,34 @@
+{% extends 'base.html' %}{% load static %}
+{% block title %}Placement &amp; reviews · {{ child.nickname }}{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{% static 'placement-reviews.css' %}">{% endblock %}
+{% block content %}
+<nav class="history-nav"><a href="{% url 'home' %}">Family garden</a><a href="{% url 'planner' child.pk %}">Lesson planner</a><a href="{% url 'family_calendar' %}?child={{ child.pk }}">Calendar</a></nav>
+<h1>Placement &amp; reviews</h1>
+<p>Choose a skill to check with <strong>{{ child.nickname }}</strong>. Keyboard use, letter sounds and number sense offer short multi-tier checks. Every lesson also has its own check.</p>
+{% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
+<p class="review-summary"><strong>{{ checked }} of {{ total }}</strong> activities checked · <strong>{{ due_count }}</strong> due for review</p>
+<details class="review-guide"><summary>When is a review due?</summary><p>Four weeks after a completed check, or sooner after eight fully scored rounds in the same skill area. Parent observations follow the four-week interval. Schedule the dates that suit your family.</p></details>
+<form class="inline review-filters" method="get">
+<div><label for="review-strand">Skill area</label><select id="review-strand" name="strand"><option value="">All skill areas</option>{% for name in strands %}<option{% if name == strand %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></div>
+<div><label for="review-status">Coverage</label><select id="review-status" name="status"><option value="">All activities</option>{% for label in statuses %}<option{% if label == status %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div><button>Show</button>
+{% if strand or status %}<a href="{% url 'placement_reviews' child.pk %}">Clear filters</a>{% endif %}
+</form>
+{% for group in groups %}<details class="review-strand"{% if strand or group.strand == opened %} open{% endif %}><summary><strong>{{ group.strand }}</strong> <small>{{ group.covered }} of {{ group.rows|length }} checked</small></summary>
+{% for row in group.visible %}<section id="review-{{ row.key }}" class="review-lesson" data-lesson="{{ row.key }}">
+<div class="review-text"><h3>{{ row.title }}</h3>
+<p>{{ row.skill }}</p><small>{{ row.method }} · {% if row.mode == "Independent" %}Independent activity{% else %}{{ row.mode }}{% endif %} · {% if row.broad %}Multi-tier check-in{% else %}Tier {{ row.level }}{% endif %}</small>
+{% if row.observe %}<p class="observe-tip">{{ row.tip }}</p>{% endif %}
+<p><strong>{{ row.status }}</strong>{% if row.last %} · {{ row.last.completed|date:"M j, Y" }}{% if row.observe %} · Observation recorded{% else %} · {{ row.last.average|floatformat:"0" }}% across {{ row.last.scored }} scored step{{ row.last.scored|pluralize }}{% endif %}{% elif row.practice %} · Last practiced {{ row.practice|date:"M j, Y" }}{% endif %}</p>
+{% if row.partial %}<p>Latest check {{ row.latest.completed|date:"M j" }} · {{ row.latest.skipped }} skipped{% if not row.observe %} · {{ row.latest.scored }} independently scored{% elif not row.latest.noted %} · Observation pending{% endif %}</p>{% endif %}
+{% if row.latest and row.observe %}<a href="{% url 'weekly_record' child.pk %}?week={{ row.latest.completed|date:'Y-m-d' }}&amp;assignment={{ row.latest.pk }}#write-note">Record an observation</a>{% endif %}
+{% if row.due %}<p>Review from {{ row.due|date:"M j, Y" }}</p>{% endif %}
+{% if row.queue %}<p>In queue · {{ row.queue|join:", " }}</p>{% endif %}
+{% for plan in row.plans %}<p><a href="{% url 'planner' child.pk %}?edit={{ plan.pk }}">{{ plan.get_purpose_display }} scheduled {{ plan.next_on|date:"M j, Y" }}</a></p>{% endfor %}
+</div><div class="review-actions">
+{% if not row.queue %}<form method="post">{% csrf_token %}<input type="hidden" name="lesson" value="{{ row.key }}">{% if row.last %}<button name="purpose" value="review">Queue review</button>{% else %}<button name="purpose" value="placement">Queue placement</button>{% endif %}</form>{% endif %}
+<a href="{% url 'preview' child.pk row.key 0 %}?purpose={% if row.last %}review{% else %}placement{% endif %}">Preview check</a>
+{% if not row.last and not row.queue and not row.placement_planned %}<a href="{% url 'planner' child.pk %}?lesson={{ row.key }}&amp;purpose=placement">Schedule placement</a>{% endif %}
+{% if not row.review_planned %}<a href="{% url 'planner' child.pk %}?lesson={{ row.key }}&amp;purpose=review&amp;day={{ row.next_date.isoformat }}">Schedule review</a>{% endif %}
+</div></section>{% endfor %}</details>
+{% empty %}<p>No activities match these filters.</p>{% endfor %}
+{% endblock %}

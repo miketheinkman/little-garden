@@ -8,7 +8,7 @@
 {% for message in messages %}<p role="status" class="screen-only">{{ message }}</p>{% endfor %}
 <h2>Finished lessons</h2>
 {% if rows %}<p>{{ rows|length }} round{{ rows|length|pluralize }} · {{ answered }} question{{ answered|pluralize }} answered · {{ skipped }} skipped</p>
-<ul class="history-list">{% for row in rows %}<li><strong>{{ row.info.title }}</strong> · {{ row.completed|date:"D, M j" }}<br>{{ row.info.strand }} · {{ row.answered }} answered{% if row.skipped %} · {{ row.skipped }} skipped{% endif %}</li>{% endfor %}</ul>
+<ul class="history-list">{% for row in rows %}<li><strong>{{ row.info.title }}</strong> · {{ row.completed|date:"D, M j" }}<br>{% if row.purpose != "practice" %}{{ row.get_purpose_display }} · {% endif %}{{ row.info.strand }} · {{ row.answered }} answered{% if row.skipped %} · {{ row.skipped }} skipped{% endif %}</li>{% endfor %}</ul>
 {% else %}<p>No lessons finished during this week.</p>{% endif %}
 {% if skills %}<h2>Practice by skill</h2>
 <ul>{% for skill in skills %}<li><strong>{{ skill.strand }}</strong> · {% if skill.independent %}{{ skill.independent }} scored step{{ skill.independent|pluralize }} averaging {{ skill.average|floatformat:"0" }}%{% endif %}{% if skill.independent and skill.assisted %} · {% endif %}{% if skill.assisted %}{{ skill.assisted }} puzzle{{ skill.assisted|pluralize }} solved with help{% endif %}</li>{% endfor %}</ul>{% endif %}

@@ -5,6 +5,31 @@ from .models import Assignment, Learner
 from .views import LESSONS
 
 
+def correct_submission(item):
+    data = {"answer": item["answer"], "pixels": "0"*16+"1"+"0"*751}
+    if "dots" in item:
+        data["tool_state"] = item["answer"]
+    if "pieces" in item:
+        data["tool_state"] = ",".join(str(p["bin"]) for p in item["pieces"])
+    if "recipes" in item:
+        recipe = next(r for r in item["recipes"] if r["result"]["name"] == item["answer"])
+        data["tool_state"] = ",".join(str(i) for i, pot in enumerate(item["paints"])
+                                      if pot["name"] in (recipe["first"], recipe["second"]))
+    if "deck" in item:
+        pairs = sorted(range(len(item["deck"])), key=lambda i: item["deck"][i]["pair"])
+        data["tool_state"] = ",".join(map(str, pairs))
+    if "blocks" in item:
+        from itertools import combinations
+        ids = range(len(item["blocks"]))
+        solution = next(ix for n in (1, 2) for ix in combinations(ids, n)
+                        if sum(item["blocks"][i]["weight"] for i in ix) == item["target"])
+        data["tool_state"] = ",".join(map(str, solution))
+    if "board" in item:
+        from .test_puzzles import winning_moves
+        data["moves"] = "".join(map(str, winning_moves(item["board"])[0]))
+    return data
+
+
 class FamilyPilotTests(TestCase):
     def setUp(self):
         self.parent = get_user_model().objects.create_user("parent")
@@ -250,27 +275,7 @@ class LibraryTests(TestCase):
             for step, item in enumerate(lesson["items"]):
                 url = f"{self.library}{key}/preview/{step}/"
                 self.assertContains(self.client.get(url), item["prompt"], html=True)
-                data = {"answer": item["answer"], "pixels": "0"*16+"1"+"0"*751}
-                if "dots" in item:
-                    data["tool_state"] = item["answer"]
-                if "pieces" in item:
-                    data["tool_state"] = ",".join(str(p["bin"]) for p in item["pieces"])
-                if "recipes" in item:
-                    recipe = next(r for r in item["recipes"] if r["result"]["name"] == item["answer"])
-                    data["tool_state"] = ",".join(str(i) for i, pot in enumerate(item["paints"])
-                                                  if pot["name"] in (recipe["first"], recipe["second"]))
-                if "deck" in item:
-                    pairs = sorted(range(len(item["deck"])), key=lambda i: item["deck"][i]["pair"])
-                    data["tool_state"] = ",".join(map(str, pairs))
-                if "blocks" in item:
-                    from itertools import combinations
-                    ids = range(len(item["blocks"]))
-                    solution = next(ix for n in (1, 2) for ix in combinations(ids, n)
-                                    if sum(item["blocks"][i]["weight"] for i in ix) == item["target"])
-                    data["tool_state"] = ",".join(map(str, solution))
-                if "board" in item:
-                    from .test_puzzles import winning_moves
-                    data["moves"] = "".join(map(str, winning_moves(item["board"])[0]))
+                data = correct_submission(item)
                 response = self.client.post(url, data, follow=True)
             self.assertContains(response, "Preview complete")
         self.assertFalse(Assignment.objects.exists())
@@ -604,7 +609,10 @@ class ProgressionTests(TestCase):
         picks = progress.recommendations()
         self.assertEqual(LESSONS[picks[0]["key"]]["strand"], "Number sense")
         self.assertEqual(len({p["key"] for p in picks}), len(picks))
-        self.child.assignment_set.create(lesson="number-check-v1", completed=timezone.now()-timedelta(days=29))
+        when = timezone.now()-timedelta(days=29)
+        row = self.child.assignment_set.create(lesson="number-check-v1", completed=when, step=3)
+        for step in range(3):
+            SkillSample.objects.create(assignment=row, step=step, strand="Number sense", level=1, score=100)
         checks = Progress(self.child).checkins()
         self.assertEqual(next(c["reason"] for c in checks if c["key"]=="number-check-v1"), "Recheck suggested")
 

@@ -13,9 +13,10 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
+from .assignments import session_purpose
 from .calendar import scheduled_entries
 from .discovery import PATCH, letter_selection
-from .models import Learner, LessonPlan
+from .models import Learner, LessonPlan, Purpose
 from .practice import CURRENT_LESSONS, LESSONS, round_count
 from .scheduling import occurrence, release_due
 from .themes import summary
@@ -25,6 +26,7 @@ DAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sun
 
 class PlanForm(forms.Form):
     lesson = forms.ChoiceField(label="Lesson")
+    purpose = forms.ChoiceField(label="Session purpose", choices=Purpose.choices, required=False)
     start = forms.DateField(label="First available", widget=forms.DateInput(attrs={"type": "date"}))
     repeat = forms.ChoiceField(label="Repeat", choices=LessonPlan.Repeat.choices)
     weekdays = forms.MultipleChoiceField(label="Practice days", required=False, widget=forms.CheckboxSelectMultiple,
@@ -87,8 +89,12 @@ def planner(request, pk):
         child_filter = f"&child={child.pk}" if calendar_scope == "child" else ""
         return f"{calendar_url}?day={day.isoformat()}{child_filter}#day-plan"
 
-    initial = {"lesson": key, "start": editing.next_on if editing else max(today, selected or today + timedelta(days=1)),
-               "repeat": editing.repeat if editing else "once", "weekdays": list(editing.weekdays) if editing else [],
+    purpose = editing.purpose if editing else request.GET.get("purpose", Purpose.PRACTICE)
+    if purpose not in Purpose.values:
+        raise Http404
+    default_start = today + timedelta(days=28 if purpose == Purpose.REVIEW else 1)
+    initial = {"lesson": key, "purpose": purpose, "start": editing.next_on if editing else max(today, selected or default_start),
+               "repeat": editing.repeat if editing else ("fourweeks" if purpose == Purpose.REVIEW else "once"), "weekdays": list(editing.weekdays) if editing else [],
                "end": editing.ends_on if editing else None, "submission": editing.submission if editing else uuid.uuid4()}
     form = PlanForm(request.POST if request.method == "POST" else None, initial=initial, label_suffix="")
     groups = defaultdict(list)
@@ -110,7 +116,7 @@ def planner(request, pk):
         return redirect("planner", pk=pk)
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
-        values = dict(lesson=data["lesson"], next_on=data["next_on"], repeat=data["repeat"],
+        values = dict(purpose=session_purpose(child, data["lesson"], data["purpose"] or purpose), lesson=data["lesson"], next_on=data["next_on"], repeat=data["repeat"],
                       weekdays="".join(data["weekdays"]), ends_on=data["end"])
         with transaction.atomic():
             Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))

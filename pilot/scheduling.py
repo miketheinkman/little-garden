@@ -6,10 +6,20 @@ from django.db.models import F
 from django.utils import timezone
 
 from .assignments import assign_lesson
-from .models import Learner, LessonPlan
+from .models import Learner, LessonPlan, Purpose
 
 
 def occurrence(plan, day, direction=1):
+    if plan.repeat == LessonPlan.Repeat.FOUR_WEEKS:
+        # Every cursor is on the original 28-day cycle, even after missed dates.
+        anchor = plan.next_on or day
+        distance = (day - anchor).days
+        offset = (-distance) % 28 if direction == 1 else -(distance % 28)
+        ordinal = day.toordinal() + offset
+        if not 1 <= ordinal <= date.max.toordinal():
+            return None
+        candidate = date.fromordinal(ordinal)
+        return candidate if candidate >= anchor and (not plan.ends_on or candidate <= plan.ends_on) else None
     if plan.repeat == LessonPlan.Repeat.WEEKDAYS:
         allowed = "01234"
     elif plan.repeat == LessonPlan.Repeat.WEEKLY:
@@ -42,10 +52,12 @@ def release_due(child, today=None):
                 if today < date.max:
                     following = occurrence(plan, today + timedelta(days=1))
             if plan.repeat == LessonPlan.Repeat.ONCE or not plan.assignment_set.filter(completed=None, removed_at=None).exists():
-                row = assign_lesson(child, plan.lesson, plan.first_variation, plan.letters)
+                row = assign_lesson(child, plan.lesson, plan.first_variation, plan.letters, purpose=plan.purpose)
                 row.plan = plan
                 row.scheduled_for = day
                 row.save(update_fields=["plan", "scheduled_for"])
                 plan.first_variation = None
+                if following and plan.purpose == Purpose.PLACEMENT:
+                    plan.purpose = Purpose.REVIEW
             plan.next_on = following
-            plan.save(update_fields=["next_on", "first_variation"])
+            plan.save(update_fields=["next_on", "first_variation", "purpose"])

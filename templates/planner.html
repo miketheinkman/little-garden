@@ -9,6 +9,7 @@
 <h2>{% if editing %}Edit upcoming dates{% else %}Schedule a lesson{% endif %}</h2>
 <form method="post">{% csrf_token %}{{ form.submission }}{{ form.submission.errors }}{{ form.non_field_errors }}
 <label for="{{ form.lesson.id_for_label }}">Lesson</label>{{ form.lesson }}{{ form.lesson.errors }}
+{{ form.purpose.label_tag }}{{ form.purpose }}{{ form.purpose.errors }}
 {% if variation != None %}<p>First session uses preview round {{ variation|add:1 }}{% if letters %} with letters {{ letters }}{% endif %}.</p>{% endif %}
 <div class="planner-fields">
 <div>{{ form.start.label_tag }}{{ form.start }}{{ form.start.errors }}</div>
@@ -28,7 +29,7 @@
 <section aria-labelledby="planned"><h2 id="planned">Upcoming plans</h2>
 {% for plan in plans %}<article class="plan-row">
 <div><time datetime="{{ plan.next_on|date:'Y-m-d' }}">{{ plan.next_on|date:"D, M j, Y" }}</time>
-<h3>{{ plan.title }}</h3><p>{{ plan.cadence }}{% if plan.ends_on %} · Through {{ plan.ends_on|date:"M j, Y" }}{% endif %}</p></div>
+<h3>{{ plan.title }}</h3><p>{% if plan.purpose != "practice" %}{{ plan.get_purpose_display }} · {% endif %}{{ plan.cadence }}{% if plan.ends_on %} · Through {{ plan.ends_on|date:"M j, Y" }}{% endif %}</p></div>
 <div class="card-actions"><a href="{% url 'planner' child.pk %}?edit={{ plan.pk }}">Edit dates</a>
 <form method="post" action="{% url 'planner' child.pk %}{% if calendar_back %}?day={{ calendar_date.isoformat }}&amp;calendar={{ calendar_scope }}{% endif %}">{% csrf_token %}<input type="hidden" name="plan" value="{{ plan.pk }}">
 <button class="link" name="action" value="cancel">Cancel plan</button></form></div></article>

@@ -8,7 +8,7 @@
 {% include "tier_key.html" %}
 <p>Each scored step counts once. Answer-based lessons use first tries. Coloring and reflection use shape overlap.</p>
 {% include "skill_charts.html" %}
-<div data-available-checkins><h3>Assign a check-in</h3>
+<div data-available-checkins><h3>Assign a check-in</h3><p>These short checks sample several tiers. <a href="{% url 'placement_reviews' child.pk %}">See placement and reviews for every lesson</a>.</p>
 {% for check in child.checkins %}<form data-dashboard-add class="inline" method="post" action="{% url 'manage' child.pk %}">{% csrf_token %}
 <input name="action" type="hidden" value="assign"><button name="lesson" value="{{ check.key }}">{{ check.title }}</button><span>{{ check.reason }}</span></form>{% endfor %}
 </div><h3>Evidence over time</h3>

@@ -15,6 +15,7 @@ from django.views.decorators.http import require_http_methods
 
 from .models import Learner, SkillSample
 from .themes import assignment_lesson
+from .progression import OBSERVED_LESSONS
 
 
 class ObservationForm(forms.Form):
@@ -76,7 +77,7 @@ def weekly_record(request, pk):
         note.lesson_title = assignment_lesson(note.assignment)["title"] if note.assignment else ""
     independent = Q(puzzle_help=0)
     skills = (SkillSample.objects.filter(assignment__learner=child, measured__date__range=(start, end))
-              .values("strand").annotate(independent=Count("pk", filter=independent),
+              .exclude(assignment__lesson__in=OBSERVED_LESSONS).values("strand").annotate(independent=Count("pk", filter=independent),
                                          average=Avg("score", filter=independent),
                                          assisted=Count("pk", filter=Q(puzzle_help__gt=0)))
               .order_by("strand"))

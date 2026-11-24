@@ -5,8 +5,8 @@ from django.db import transaction
 from django.db.models import F, Max
 
 from .discovery import PATCH, discovery_round
-from .models import Learner
-from .practice import FIVE_PROMPT_ROUNDS, build_round, round_count
+from .models import Learner, Purpose
+from .practice import CURRENT_VERSION, FIVE_PROMPT_ROUNDS, LESSONS, build_round, round_count
 from .themes import themed_round
 
 
@@ -50,11 +50,40 @@ def next_round(child, key):
     return suggested_round(child, key, history)
 
 
+def session_purpose(child, key, purpose):
+    if purpose == Purpose.PRACTICE and LESSONS[key].get("checkin"):
+        previous = child.assignment_set.filter(lesson=key, completed__isnull=False, skipped=0, step__gt=0,
+                                               samples__isnull=False).exists()
+        return Purpose.REVIEW if previous else Purpose.PLACEMENT
+    return purpose
+
+
 @transaction.atomic
-def assign_lesson(child, key, variation=None, letters=None):
+def assign_lesson(child, key, variation=None, letters=None, *, purpose=Purpose.PRACTICE):
     Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))
+    purpose = session_purpose(child, key, purpose)
     if variation is None:
         variation = next_round(child, key)
     last = child.assignment_set.aggregate(last=Max("position"))["last"] or 0
-    return child.assignment_set.create(lesson=key, position=last+1, variation=variation,
+    return child.assignment_set.create(lesson=key, purpose=purpose, position=last+1, variation=variation,
                                 round_snapshot=discovery_round(key, variation, letters) if key == PATCH and letters else build_round(key, variation))
+
+
+def active_lesson_keys(child):
+    keys = child.assignment_set.filter(completed=None, removed_at=None).values_list("lesson", flat=True)
+    return {CURRENT_VERSION.get(key, key) for key in keys}
+
+
+@transaction.atomic
+def queue_available(child, keys, variation=None, letters=None, *, purpose=Purpose.PRACTICE):
+    # Serialize single and bulk adds before reading the queue, including on SQLite.
+    Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))
+    active = active_lesson_keys(child)
+    added = []
+    for key in keys:
+        current = CURRENT_VERSION.get(key, key)
+        if current not in active:
+            assign_lesson(child, key, variation, letters, purpose=purpose)
+            active.add(current)
+            added.append(key)
+    return added, active

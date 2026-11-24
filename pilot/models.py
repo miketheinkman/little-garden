@@ -31,14 +31,22 @@ class Learner(models.Model):
         return {"accent": accent, "ink": ink, "font": self.font}
 
 
+class Purpose(models.TextChoices):
+    PRACTICE = "practice", "Practice"
+    PLACEMENT = "placement", "Initial placement"
+    REVIEW = "review", "Skill review"
+
+
 class LessonPlan(models.Model):
     class Repeat(models.TextChoices):
         ONCE = "once", "Just once"
         DAILY = "daily", "Every day"
         WEEKDAYS = "weekdays", "Monday through Friday"
         WEEKLY = "weekly", "Weekly on selected days"
+        FOUR_WEEKS = "fourweeks", "Every four weeks"
 
     learner = models.ForeignKey(Learner, on_delete=models.CASCADE)
+    purpose = models.CharField(max_length=12, choices=Purpose.choices, default=Purpose.PRACTICE)
     lesson = models.CharField(max_length=80)
     next_on = models.DateField(null=True, db_index=True)
     repeat = models.CharField(max_length=10, choices=Repeat.choices)
@@ -56,6 +64,7 @@ class Assignment(models.Model):
     plan = models.ForeignKey(LessonPlan, null=True, on_delete=models.SET_NULL)
     scheduled_for = models.DateField(null=True)
     learner = models.ForeignKey(Learner, on_delete=models.CASCADE)
+    purpose = models.CharField(max_length=12, choices=Purpose.choices, default=Purpose.PRACTICE)
     lesson = models.CharField(max_length=80)
     variation = models.PositiveIntegerField(default=0)
     artwork = models.JSONField(null=True)

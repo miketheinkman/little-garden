@@ -3,6 +3,7 @@ from django.contrib.auth import views as auth
 from django.urls import path
 from django.views.generic import TemplateView
 from pilot import coview, views
+from pilot.reviews import placement_reviews
 from pilot.calendar import family_calendar
 from pilot.planner import planner
 from pilot.records import weekly_record
@@ -41,6 +42,7 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
     path("children/<int:pk>/library/<slug:key>/preview/<int:step>/", views.preview, name="preview"),
     path("children/<int:pk>/library/", views.library, name="library"),
+    path("children/<int:pk>/reviews/", placement_reviews, name="placement_reviews"),
     path("calendar/", family_calendar, name="family_calendar"),
     path("children/<int:pk>/planner/", planner, name="planner"),
     path("children/<int:pk>/record/", weekly_record, name="weekly_record"),
