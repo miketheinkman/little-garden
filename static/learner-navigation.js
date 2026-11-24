@@ -38,7 +38,7 @@ async function openLearnerPage(url, options = {}) {
     heading.tabIndex = -1;
     heading.focus({preventScroll: true});
   }
-  window.scrollTo(0, 0);
+  positionQuestion();
 }
 
 document.addEventListener("click", event => {

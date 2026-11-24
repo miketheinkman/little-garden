@@ -20,7 +20,7 @@
 <section class="history-day"><h2>{{ day.grouper|default:"Date unavailable" }}</h2>
 <ul class="history-list">{% for row in day.list %}
 <li><div><strong>{{ row.info.title }}</strong><span class="history-status">{{ row.status }}</span></div>
-<p>Round {{ row.variation|add:1 }}{% if row.step or row.retries %} · {{ row.answered }} answered{% if row.skipped %} · {{ row.skipped }} skipped{% endif %}{% if row.retries %} · {{ row.retries }} retr{{ row.retries|pluralize:"y,ies" }}{% endif %}{% endif %}</p>
+<p>Round {{ row.variation|add:1 }}{% if row.scheduled_for %} · Planned for {{ row.scheduled_for|date:"M j" }}{% endif %}{% if row.step or row.retries %} · {{ row.answered }} answered{% if row.skipped %} · {{ row.skipped }} skipped{% endif %}{% if row.retries %} · {{ row.retries }} retr{{ row.retries|pluralize:"y,ies" }}{% endif %}{% endif %}</p>
 {% if row.history_date %}<small>{% if row.removed_at %}Removed{% elif row.completed %}Finished{% else %}Assigned{% endif %} <time datetime="{{ row.history_date|date:'c' }}">{{ row.history_date|date:"g:i a T" }}</time>{% if row.assigned_at and row.history_date != row.assigned_at %} · Assigned <time datetime="{{ row.assigned_at|date:'c' }}">{{ row.assigned_at|date:"M j, Y" }}</time>{% endif %}</small>{% else %}<small>Assignment date wasn’t recorded.</small>{% endif %}
 </li>{% endfor %}</ul></section>
 {% endfor %}

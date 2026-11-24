@@ -47,8 +47,10 @@ The picture and listening activities include holiday clues and traditions, color
 ## Next milestones
 
 1. Observe families using the full queue and collect educator feedback on lessons, accessibility, and learning evidence.
-2. Add adult observations, printable weekly exports, equivalent input options, lesson previews, and account recovery.
+2. Add parent observations to individual learning records and printable weekly reports. Expand equivalent input options across activities. Lesson previews and parent account recovery are available in the pilot.
 3. Before hosted enrollment, implement retention, export and deletion workflows, parental consent as applicable, production settings, PostgreSQL backups and verified restoration. Expand reviewed sequences toward ages 7–8 after the family workflow is tested.
+4. Expand the logic puzzle collection with Light Paths, Bridges and Crossings, Delivery Routes, Gears and Motion, and Gates and Switches. Water Works and Train Tracks cover the first phase.
+5. Test an optional donation checkout in Stripe’s sandbox before adding a donation link to the mission page.
 
 ## Licensing
 
@@ -63,6 +65,12 @@ New parents enter a recovery email at signup. Existing parents can add one from 
 For inbox delivery, configure your SMTP provider on the server using `GARDEN_SMTP_HOST`, `GARDEN_SMTP_PORT` (default 587), `GARDEN_SMTP_USER`, `GARDEN_SMTP_PASSWORD`, and `GARDEN_FROM_EMAIL`, then restart the app. STARTTLS is enabled by default. Without SMTP, reset messages are written to the host-private, Git-ignored `.private-mail/` folder. Keep it private and clear expired messages. A LAN reset URL works from the home network while the host is running.
 
 For a local Gmail sender with Google 2-Step Verification and app passwords enabled, run `.venv/bin/python manage.py setup_gmail SENDER_ADDRESS TEST_RECIPIENT` in a private terminal. The command prompts for the app password without displaying it, sends a test message, then saves the working credential in the owner-only file `.private-mail/gmail.json`. The pilot uses it on subsequent sends. Removing that file restores the private outbox fallback. Revoke the app password at Google when retiring the sender.
+
+## Planning ahead
+
+Open **Lesson planner** for a learner in the family garden or lesson library. Schedule one date, every day, weekdays, or selected days of the week, with an optional last date. **Schedule this round** in a lesson preview preserves the displayed first round and any chosen letters. Later sessions draw fresh rounds. The weekly view shows upcoming dates alongside scheduled sessions already in the queue or completed. Parents can edit or cancel upcoming dates separately from assignments already in the queue.
+
+The queue makes due lessons available when the family next opens it, using the pilot’s local calendar date. A one-time lesson waits for the learner even after a missed day. After time away, each recurring plan offers its latest due session. It keeps one unfinished session from that plan at a time.
 
 ## Practice rounds
 

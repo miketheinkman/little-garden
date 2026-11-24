@@ -479,3 +479,27 @@ main:has(#live-room) {max-width:1600px}
 .picture-props i{font-style:normal;color:var(--muted)}
 .prompt-icon{background:#faefd7}
 .listen-control span,[data-hear-word] span,[data-hear-call] span,[data-repeat] span{display:inline-grid;place-items:center;vertical-align:middle;background:#faefd7;border-radius:.45rem;color:#203e32;font-size:1.3rem;line-height:1;width:1.45em;height:1.45em;margin-inline-end:.15em}
+
+.planner-form form {max-width:43rem}
+.planner-form select {width:100%}
+.planner-fields,.plan-row {display:flex;flex-wrap:wrap;gap:.8rem 1.5rem}
+.planner-fields,.planner-form [data-end],.planner-form fieldset {margin:1rem 0}
+.planner-fields>div {flex:1 1 12rem;min-width:0}
+.planner-form input[type=date] {width:100%}
+.planner-form fieldset {border:1px solid var(--line);border-radius:.6rem}
+#id_weekdays {display:flex;flex-wrap:wrap;gap:.5rem 1rem}
+#id_weekdays label {display:inline-flex;align-items:center;gap:.35rem}
+.planner-form button {margin-top:.5rem}
+.planner-form .errorlist {color:var(--flower)}
+.plan-row {justify-content:space-between;align-items:center}
+.plan-row p,.plan-row h3 {margin:.15rem 0}
+.plan-row time {color:var(--muted);font-weight:650}
+
+.plan-agenda dl {margin:.5rem 0 1.5rem}
+.plan-agenda dl>div {display:flex;flex-wrap:wrap;gap:.25rem 1rem;padding:.5rem 0;border-bottom:1px solid var(--line)}
+.plan-agenda dt {min-width:7.5rem;font-weight:650}
+.plan-agenda dd {margin:0}
+
+@media (orientation:landscape) and (pointer:coarse) and (max-height:900px) {
+  .learner-step {min-height:100svh}
+}

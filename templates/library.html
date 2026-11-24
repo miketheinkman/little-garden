@@ -5,7 +5,7 @@
 <h1>Lesson library</h1>
 <p>Choose activities for <strong>{{ child.nickname }}</strong>. Independent lessons can be finished on screen. Parent-required lessons include a job for a grown-up.</p>
 {% if child.lesson_theme != "garden" %}<p>{{ world.actor.icon }} {{ world.label }}</p>{% endif %}
-<p><a href="{% url 'assignment_history' child.pk %}">View assignment history for {{ child.nickname }}</a></p>
+<p><a href="{% url 'planner' child.pk %}">Lesson planner</a> · <a href="{% url 'assignment_history' child.pk %}">View assignment history for {{ child.nickname }}</a></p>
 {% include "tier_key.html" %}
 <form method="get" class="inline library-filters">
   <label>Subject <select name="category"><option value="">All subjects</option>{% for c in categories %}<option {% if category == c %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></label>

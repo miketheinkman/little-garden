@@ -1,4 +1,5 @@
 import re
+import uuid
 
 from django.conf import settings
 from django.db import models
@@ -30,7 +31,30 @@ class Learner(models.Model):
         return {"accent": accent, "ink": ink, "font": self.font}
 
 
+class LessonPlan(models.Model):
+    class Repeat(models.TextChoices):
+        ONCE = "once", "Just once"
+        DAILY = "daily", "Every day"
+        WEEKDAYS = "weekdays", "Monday through Friday"
+        WEEKLY = "weekly", "Weekly on selected days"
+
+    learner = models.ForeignKey(Learner, on_delete=models.CASCADE)
+    lesson = models.CharField(max_length=80)
+    next_on = models.DateField(null=True, db_index=True)
+    repeat = models.CharField(max_length=10, choices=Repeat.choices)
+    weekdays = models.CharField(max_length=7, blank=True)
+    ends_on = models.DateField(null=True)
+    first_variation = models.PositiveIntegerField(null=True)
+    letters = models.CharField(max_length=26, blank=True)
+    submission = models.UUIDField(default=uuid.uuid4)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=("learner", "submission"), name="unique_learner_plan_submission")]
+
+
 class Assignment(models.Model):
+    plan = models.ForeignKey(LessonPlan, null=True, on_delete=models.SET_NULL)
+    scheduled_for = models.DateField(null=True)
     learner = models.ForeignKey(Learner, on_delete=models.CASCADE)
     lesson = models.CharField(max_length=80)
     variation = models.PositiveIntegerField(default=0)

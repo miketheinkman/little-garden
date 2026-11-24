@@ -1,6 +1,5 @@
 import re
 import random
-import json
 from collections import defaultdict
 from datetime import timedelta
 
@@ -11,7 +10,7 @@ from django.contrib.auth.decorators import login_required
 from .forms import ParentSignupForm, RecoveryEmailForm
 from django.db import connection, transaction
 from django.core.paginator import Paginator
-from django.db.models import Case, F, Max, Q, Value, When
+from django.db.models import Case, F, Q, Value, When
 from django.db.models.functions import Coalesce
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -23,6 +22,8 @@ from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 from .themes import THEMES, THEME_CHOICES, assignment_lesson, summary, themed_round
 from .puzzles import parse_moves, simulate, hint
 from .discovery import PATCH, discovery_round, letter_selection
+from .assignments import assign_lesson, suggested_round, question_set
+from .scheduling import release_due
 from .paint import mixture_matches
 from .table_games import table_answer
 from .audio import lesson_clips
@@ -30,7 +31,7 @@ from .art import art_item, evaluate
 from .coview import recent_response
 from .models import FONT_CHOICES, SkillSample
 from .progression import FIT_LABELS, Progress, item_score, record_tier
-from .practice import CURRENT_LESSONS, CURRENT_VERSION, FIVE_PROMPT_ROUNDS, LESSONS, build_round, round_count
+from .practice import CURRENT_LESSONS, CURRENT_VERSION, LESSONS, build_round, round_count
 
 
 def puzzle_action(request, item, row=None):
@@ -115,6 +116,7 @@ def home(request):
     if request.user.is_authenticated:
         learners = list(Learner.objects.filter(parent=request.user))
         for child in learners:
+            release_due(child)
             child.queue = decorate(child.assignment_set.filter(completed=None, removed_at=None), child)
             progress = Progress(child)
             for row in child.queue:
@@ -131,6 +133,7 @@ def home(request):
         return render(request, "parent.html", {"learners": learners, "lessons": LESSONS, "theme_choices": THEME_CHOICES, "fonts": FONT_CHOICES})
     child = Learner.objects.filter(pk=request.session.get("child")).first()
     if child:
+        release_due(child)
         queue = decorate(child.assignment_set.filter(completed=None, removed_at=None), child)
         progress = Progress(child)
         child.charts = progress.charts()
@@ -167,56 +170,6 @@ def requested_round(key, value):
     return number
 
 
-def question_set(child, key, variation):
-    round_data = themed_round(key, build_round(key, variation), child.lesson_theme, variation)
-    signatures = set()
-    for item in round_data["items"]:
-        if item.get("deck"):
-            # Rotating the locations of the cards still practices the same pairs.
-            core = sorted((c["label"], c.get("symbol", ""), c.get("clip", "")) for c in item["deck"])
-        elif round_data["kind"] in {"key", "type"} or item.get("word"):
-            core = (item.get("word", ""), item["answer"])
-        else:
-            ignored = {"choices", "letters", "tiles", "pictures", "animals", "bank_context"}
-            core = {k: v for k, v in item.items() if k not in ignored}
-        signatures.add(json.dumps(core, sort_keys=True, ensure_ascii=False))
-    return signatures
-
-
-def suggested_round(child, key, history):
-    if not history:
-        return 0
-    count = round_count(key)
-    # Consider all previous IDs until the pool is exhausted, then recycle oldest IDs first.
-    last_used = {number: index for index, number in enumerate(history)}
-    candidates = [number for number in range(count) if number not in last_used]
-    if not candidates:
-        candidates = sorted(last_used, key=last_used.get)[:max(1, count//2)]
-    rng = random.Random(f"{child.pk}/{key}/{len(history)}/{history[-1]}")
-    candidates = rng.sample(candidates, min(12, len(candidates)))
-    previous = [question_set(child, key, n) for n in history[-3:]]
-    def overlap(number):
-        questions = question_set(child, key, number)
-        return (questions == previous[-1], sum(len(questions & recent) for recent in previous))
-    return min(candidates, key=overlap)
-
-
-def next_round(child, key):
-    versions = [key, key.replace("-v2", "-v1")] if key in FIVE_PROMPT_ROUNDS else [key]
-    history = list(child.assignment_set.filter(lesson__in=versions).order_by("pk").values_list("variation", flat=True))
-    return suggested_round(child, key, history)
-
-
-@transaction.atomic
-def assign_lesson(child, key, variation=None, letters=None):
-    Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))
-    if variation is None:
-        variation = next_round(child, key)
-    last = child.assignment_set.aggregate(last=Max("position"))["last"] or 0
-    return child.assignment_set.create(lesson=key, position=last+1, variation=variation,
-                                round_snapshot=discovery_round(key, variation, letters) if key == PATCH and letters else build_round(key, variation))
-
-
 def active_lesson_keys(child):
     keys = child.assignment_set.filter(completed=None, removed_at=None).values_list("lesson", flat=True)
     return {CURRENT_VERSION.get(key, key) for key in keys}
@@ -241,6 +194,7 @@ def queue_available(child, keys, variation=None, letters=None):
 @require_http_methods(["GET", "POST"])
 def library(request, pk):
     child = get_object_or_404(Learner, parent=request.user, pk=pk)
+    release_due(child)
     category = request.GET.get("category", "")
     help_mode = request.GET.get("participation", "")
     tier = request.GET.get("tier", "")
@@ -431,6 +385,7 @@ def feedback_preferences(request):
 @require_POST
 def manage(request, pk):
     child = get_object_or_404(Learner, pk=pk, parent=request.user)
+    release_due(child)
     action = request.POST.get("action")
     if action == "play":
         request.session.flush()
@@ -484,6 +439,7 @@ def start_suggestion(request):
     if not Learner.objects.filter(pk=pk).update(nickname=F("nickname")):
         raise Http404
     child = Learner.objects.get(pk=pk)
+    release_due(child)
     if child.assignment_set.filter(completed=None, removed_at=None).exists():
         return redirect("home")
     key = request.POST.get("lesson")

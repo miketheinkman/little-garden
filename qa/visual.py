@@ -34,6 +34,86 @@ class VisualReview(StaticLiveServerTestCase):
         page.screenshot(path=self.out / f"{self.variant}-{name}.png", full_page=True, animations="disabled")
         self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"), name)
 
+    def test_planner_and_tablet_questions(self):
+        from datetime import timedelta
+
+        parent = get_user_model().objects.get(username="reviewer")
+        family = Client()
+        family.force_login(parent)
+        child = Learner.objects.get(pk=self.child_id)
+        scheduled = assign_lesson(child, "keys-v2", 0)
+        route = assign_lesson(child, "water-works-v1", 0)
+        device = Client()
+        device.force_login(parent)
+        device.post(reverse("manage", args=[child.pk]), {"action": "play"})
+        tomorrow = timezone.localdate() + timedelta(days=1)
+        cases = [(width, theme, Learner.objects.create(parent=parent, nickname="Fern"))
+                 for width in (375, 1200) for theme in ("light", "dark")]
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width, theme, learner in cases:
+                self.variant = f"planner-{width}-{theme}"
+                with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                    ctx.add_cookies([{"name":"sessionid","value":family.cookies["sessionid"].value,"url":self.live_server_url}])
+                    page = ctx.new_page()
+                    page.goto(self.live_server_url + reverse("planner", args=[learner.pk]))
+                    expect(page.get_by_text("No upcoming plans", exact=False)).to_be_visible()
+                    self.capture(page, "empty")
+                    page.get_by_label("Lesson", exact=True).select_option("ten-v1")
+                    page.get_by_label("First available").fill(tomorrow.isoformat())
+                    page.get_by_label("Repeat", exact=True).select_option("weekly")
+                    page.get_by_role("button", name="Schedule lesson").click()
+                    expect(page.get_by_text("Choose at least one practice day.")).to_be_visible()
+                    self.capture(page, "choose-days")
+                    page.get_by_label("Monday", exact=True).check()
+                    expect(page.get_by_text("Choose at least one practice day.")).to_have_count(0)
+                    page.get_by_label("Thursday", exact=True).check()
+                    self.capture(page, "weekly")
+                    page.get_by_role("button", name="Schedule lesson").click()
+                    expect(page.get_by_text("Mon, Thu", exact=True)).to_be_visible()
+                    self.capture(page, "saved")
+                    page.get_by_role("link", name="Next week").click()
+                    expect(page.locator(".plan-agenda dd")).to_have_count(2)
+                    page.get_by_role("link", name="Previous week").click()
+                    page.get_by_role("link", name="Edit dates").click()
+                    expect(page.get_by_label("Monday", exact=True)).to_be_checked()
+                    page.get_by_label("Repeat", exact=True).select_option("once")
+                    page.get_by_role("button", name="Save changes").click()
+                    expect(page.locator(".plan-row")).to_contain_text("Just once")
+                    page.get_by_role("button", name="Cancel plan").click()
+                    expect(page.get_by_text("No upcoming plans", exact=False)).to_be_visible()
+            with browser.new_context(viewport={"width":1024,"height":640}, has_touch=True) as ctx:
+                ctx.add_cookies([{"name":"sessionid","value":device.cookies["sessionid"].value,"url":self.live_server_url}])
+                page = ctx.new_page()
+                page.goto(self.live_server_url + reverse("play", args=[scheduled.pk]))
+                def on_question():
+                    page.wait_for_function("Math.abs(document.querySelector('[data-question-start]').getBoundingClientRect().top-16) < 3 || (window.scrollY + innerHeight >= document.documentElement.scrollHeight-2 && document.querySelector('#prompt').getBoundingClientRect().bottom < innerHeight)")
+                    self.assertLess(page.locator("#activity button[name=answer]").first.bounding_box()["y"], 640)
+                on_question()
+                self.variant = "landscape-tablet"
+                page.screenshot(path=self.out / "landscape-tablet-question.png")
+                first = scheduled.round_snapshot["items"][0]
+                buttons = page.locator("#activity button[name=answer]")
+                buttons.filter(has_text=next(c for c in first["choices"] if c != first["answer"])).click()
+                expect(page.locator(".retry-note")).to_be_visible()
+                buttons.filter(has_text=first["answer"]).click()
+                expect(page.get_by_text("Step 2 of 5")).to_be_visible()
+                on_question()
+                page.get_by_role("button",name="Skip this question").click()
+                expect(page.get_by_text("Step 3 of 5")).to_be_visible()
+                on_question()
+                page.goto(self.live_server_url + reverse("play", args=[route.pk]))
+                expect(page.locator(".route-game [data-run]")).to_be_in_viewport()
+                expect(page.locator("#prompt")).to_be_in_viewport()
+                page.screenshot(path=self.out / "landscape-tablet-puzzle.png")
+                ctx.add_cookies([{"name":"sessionid","value":family.cookies["sessionid"].value,"url":self.live_server_url}])
+                page.goto(self.live_server_url + reverse("preview", args=[child.pk, "keys-v2", 0]))
+                expect(page.get_by_role("link", name="Schedule this round")).to_be_in_viewport()
+                page.locator(".preview-steps").get_by_role("link", name="2", exact=True).click()
+                page.wait_for_function("Math.abs(document.querySelector('.question-heading').getBoundingClientRect().top-16) < 3")
+                expect(page.locator("#activity button[name=answer]").first).to_be_in_viewport()
+            browser.close()
+
     def test_feature_screens(self):
         for device, width in [("desktop", 1200), ("phone", 375)]:
             for theme in ("light", "dark"):

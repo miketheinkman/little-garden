@@ -1,5 +1,5 @@
 <div class="preview-nav"><a href="{% url 'library' child.pk %}">Back to lesson library</a>
-<a class="link" href="#feedback">Give feedback</a></div>
+<a class="link" href="#feedback">Give feedback</a> · <a href="{% url 'planner' child.pk %}?lesson={{ key }}&amp;v={{ variation }}{{ letter_query }}">Schedule this round</a></div>
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
 <div class="preview-tools"><p><strong>Parent preview</strong> · {{ lesson.participation }} · Ages {{ lesson.age }}</p>
 <p>Round {{ variation|add:1 }} · {% if variation %}<a href="{% url 'preview' child.pk key 0 %}?v={{ variation|add:-1 }}{{ letter_query }}">Previous round</a> · {% endif %} <a href="{% url 'preview' child.pk key 0 %}?v={{ next_variant }}{{ letter_query }}">Try another round</a> · <a href="{% url 'preview' child.pk key 0 %}?v={{ variation }}&amp;shuffle=1{{ letter_query }}">Shuffle round</a></p>
