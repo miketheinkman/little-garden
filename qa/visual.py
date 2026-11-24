@@ -34,6 +34,35 @@ class VisualReview(StaticLiveServerTestCase):
         page.screenshot(path=self.out / f"{self.variant}-{name}.png", full_page=True, animations="disabled")
         self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"), name)
 
+    @override_settings(STRIPE_TEST_ONE_TIME_LINK="https://donate.stripe.com/test_Once",
+                       STRIPE_TEST_MONTHLY_LINK="https://buy.stripe.com/test_Monthly")
+    def test_donation_links(self):
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375, 1200):
+                for theme in ("light", "dark"):
+                    self.variant = f"donations-{width}-{theme}"
+                    with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                        page = ctx.new_page()
+                        # Isolate the app-to-Stripe handoff from the third-party checkout.
+                        page.route(re.compile(r"^https://(?:buy|donate)\.stripe\.com/test_"), lambda route: route.fulfill(
+                            status=200, content_type="text/plain", body="Test checkout destination"))
+                        page.goto(self.live_server_url + reverse("mission"))
+                        for label, url in (("Give once", "https://donate.stripe.com/test_Once"),
+                                           ("Give monthly", "https://buy.stripe.com/test_Monthly")):
+                            link = page.get_by_role("link", name=label, exact=True)
+                            link.focus()
+                            if label == "Give once":
+                                self.capture(page, "mission")
+                            link.press("Enter")
+                            expect(page).to_have_url(url)
+                            page.go_back()
+                        with override_settings(STRIPE_TEST_MONTHLY_LINK="", STRIPE_TEST_ONE_TIME_LINK=""):
+                            page.reload()
+                            expect(page.get_by_text("Online donations are coming soon.")).to_be_visible()
+                            self.capture(page, "unavailable")
+            browser.close()
+
     def test_placement_and_review_coverage(self):
         from datetime import timedelta
         parent = get_user_model().objects.get(username="reviewer")

@@ -167,4 +167,7 @@ CACHES = {
     },
 }
 
+STRIPE_TEST_ONE_TIME_LINK = os.environ.get("GARDEN_STRIPE_TEST_ONE_TIME_LINK", "").strip()
+STRIPE_TEST_MONTHLY_LINK = os.environ.get("GARDEN_STRIPE_TEST_MONTHLY_LINK", "").strip()
+
 TEST_RUNNER = "qa.runner.GardenTestRunner"

@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import timedelta
 from urllib.parse import urlencode
 
+from django.conf import settings
 from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth import login
@@ -37,6 +38,16 @@ from .coview import recent_response
 from .models import FONT_CHOICES, SkillSample
 from .progression import FIT_LABELS, Progress, item_score, record_tier
 from .practice import CURRENT_LESSONS, CURRENT_VERSION, LESSONS, ORIGINALS, build_round, round_count
+
+
+def mission(request):
+    once = settings.STRIPE_TEST_ONE_TIME_LINK
+    monthly = settings.STRIPE_TEST_MONTHLY_LINK
+    links = [
+        (label, url) for label, url in (("Give once", once), ("Give monthly", monthly))
+        if once != monthly and re.fullmatch(r"https://(?:buy|donate)\.stripe\.com/test_[A-Za-z0-9]+", url)
+    ]
+    return render(request, "mission.html", {"donation_links": links})
 
 
 def scheduling_query(request):

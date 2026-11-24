@@ -4,6 +4,7 @@ StartLimitIntervalSec=0
 
 [Service]
 WorkingDirectory=%h/.local/share/little-garden-pilot
+EnvironmentFile=-%h/.config/little-garden/donations.env
 ExecStart="%h/.local/share/little-garden-pilot/.venv/bin/python" -m garden.serve %i
 Restart=on-failure
 RestartSec=5

@@ -48,7 +48,13 @@ The picture and listening activities include holiday clues and traditions, color
 
 1. Observe families using the full queue and collect educator feedback on lessons, accessibility, and learning evidence.
 2. Before hosted enrollment, implement retention, export and deletion workflows, parental consent as applicable, production settings, PostgreSQL backups and verified restoration. Expand reviewed sequences toward ages 7–8 after the family workflow is tested.
-3. Test an optional donation checkout in Stripe’s sandbox before adding a donation link to the mission page.
+## Sandbox donations
+
+The mission page supports two Stripe-hosted Payment Links. In the same Stripe sandbox, create a one-time price and a monthly recurring price, then create a separate Payment Link for each. Stripe hosts the checkout and confirmation and records the payment or subscription. Little Garden sends no family profile or lesson data.
+
+Set `GARDEN_STRIPE_TEST_ONE_TIME_LINK` and `GARDEN_STRIPE_TEST_MONTHLY_LINK` to the respective public URLs. Use plain sandbox links starting with `https://buy.stripe.com/test_` or `https://donate.stripe.com/test_`. The Linux pilot service reads these settings from `~/.config/little-garden/donations.env`, one `NAME=value` per line. After updating an existing service installation, reinstall the unit as described above, reload systemd and restart the pilot listeners. The page can display either configured option individually. Child sessions do not see the donation section.
+
+For an account-level check, use Stripe’s test Visa on each checkout and verify a successful one-time payment and an active monthly subscription with a paid first invoice in the same sandbox. [Stripe test cards](https://docs.stripe.com/testing)
 
 ## Licensing
 
