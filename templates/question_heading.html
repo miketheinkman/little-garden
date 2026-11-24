@@ -1,2 +1,4 @@
-{% load lesson_cues %}<div class="question-heading"><span class="prompt-icon" aria-hidden="true">{{ key|prompt_icon }}</span>
+{% load static lesson_cues %}<div class="question-heading question-landscape" data-world="{{ lesson.world_key|default:'garden' }}">
+<svg class="question-scenery" aria-hidden="true" focusable="false" viewBox="0 0 280 120" preserveAspectRatio="xMaxYMax meet"><use href="{% static 'brand/question-scenes.svg' %}#{{ lesson.world_key|default:'garden' }}"></use></svg>
+<span class="prompt-icon" aria-hidden="true">{{ key|prompt_icon }}</span>
 {% if mirror %}<h3>{{ item.prompt }}</h3>{% else %}<h2 id="prompt">{{ item.prompt }}</h2>{% endif %}</div>

@@ -551,3 +551,41 @@ main:has(#live-room) {max-width:1600px}
 @media (max-width:36rem) {
   .schedule-dialog .dialog-heading {position:sticky;top:-1rem;z-index:1;background:var(--surface);padding-top:.5rem}
 }
+
+/* The scenery lives on the paper beside the prompt. The activity keeps its
+   full working area, including when a tablet scrolls to the next question. */
+.question-landscape {
+  --scene-pigment:#528768;
+  --scene-ink:color-mix(in srgb,var(--scene-pigment) 60%,var(--ink));
+  --paper:color-mix(in srgb,var(--scene-pigment) 10%,var(--surface));
+  position:relative;container-type:inline-size;isolation:isolate;align-items:center;overflow:hidden;border-radius:.85rem;
+  padding:.65rem clamp(.5rem,1.8vw,1rem);min-height:5.5rem;
+  background:linear-gradient(100deg,var(--surface) 10%,var(--paper) 80%);
+}
+.question-landscape[data-world="space"] {--scene-pigment:#8270ad}
+.question-landscape[data-world="construction"] {--scene-pigment:#ae8253}
+.question-landscape[data-world="ocean"] {--scene-pigment:#45859b}
+.question-landscape[data-world="trains"] {--scene-pigment:#6c8298}
+.question-landscape[data-world="woodland"] {--scene-pigment:#57816e}
+.question-landscape[data-world="bakery"] {--scene-pigment:#aa7772}
+.question-landscape[data-world="dinosaurs"] {--scene-pigment:#7c904f}
+.question-landscape[data-world="farm"] {--scene-pigment:#a2775c}
+.question-scenery {
+  position:absolute;inset-block:0;right:0;width:min(40%,16rem);height:100%;
+  color:var(--scene-ink);opacity:.47;pointer-events:none;z-index:-1;
+}
+.question-landscape :is(h2,h3) {flex:1;padding-right:min(22%,8rem);overflow-wrap:anywhere}
+.question-landscape .prompt-icon {align-self:center}
+@media (max-width:600px) {
+  .question-landscape {min-height:4.25rem;padding:.45rem .35rem}
+}
+@container (max-width:28rem) {
+  .question-scenery {inset-block:auto 0;width:6.75rem;height:2rem;opacity:.46}
+  .question-landscape :is(h2,h3) {padding:0 0 1.45rem}
+  .question-landscape .prompt-icon {align-self:flex-start}
+}
+@media (forced-colors:active),print {
+  .question-landscape {background:none}
+  .question-scenery {display:none}
+  .question-landscape :is(h2,h3) {padding:0}
+}

@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <!-- Two-colour landscape vignettes for the question sheet. The ink colour
+       comes from the host, so the same drawings work on dark paper. -->
+  <metadata>Original illustrations by Little Garden contributors. CC BY-SA 4.0 · https://creativecommons.org/licenses/by-sa/4.0/</metadata>
+  <defs>
+    <path id="hill" d="M0 103Q53 75 110 92T210 93Q246 83 280 84V120H0Z" fill="currentColor" opacity=".24"/>
+    <g id="pine"><path d="M0 0l-13 21h6l-12 17h12l-13 17h40L7 38h12L7 21h6Z" fill="currentColor"/><path d="M0 48v14" stroke="currentColor" stroke-width="4"/></g>
+    <g id="wheel"><circle r="8" fill="currentColor"/><circle r="3" fill="var(--paper,#fff)" /></g>
+    <path id="spark" d="M0-5Q0 0 5 0 0 0 0 5 0 0-5 0 0 0 0-5Z" fill="currentColor"/>
+  </defs>
+  <symbol id="garden" viewBox="0 0 280 120">
+    <use href="#hill"/><g fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+      <path d="M26 116q58-29 130-14t123 1M137 95q1-24-6-48m9 35q10-19 23-29m45 41q-3-24 4-51m-1 32q12-11 20-16"/>
+    </g>
+    <g fill="currentColor"><path d="M135 68q-19-5-23-24 19 1 23 24m1-7q-1-20 11-30 8 18-11 30m11 13q4-22 24-25-3 19-24 25m63 5q-18-7-20-22 17 2 20 22m4-20q-3-18 10-30 9 16-10 30m6 11q10-16 25-14-5 16-25 14"/>
+    <path d="M59 96q1-22 20-22 17 0 27 20Z" opacity=".66"/><circle cx="103" cy="89" r="7"/></g>
+    <path d="M76 75q8 7 9 18m17-9 4-8m0 9 7-5" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <g fill="var(--paper,#fff)"><circle cx="70" cy="86" r="3"/><circle cx="89" cy="84" r="3"/></g>
+  </symbol>
+  <symbol id="construction" viewBox="0 0 280 120">
+    <use href="#hill"/><g fill="currentColor" opacity=".40"><path d="M30 104l38-36 21 24 12-10 20 22Zm165 0 32-30 31 30Z"/></g>
+    <g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M197 85V22h9v64m-9-53 9 10-9 10 9 10-9 10m-18-46 23-17 44 17h-67Zm53 2v19q0 7-6 5"/>
+    </g>
+    <path d="m86 59 50 8-9 19-38-10Zm49 25 5-28 19 2 15 18 2 15-88-1v-8Z" fill="currentColor"/>
+    <path d="m144 61 11 1 10 12h-23Z" fill="var(--paper,#fff)"/>
+    <use href="#wheel" x="103" y="91"/><use href="#wheel" x="158" y="91"/>
+  </symbol>
+  <symbol id="space" viewBox="0 0 280 120">
+    <g fill="currentColor"><circle cx="104" cy="41" r="17" opacity=".46"/><path d="M94 47q10 5 22-6" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path d="M3 120q81-39 165-18t112-5v23Z" opacity=".23"/>
+      <ellipse cx="211" cy="45" rx="29" ry="26" transform="rotate(-22 211 45)"/>
+    </g><ellipse cx="211" cy="47" rx="47" ry="10" transform="rotate(-22 211 47)" fill="none" stroke="var(--paper,#fff)" stroke-width="6"/>
+    <ellipse cx="211" cy="47" rx="47" ry="10" transform="rotate(-22 211 47)" fill="none" stroke="currentColor" stroke-width="3"/>
+    <g fill="currentColor" opacity=".65"><use href="#spark" x="146" y="26"/><use href="#spark" x="58" y="65"/><use href="#spark" x="178" y="81"/><circle cx="129" cy="68" r="2"/><circle cx="257" cy="17" r="2"/></g>
+  </symbol>
+  <symbol id="ocean" viewBox="0 0 280 120">
+    <path d="M0 106q66-23 123-7t157-11v32H0Z" fill="currentColor" opacity=".25"/>
+    <path d="M210 104q-8-20-2-39m-2 20q-15-1-16-17m17 7q14-4 14-20m-21 36q-21-1-25-18m56 31q3-15 15-26" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+    <g fill="currentColor"><path d="M95 45q17-18 37-1l13-10-1 22-12-8q-21 15-37-3Zm60-20q12-11 24 0l9-7v15l-9-6q-13 11-24-2Z"/>
+      <path d="m88 94 4-14 7 11 14 1-10 9 3 13-12-7-13 6 4-13-10-8Z" opacity=".70"/></g>
+    <g stroke="currentColor" fill="none" opacity=".65"><circle cx="74" cy="39" r="3"/><circle cx="66" cy="29" r="5"/></g>
+  </symbol>
+  <symbol id="trains" viewBox="0 0 280 120">
+    <use href="#hill"/><path d="M16 106q76-21 141-10t123 2" fill="none" stroke="currentColor" stroke-width="4"/>
+    <path d="M83 56h40v26H83Zm46 0h40v27h-40Zm46-12h29v19h22l6 17h-57Zm38 19V46h9v17Zm-40-23h33v5h-33Z" fill="currentColor"/>
+    <path d="M89 61h8v8h-8zm14 0h8v8h-8zm33 0h8v8h-8zm14 0h8v8h-8zm31-11h15v12h-15Z" fill="var(--paper,#fff)"/>
+    <g fill="currentColor"><circle cx="93" cy="85" r="5"/><circle cx="115" cy="85" r="5"/><circle cx="139" cy="85" r="5"/><circle cx="161" cy="85" r="5"/><use href="#wheel" x="187" y="85"/><use href="#wheel" x="218" y="85"/>
+      <path d="M215 36q5-9-8-11-19-2-16-11-18 6-5 13 3 2 16 3 9 1 13 6Z" opacity=".35"/></g>
+  </symbol>
+  <symbol id="woodland" viewBox="0 0 280 120">
+    <use href="#hill"/><g opacity=".5"><use href="#pine" transform="translate(87 48) scale(.75)"/><use href="#pine" transform="translate(110 57) scale(.63)"/></g>
+    <use href="#pine" transform="translate(214 14) scale(1.26)"/><use href="#pine" transform="translate(241 49) scale(.74)"/>
+    <path d="m113 96 29-41 29 42Zm32-41 23 7 28 34-23 2Z" fill="currentColor"/>
+    <path d="m130 96 12-23 8 24Z" fill="var(--paper,#fff)"/>
+    <path d="M134 56l14-5m-8 0 7 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="bakery" viewBox="0 0 280 120">
+    <path d="M39 103q84-10 133-6t108-2v25H39Z" fill="currentColor" opacity=".23"/>
+    <g transform="rotate(-24 172 59)" fill="currentColor"><rect x="146" y="45" width="61" height="21" rx="8"/><rect x="132" y="51" width="17" height="8" rx="4"/><rect x="204" y="51" width="15" height="8" rx="4"/></g>
+    <path d="M91 66h62q-3 27-26 30-28 3-36-30Z" fill="currentColor"/><path d="m91 64 63-1" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+    <path d="M178 94q0-17 16-24 17-8 35 0 12 7 14 22-33 7-65 2Z" fill="currentColor" opacity=".85"/>
+    <path d="m201 71-7 10m19-10-7 10m19-8-6 8" stroke="var(--paper,#fff)" stroke-width="3" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="dinosaurs" viewBox="0 0 280 120">
+    <use href="#hill"/><path d="M54 82q28 3 47-20 10-12 29-10 11 1 18 8 13-1 17-22 1-16 11-20 11-5 19 2 7 8-4 12l-7-1q-2 8-3 20-1 22-14 34l-1 13h-9l-2-16q-8 5-21 5l-2 13h-9l-2-16q-10-5-15-11-25 19-52 9Z" fill="currentColor"/>
+    <circle cx="184" cy="23" r="1.5" fill="var(--paper,#fff)"/>
+    <path d="M221 99q-2-24 7-48m-7 39q-16-5-18-17 12 2 18 17m1-12q-13-6-13-18 11 5 13 18m3-15q-9-6-8-16 8 3 8 16m-2 18q13-15 26-14-4 12-26 14m4-16q10-13 20-13-4 11-20 13Z" fill="currentColor" opacity=".65"/>
+  </symbol>
+  <symbol id="farm" viewBox="0 0 280 120">
+    <use href="#hill"/><path d="m154 55 15-24 25-11 28 13 14 23-9-3v39h-66V53Z" fill="currentColor"/>
+    <g stroke="var(--paper,#fff)" fill="none" stroke-width="2"><path d="M177 92V63h31v29m-29-27 27 25m0-25-27 25"/><path d="M187 44h10v9h-10z"/></g>
+    <path d="M62 86 145 73m-83 23 83-13m-75-9v30m28-34v30m29-35v30" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+    <path d="M56 120q39-13 76-17m-37 17q44-14 74-16m-22 16q34-11 58-12" fill="none" stroke="currentColor" opacity=".55" stroke-width="2"/>
+  </symbol>
+</svg>

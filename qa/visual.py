@@ -1165,6 +1165,10 @@ class VisualReview(StaticLiveServerTestCase):
                     for ctx, session in zip(contexts, (login, device)):
                         ctx.add_cookies([{"name":"sessionid","value":session.cookies["sessionid"].value,"url":self.live_server_url}])
                     page, kid = [ctx.new_page() for ctx in contexts]
+                    page.goto(self.live_server_url + reverse("preview", args=[child.pk, "ten-v1", 0]))
+                    garden = page.locator(".question-landscape")
+                    expect(garden).to_have_attribute("data-world", "garden")
+                    garden.screenshot(path=self.out / f"{self.variant}-scenery-garden.png")
                     for slug in ["construction","ocean","trains","woodland","bakery","dinosaurs","farm","space"]:
                         page.goto(self.live_server_url)
                         panel = page.locator("article").filter(has=page.get_by_role("link",name="Browse lesson library")).filter(
@@ -1177,6 +1181,10 @@ class VisualReview(StaticLiveServerTestCase):
                         page.locator('[data-lesson="ten-v1"]').get_by_role("link",name="Preview lesson").click()
                         expect(page.locator(".lesson-setting")).to_contain_text(THEMES[slug]["label"])
                         expect(page.locator(".themed-cell")).to_have_count(5)
+                        expect(garden).to_have_attribute("data-world", slug)
+                        expect(garden.locator("use")).to_have_attribute("href", re.compile(f"#{slug}$"))
+                        page.wait_for_function("document.querySelector('.question-scenery use').getBBox().width > 0")
+                        garden.screenshot(path=self.out / f"{self.variant}-scenery-{slug}.png")
                         page.locator("article").filter(has=page.locator("#activity")).screenshot(path=self.out / f"{self.variant}-world-{slug}.png")
                         self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"))
                     page.goto(self.live_server_url)
@@ -1193,6 +1201,9 @@ class VisualReview(StaticLiveServerTestCase):
                     kid.get_by_role("button",name="Add one moon rock").click()
                     expect(tile.locator("[data-basket]")).to_have_text("🪨")
                     expect(tile.locator(".lesson-setting")).to_contain_text("Outer Space & Rockets")
+                    for surface in (kid, tile):
+                        expect(surface.locator(".question-scenery use")).to_have_attribute("href", re.compile("#space$"))
+                    kid.locator("article.learner-step").screenshot(path=self.out / f"{self.variant}-scenery-in-play.png")
                     kid.get_by_role("button",name="Add one moon rock").click()
                     kid.get_by_role("button",name="Check cargo bay").click()
                     expect(kid.locator(".answer-party")).to_be_visible()
