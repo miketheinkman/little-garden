@@ -523,3 +523,31 @@ main:has(#live-room) {max-width:1600px}
 .sign-keys {display:flex;flex-wrap:wrap;gap:.35rem;max-width:35rem;margin:.55rem 0}
 .sign-keys button,[data-trace-arrow] {min-width:44px;min-height:44px}
 #trace-next {color:#395d43;pointer-events:none}
+
+.answer-sounds-control:not([hidden]) {display:inline-flex;align-items:center;gap:.4rem;min-height:44px;margin-inline:.4rem;color:var(--muted);font-size:.9rem;cursor:pointer}
+.answer-sounds-control[hidden] {display:none}
+.answer-sounds-control input {width:1.05rem;height:1.05rem;margin:0}
+.login-field {margin:1rem 0}
+.login-field input {width:100%}
+.login-password {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.login-password input {grid-column:1/-1;grid-row:2;min-width:0}
+.login-password button {grid-column:2;grid-row:1;min-height:44px;padding:.4rem .2rem;background:transparent;color:var(--link);text-decoration:underline;font-size:.95rem}
+.login-password button[hidden] {display:none}
+
+.button.secondary,button.secondary {color:var(--ink);background:var(--surface);border:1px solid var(--edge)}
+.schedule-dialog {box-sizing:border-box;width:min(34rem,calc(100% - 1.5rem));max-height:90dvh;overflow:auto;overscroll-behavior:contain;color:var(--ink);background:var(--surface);border:1px solid var(--edge);border-radius:1.2rem;padding:clamp(1rem,3vw,1.7rem);box-shadow:0 1rem 4rem #0004}
+.schedule-dialog::backdrop {background:rgb(15 31 24 / .66)}
+.dialog-heading {display:flex;align-items:center;justify-content:space-between;gap:1rem;border-bottom:1px solid var(--line);padding-bottom:.7rem}
+.dialog-heading h2,.dialog-heading button {margin:0}
+.schedule-dialog h3 {margin:1rem 0 0}
+.schedule-dialog h3+p {margin:.2rem 0 1rem}
+.schedule-dialog [role=status]:empty {display:none}
+
+.history-questions {margin:.7rem 0;max-width:44rem}
+.history-questions summary {color:var(--link);font-weight:650;cursor:pointer}
+.history-questions section {border-left:3px solid var(--edge);padding:.35rem .8rem;margin:.8rem 0;background:var(--wash);border-radius:.25rem;overflow-wrap:anywhere}
+.history-questions h3,.history-questions p {margin:.25rem 0}
+.history-questions .history-attempt {display:grid;gap:.1rem;border-top:1px solid var(--line);padding:.45rem 0}
+@media (max-width:36rem) {
+  .schedule-dialog .dialog-heading {position:sticky;top:-1rem;z-index:1;background:var(--surface);padding-top:.5rem}
+}

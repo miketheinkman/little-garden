@@ -27,8 +27,9 @@
 </div><div class="review-actions">
 {% if not row.queue %}<form method="post">{% csrf_token %}<input type="hidden" name="lesson" value="{{ row.key }}">{% if row.last %}<button name="purpose" value="review">Queue review</button>{% else %}<button name="purpose" value="placement">Queue placement</button>{% endif %}</form>{% endif %}
 <a href="{% url 'preview' child.pk row.key 0 %}?purpose={% if row.last %}review{% else %}placement{% endif %}">Preview check</a>
-{% if not row.last and not row.queue and not row.placement_planned %}<a href="{% url 'planner' child.pk %}?lesson={{ row.key }}&amp;purpose=placement">Schedule placement</a>{% endif %}
-{% if not row.review_planned %}<a href="{% url 'planner' child.pk %}?lesson={{ row.key }}&amp;purpose=review&amp;day={{ row.next_date.isoformat }}">Schedule review</a>{% endif %}
+{% if not row.last and not row.queue and not row.placement_planned %}<a data-schedule class="button secondary" href="{% url 'planner' child.pk %}?lesson={{ row.key }}&amp;purpose=placement">Schedule placement</a>{% endif %}
+{% if not row.review_planned %}<a data-schedule class="button secondary" href="{% url 'planner' child.pk %}?lesson={{ row.key }}&amp;purpose=review&amp;day={{ row.next_date.isoformat }}">Schedule review</a>{% endif %}
 </div></section>{% endfor %}</details>
 {% empty %}<p>No activities match these filters.</p>{% endfor %}
+{% include "schedule_dialog.html" %}
 {% endblock %}

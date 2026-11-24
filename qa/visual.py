@@ -67,7 +67,7 @@ class VisualReview(StaticLiveServerTestCase):
                     first = timezone.localdate()+timedelta(days=28)
                     expect(page.get_by_label("First available")).to_have_value(first.isoformat())
                     page.get_by_role("button",name="Schedule lesson").click()
-                    expect(page.locator(".plan-row")).to_contain_text("Skill review · Every four weeks")
+                    expect(card).to_contain_text("Skill review scheduled")
                     url = self.live_server_url + reverse("placement_reviews",args=[child.pk])
                     page.goto(url+"?strand=Money+sense")
                     expect(card).to_contain_text("Skill review scheduled")
@@ -113,8 +113,10 @@ class VisualReview(StaticLiveServerTestCase):
                         page.get_by_role("button",name="Show",exact=True).click()
                         expect(page.locator("#day-plan")).not_to_contain_text("Make ten")
                         page.get_by_role("link",name="Schedule for Fern").click()
+                        page.get_by_label("Lesson tier").select_option(str(LESSONS["five-v1"]["level"]))
+                        page.get_by_role("button", name="Filter lessons").click()
+                        page.locator('[data-lesson="five-v1"] [data-schedule]').click()
                         expect(page.get_by_label("First available")).to_have_value(day.isoformat())
-                        page.get_by_label("Lesson",exact=True).select_option("five-v1")
                         page.get_by_role("button",name="Schedule lesson").click()
                         expect(page.locator("#day-plan")).to_contain_text("Make five")
                         expect(page.get_by_label("Show lessons for")).to_have_value(str(fern.pk))
@@ -155,17 +157,31 @@ class VisualReview(StaticLiveServerTestCase):
                     page.goto(self.live_server_url + reverse("planner", args=[learner.pk]))
                     expect(page.get_by_text("No upcoming plans", exact=False)).to_be_visible()
                     self.capture(page, "empty")
-                    page.get_by_label("Lesson", exact=True).select_option("ten-v1")
+                    page.get_by_role("link", name="Choose a lesson to schedule").click()
+                    page.get_by_label("Subject").select_option(LESSONS["ten-v1"]["category"])
+                    page.get_by_role("button", name="Filter lessons").click()
+                    trigger = page.locator('[data-lesson="ten-v1"] [data-schedule]')
+                    trigger.focus()
+                    trigger.press("Enter")
+                    expect(page.get_by_role("dialog")).to_be_visible()
+                    page.keyboard.press("Escape")
+                    expect(trigger).to_be_focused()
+                    trigger.click()
                     page.get_by_label("First available").fill(tomorrow.isoformat())
                     page.get_by_label("Repeat", exact=True).select_option("weekly")
                     page.get_by_role("button", name="Schedule lesson").click()
                     expect(page.get_by_text("Choose at least one practice day.")).to_be_visible()
-                    self.capture(page, "choose-days")
+                    page.screenshot(path=self.out / f"{self.variant}-choose-days.png")
                     page.get_by_label("Monday", exact=True).check()
                     expect(page.get_by_text("Choose at least one practice day.")).to_have_count(0)
                     page.get_by_label("Thursday", exact=True).check()
-                    self.capture(page, "weekly")
+                    page.screenshot(path=self.out / f"{self.variant}-weekly.png")
+                    self.assertFalse(page.get_by_role("dialog").evaluate("el => el.scrollWidth > el.clientWidth"))
                     page.get_by_role("button", name="Schedule lesson").click()
+                    expect(page.get_by_role("dialog")).not_to_be_visible()
+                    expect(trigger).to_be_visible()
+                    expect(page.get_by_label("Subject")).to_have_value(LESSONS["ten-v1"]["category"])
+                    page.get_by_role("link", name="Lesson planner", exact=True).click()
                     expect(page.get_by_text("Mon, Thu", exact=True)).to_be_visible()
                     self.capture(page, "saved")
                     page.get_by_role("link", name="Next week").click()
@@ -278,6 +294,59 @@ class VisualReview(StaticLiveServerTestCase):
                         self.assertEqual(errors,[])
             browser.close()
 
+    def test_answer_sounds(self):
+        child = Learner.objects.get(pk=self.child_id)
+        row = assign_lesson(child, "keys-v2", variation=0)
+        family = Client()
+        family.force_login(child.parent)
+        family.post(reverse("manage", args=[child.pk]), {"action":"play"})
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            page = browser.new_page()
+            page.context.add_cookies([{"name":"sessionid","value":family.cookies["sessionid"].value,"url":self.live_server_url}])
+            # Tap the real audio output in headless Chrome and measure the rendered waveform.
+            page.add_init_script("""
+                window.cuePeaks = [];
+                const connect = AudioNode.prototype.connect;
+                AudioNode.prototype.connect = function(destination, ...rest) {
+                  if (destination === this.context.destination) {
+                    const meter = this.context.createAnalyser();
+                    connect.call(this, meter);
+                    const index = cuePeaks.push(0) - 1;
+                    const data = new Float32Array(meter.fftSize);
+                    const timer = setInterval(() => {
+                      meter.getFloatTimeDomainData(data);
+                      cuePeaks[index] = Math.max(cuePeaks[index], ...data);
+                    }, 15);
+                    setTimeout(() => clearInterval(timer), 700);
+                  }
+                  return connect.call(this, destination, ...rest);
+                };
+            """)
+            page.goto(self.live_server_url + reverse("play", args=[row.pk]))
+            toggle = page.get_by_role("checkbox", name="Answer sounds")
+            expect(toggle).to_be_checked()
+            page.keyboard.press("x")
+            expect(page.locator(".retry-note")).to_be_visible()
+            page.wait_for_function("cuePeaks.length === 1 && cuePeaks[0] > .01")
+            page.keyboard.press("s")
+            expect(page.locator(".answer-party")).to_be_visible()
+            page.wait_for_function("cuePeaks.length === 2 && cuePeaks[1] > .01")
+            expect(page.get_by_text("Step 2 of 5",exact=True)).to_be_visible()
+            toggle.uncheck()
+            # Move focus back to the activity after changing the audio control.
+            page.locator('#activity button[name=answer]').first.focus()
+            page.keyboard.press("x")
+            expect(page.locator(".retry-note")).to_be_visible()
+            self.assertEqual(page.evaluate("cuePeaks.length"), 2)
+            page.reload()
+            expect(toggle).not_to_be_checked()
+            toggle.check()
+            page.get_by_role("button",name="Skip this question").click()
+            expect(page.get_by_text("Step 3 of 5",exact=True)).to_be_visible()
+            self.assertEqual(page.evaluate("cuePeaks.length"), 0)
+            browser.close()
+
     def test_feature_screens(self):
         for device, width in [("desktop", 1200), ("phone", 375)]:
             for theme in ("light", "dark"):
@@ -384,6 +453,10 @@ class VisualReview(StaticLiveServerTestCase):
                     self.capture(page, "shuffled-route")
                     page.get_by_role("button", name="Add to Fern’s queue").click()
                     expect(page.locator("[data-queue-status]")).not_to_be_empty()
+                    page.get_by_role("link", name="Schedule this round").click()
+                    expect(page.get_by_role("dialog")).to_contain_text(f"preview round {variation+1}")
+                    page.get_by_role("button", name="Schedule lesson").click()
+                    expect(page.get_by_role("dialog")).not_to_be_visible()
                     assigned.append((child, variation))
                     page.goto(self.live_server_url + reverse("preview", args=[child.pk, "letters-v1", 0]) + "?v=1073")
                     lengths = page.locator("#trail").evaluate("""svg => {
@@ -399,6 +472,7 @@ class VisualReview(StaticLiveServerTestCase):
             browser.close()
         for child, variation in assigned:
             self.assertEqual(child.assignment_set.get().variation, variation)
+            self.assertEqual(child.lessonplan_set.get().first_variation, variation)
 
     def test_exploration_lessons(self):
         from pilot.explorations import EXPLORATIONS
@@ -488,7 +562,18 @@ class VisualReview(StaticLiveServerTestCase):
         new_learner = Learner.objects.create(parent=child.parent, nickname="Pip")
         recent = timezone.now() - timedelta(days=7)
         child.assignment_set.update(completed=recent, assigned_at=recent)
-        child.assignment_set.create(lesson="keys-v2", variation=1, completed=timezone.now(), step=5, skipped=1)
+        round_row = assign_lesson(child, "keys-v2", 1)
+        player = Client()
+        player.force_login(child.parent)
+        player.post(reverse("manage", args=[child.pk]), {"action": "play"})
+        play = reverse("play", args=[round_row.pk])
+        player.get(play)
+        item = round_row.round_snapshot["items"][0]
+        player.post(play, {"step": 0, "answer": "?", "active_ms": 1800})
+        player.post(play, {"step": 0, "answer": item["answer"], "active_ms": 4000})
+        for step in range(1, len(round_row.round_snapshot["items"])):
+            player.post(play, {"step": step, "action": "skip"})
+
         family = Client()
         family.force_login(child.parent)
         with sync_playwright() as pw:
@@ -511,6 +596,13 @@ class VisualReview(StaticLiveServerTestCase):
                         expect(page.get_by_role("combobox", name="Lesson", exact=True)).to_have_value("keys-v2")
                         expect(page.locator(".history-list li")).to_have_count(3)
                         self.capture(page, "history-rounds")
+                        details = page.locator(".history-questions").first
+                        details.locator("summary").click()
+                        expect(details).to_contain_text("Try 1 · Incorrect · ?")
+                        expect(details).to_contain_text("Try 2 · Correct")
+                        expect(details).to_contain_text("Skipped")
+                        details.locator("summary").evaluate('el => el.scrollIntoView({block: "start"})')
+                        page.screenshot(path=self.out / f"{self.variant}-history-attempts.png")
                         page.get_by_role("combobox", name="Status", exact=True).select_option("Removed")
                         page.get_by_role("button", name="Apply filters").click()
                         expect(page.get_by_role("heading", name="No matching assignments")).to_be_visible()
@@ -860,6 +952,11 @@ class VisualReview(StaticLiveServerTestCase):
                         page.get_by_label("Subject").select_option("Numbers & patterns")
                         page.get_by_label("Adult involvement").select_option("Parent required")
                         page.get_by_role("button", name="Filter lessons").click()
+                        page.get_by_role("link", name="Schedule all (2)").click()
+                        expect(page.get_by_role("dialog")).to_contain_text("2 selected lessons")
+                        page.get_by_role("button", name="Schedule 2 lessons").click()
+                        expect(page.get_by_role("dialog")).not_to_be_visible()
+                        expect(page.locator("[data-queue-status]")).to_contain_text("2 lessons scheduled for Pip")
                         page.get_by_role("button", name="Add all (2)").click()
                         expect(page.locator("[data-empty]")).to_be_visible()
                         self.capture(page, "library-filter-queued")
@@ -1372,6 +1469,22 @@ class VisualReview(StaticLiveServerTestCase):
         expect(page).to_have_url(self.live_server_url + "/login/")
         page.emulate_media(reduced_motion="no-preference")
         self.capture(page, "login")
+        password = page.get_by_label(re.compile(r"^Password:?$"))
+        expect(password).to_have_attribute("type", "password")
+        password.fill("gardenexample")
+        password.evaluate("el => el.setSelectionRange(6, 6)")
+        page.get_by_role("button", name="Show password").click()
+        expect(password).to_have_attribute("type", "text")
+        expect(password).to_be_focused()
+        password.press("Space")
+        expect(password).to_have_value("garden example")
+        self.capture(page, "password-visible")
+        hide = page.get_by_role("button", name="Hide password")
+        hide.focus()
+        hide.press("Enter")
+        expect(password).to_have_attribute("type", "password")
+        expect(page.get_by_role("button",name="Show password")).to_be_focused()
+        expect(password).to_have_value("garden example")
         page.locator("#id_username").fill("reviewer")
         page.locator("#id_password").fill("garden-qa-only")
         page.locator("#id_password").press("Enter")

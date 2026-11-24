@@ -19,6 +19,11 @@
       if (!section.querySelector("article")) section.remove();
     });
     library.querySelector("[data-available]").textContent = remaining.length;
+    const bulk = library.querySelector("[data-schedule-all]");
+    const url = new URL(bulk.href);
+    url.searchParams.set("batch", remaining.map(card => card.dataset.lesson).join(","));
+    bulk.href = url;
+    bulk.querySelector("span").textContent = remaining.length;
     library.querySelector(".bulk-queue").hidden = !remaining.length;
     const empty = library.querySelector("[data-empty]");
     empty.hidden = Boolean(remaining.length);
@@ -29,6 +34,13 @@
       empty.focus({preventScroll: true});
     }
   }
+  document.addEventListener("garden:scheduled", event => {
+    const {active, opener, message} = event.detail;
+    if (library && [...library.querySelectorAll("[data-lesson]")].some(card => active.includes(card.dataset.lesson))) {
+      updateLibrary(new Set(active), opener);
+    }
+    if (notice) announce(message);
+  });
   document.addEventListener("submit", async event => {
     const form = event.target;
     if (!form.matches("[data-queue-form],[data-dashboard-add]")) return;

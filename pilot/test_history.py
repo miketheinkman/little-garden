@@ -2,10 +2,11 @@ from datetime import datetime, timedelta, timezone as dt_timezone
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
-from django.test import TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from .assignments import assign_lesson
 from .models import Learner
 
 
@@ -50,6 +51,30 @@ class AssignmentHistoryTests(TestCase):
         self.assertEqual(self.client.get(self.history).status_code, 404)
         self.client.logout()
         self.assertEqual(self.client.get(self.history).status_code, 302)
+
+    def test_attempts_survive_retries_skips_and_stale_submissions(self):
+        row = assign_lesson(self.child, "keys-v2", 0)
+        player = Client()
+        player.force_login(self.child.parent)
+        player.post(reverse("manage", args=[self.child.pk]), {"action": "play"})
+        play = reverse("play", args=[row.pk])
+        token = player.get(play).context["submission"]
+        for _ in range(2):
+            player.post(play, {"step": 0, "answer": "wrong", "active_ms": 3000, "submission": token})
+        history = self.client.get(self.history)
+        self.assertContains(history, "1 incorrect attempt")
+        self.assertContains(history, "1 answered")
+        player.post(play, {"step": 0, "answer": row.round_snapshot["items"][0]["answer"]})
+        player.post(play, {"step": 0, "answer": "stale"})
+        player.post(play, {"step": 1, "action": "skip"})
+        self.assertEqual(list(row.question_attempts.values_list("outcome", flat=True)), ["incorrect", "correct", "skipped"])
+        history = self.client.get(self.history)
+        self.assertContains(history, "Try 2")
+        self.assertContains(history, "0 of 1 correct on the first try")
+        self.assertContains(history, "1 answered")
+        self.assertContains(history, "1 skipped")
+        self.assertNotContains(history, "stale")
+        self.assertNotContains(history, "Earlier play has limited detail")
 
     def test_repeats_paginate_in_stable_order_with_filters(self):
         now = timezone.now()

@@ -1,1 +1,20 @@
-{% extends 'base.html' %}{% block content %}<section class="account"><h1>{{ heading|default:"Parent sign in" }}</h1><form method="post">{% csrf_token %}{{ form.as_p }}<button>{{ heading|default:"Sign in" }}</button></form><p>{% if heading %}<a href="{% url 'login' %}">Already have an account? Sign in</a>{% else %}<a href="{% url 'signup' %}">Create a free parent account</a> · <a href="{% url 'password_reset' %}">Forgot password?</a>{% endif %}</p></section>{% endblock %}
+{% extends 'base.html' %}{% load static %}
+{% block content %}
+<section class="account">
+<h1>{{ heading|default:"Parent sign in" }}</h1>
+<form method="post">{% csrf_token %}
+{% if heading %}{{ form.as_p }}{% else %}
+{{ form.non_field_errors }}
+{% for field in form %}
+  <div class="login-field">{{ field.errors }}
+  {% if field.name == "password" %}<div class="login-password">{{ field.label_tag }}
+    {{ field }}
+    <button type="button" data-password-toggle aria-controls="{{ field.id_for_label }}" hidden>Show password</button>
+  </div>{% else %}{{ field.label_tag }}{{ field }}{% endif %}</div>
+{% endfor %}
+{% endif %}
+<button>{{ heading|default:"Sign in" }}</button></form>
+<p>{% if heading %}<a href="{% url 'login' %}">Already have an account? Sign in</a>{% else %}<a href="{% url 'signup' %}">Create a free parent account</a> · <a href="{% url 'password_reset' %}">Forgot password?</a>{% endif %}</p>
+</section>
+{% if not heading %}<script defer src="{% static 'login-password.js' %}"></script>{% endif %}
+{% endblock %}

@@ -7,13 +7,13 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.db.models import F
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from .assignments import session_purpose
+from .assignments import active_lesson_keys, session_purpose
 from .calendar import scheduled_entries
 from .discovery import PATCH, letter_selection
 from .models import Learner, LessonPlan, Purpose
@@ -68,6 +68,10 @@ def planner(request, pk):
     key = editing.lesson if editing else request.GET.get("lesson")
     if key and key not in LESSONS:
         raise Http404
+    batch = list(dict.fromkeys(request.GET["batch"].split(","))) if "batch" in request.GET else []
+    if batch and (key or "v" in request.GET or any(item not in CURRENT_LESSONS for item in batch)):
+        raise Http404
+    dialog = request.headers.get("X-Garden-Dialog") == "schedule"
     variation = editing.first_variation if editing else None
     letters = editing.letters if editing else ""
     if not editing and "v" in request.GET:
@@ -97,11 +101,22 @@ def planner(request, pk):
                "repeat": editing.repeat if editing else ("fourweeks" if purpose == Purpose.REVIEW else "once"), "weekdays": list(editing.weekdays) if editing else [],
                "end": editing.ends_on if editing else None, "submission": editing.submission if editing else uuid.uuid4()}
     form = PlanForm(request.POST if request.method == "POST" else None, initial=initial, label_suffix="")
-    groups = defaultdict(list)
-    for lesson_key in ([key] if key else CURRENT_LESSONS):
-        info = summary(lesson_key, LESSONS[lesson_key], child.lesson_theme)
-        groups[info["category"]].append((lesson_key, info["title"]))
-    form.fields["lesson"].choices = list(sorted(groups.items())) if key else [("", "Choose a lesson"), *sorted(groups.items())]
+    title = summary(key, LESSONS[key], child.lesson_theme)["title"] if key else ""
+    if key:
+        form.fields["lesson"].choices = [(key, title)]
+        form.fields["lesson"].widget = forms.HiddenInput()
+    elif batch:
+        del form.fields["lesson"]
+    elif form.is_bound:
+        # Accept links and clients from before lesson selection moved into the library.
+        groups = defaultdict(list)
+        for lesson_key, lesson in CURRENT_LESSONS.items():
+            info = summary(lesson_key, lesson, child.lesson_theme)
+            groups[info["category"]].append((lesson_key, info["title"]))
+        form.fields["lesson"].choices = [("", "Choose a lesson"), *sorted(groups.items())]
+    form_context = {"child": child, "form": form, "editing": editing, "variation": variation, "letters": letters,
+                    "title": title, "batch_count": len(batch), "calendar_back": calendar_day(selected or today)
+                    if calendar_scope in {"child", "family"} else None}
     form.fields["start"].widget.attrs["min"] = today.isoformat()
     if request.method == "POST" and request.POST.get("action") == "cancel":
         if not request.POST.get("plan", "").isdecimal():
@@ -116,21 +131,33 @@ def planner(request, pk):
         return redirect("planner", pk=pk)
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
-        values = dict(purpose=session_purpose(child, data["lesson"], data["purpose"] or purpose), lesson=data["lesson"], next_on=data["next_on"], repeat=data["repeat"],
-                      weekdays="".join(data["weekdays"]), ends_on=data["end"])
+        keys = batch or [data["lesson"]]
         with transaction.atomic():
             Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))
-            if editing:
-                if not upcoming.filter(pk=editing.pk).update(**values):
-                    raise Http404
-            else:
-                child.lessonplan_set.get_or_create(submission=data["submission"], defaults={
-                    **values, "first_variation": variation, "letters": letters})
+            for lesson_key in keys:
+                values = dict(purpose=session_purpose(child, lesson_key, data["purpose"] or purpose), lesson=lesson_key,
+                              next_on=data["next_on"], repeat=data["repeat"], weekdays="".join(data["weekdays"]), ends_on=data["end"])
+                if editing:
+                    if not upcoming.filter(pk=editing.pk).update(**values):
+                        raise Http404
+                else:
+                    submission = uuid.uuid5(data["submission"], lesson_key) if batch else data["submission"]
+                    child.lessonplan_set.get_or_create(submission=submission, defaults={
+                        **values, "first_variation": variation, "letters": letters})
             release_due(child, today)
-        messages.success(request, "Updated the lesson schedule." if editing else "Lesson scheduled.")
+        label = f"{len(keys)} lessons" if batch else (title or "Lesson")
+        note = f"{label} scheduled for {child.nickname} starting {data['next_on']:%b %d}."
+        if editing:
+            note = "Updated the lesson schedule."
+        if dialog:
+            return JsonResponse({"message": note, "active": sorted(active_lesson_keys(child)), "dueToday": data["next_on"] == today,
+                                 "calendar": calendar_day(data["next_on"]) if calendar_scope in {"child", "family"} else None})
+        messages.success(request, note)
         if calendar_scope in {"child", "family"}:
             return redirect(calendar_day(data["next_on"]))
         return redirect(reverse("planner", args=[pk]) + "?day=" + data["start"].isoformat())
+    if dialog:
+        return render(request, "schedule_form.html", form_context, status=422 if form.is_bound else 200)
     plans = list(upcoming.select_related("learner").order_by("next_on", "pk"))
     for plan in plans:
         plan.title = summary(plan.lesson, LESSONS[plan.lesson], child.lesson_theme)["title"]
@@ -143,9 +170,8 @@ def planner(request, pk):
     entries = scheduled_entries([child], plans, week_start, week_end)
     agenda = [(day, [item["title"] if item.get("plan") else f'{item["title"]} ({item["status"].lower()})'
                      for item in entries[day]]) for day in sorted(entries)]
-    return render(request, "planner.html", {"child": child, "form": form, "plans": plans, "editing": editing, "agenda": agenda,
+    return render(request, "planner.html", {**form_context, "show_form": key or batch or form.is_bound, "plans": plans, "agenda": agenda,
                                             "week_start": week_start, "week_end": week_end,
                                             "previous_week": week_start-timedelta(days=7) if week_start > today else None,
                                             "next_week": week_end+timedelta(days=1) if week_end < date.max else None,
-                                            "calendar_back": calendar_day(selected or today) if calendar_scope in {"child", "family"} else None,
-                                            "calendar_scope": calendar_scope, "calendar_date": selected or anchor, "variation": variation, "letters": letters, "zone": "Central" if timezone.get_current_timezone_name() == "America/Chicago" else timezone.get_current_timezone_name()})
+                                            "calendar_scope": calendar_scope, "calendar_date": selected or anchor, "zone": "Central" if timezone.get_current_timezone_name() == "America/Chicago" else timezone.get_current_timezone_name()})

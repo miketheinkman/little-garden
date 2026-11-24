@@ -1,7 +1,9 @@
 import re
 import random
+import uuid
 from collections import defaultdict
 from datetime import timedelta
+from urllib.parse import urlencode
 
 from django.urls import reverse
 from django.contrib import messages
@@ -23,6 +25,7 @@ from .themes import THEMES, THEME_CHOICES, assignment_lesson, summary, themed_ro
 from .puzzles import parse_moves, simulate, hint
 from .discovery import PATCH, discovery_round, letter_selection
 from .assessment import evidence_method, submitted_response
+from .attempts import populate_history, record_attempt
 from .models import Purpose
 from .assignments import active_lesson_keys, assign_lesson, queue_available, suggested_round, question_set
 from .scheduling import release_due
@@ -34,6 +37,10 @@ from .coview import recent_response
 from .models import FONT_CHOICES, SkillSample
 from .progression import FIT_LABELS, Progress, item_score, record_tier
 from .practice import CURRENT_LESSONS, CURRENT_VERSION, LESSONS, ORIGINALS, build_round, round_count
+
+
+def scheduling_query(request):
+    return urlencode({key: request.GET[key] for key in ("day", "calendar", "browse") if request.GET.get(key)})
 
 
 def puzzle_action(request, item, row=None):
@@ -219,6 +226,7 @@ def library(request, pk):
         histories[key].append(number)
     today = timezone.localdate()
     groups = {}
+    queued_matches = {}
     for key, lesson in matching.items():
         if key not in active:
             info = dict(summary(key, lesson, child.lesson_theme))
@@ -228,7 +236,11 @@ def library(request, pk):
                 days = (today - timezone.localdate(completions[0])).days
                 info["last_completed_label"] = {0: "today", 1: "yesterday"}.get(days, f"{days} days ago")
             groups.setdefault(lesson["category"], []).append((key, info, suggested_round(child, key, histories[key]), progress.label(lesson)))
+        elif request.GET.get("browse") == "schedule":
+            queued_matches[key] = summary(key, lesson, child.lesson_theme)["title"]
     return render(request, "library.html", {
+        "schedule_query": scheduling_query(request), "queued_matches": queued_matches,
+        "batch_keys": ",".join(key for key in matching if key not in active),
         "tier": tier, "tiers": ["1", "2", "3", "4", "5"], "fit_label": fit_label, "fits": FIT_LABELS,
         "child": child, "groups": groups, "category": category, "help_mode": help_mode,
         "world": THEMES[child.lesson_theme], "available": len(matching.keys() - active), "matches": bool(matching),
@@ -269,7 +281,9 @@ def assignment_history(request, pk):
     if status:
         rows = rows.filter(status=status)
     page = Paginator(rows.order_by(F("history_date").desc(nulls_last=True), "-pk"), 20).get_page(request.GET.get("page"))
-    page.object_list = decorate(page.object_list, child)
+    page.object_list = decorate(page.object_list.prefetch_related("question_attempts", "samples"), child)
+    for row in page.object_list:
+        populate_history(row)
     return render(request, "assignment_history.html", {
         "child": child, "page": page, "lesson_options": lesson_options, "month_options": month_options,
         "statuses": ("Completed", "Finished with skips", "In progress", "Queued", "Removed"),
@@ -303,6 +317,9 @@ def preview(request, pk, key, step):
     if purpose not in Purpose.values:
         raise Http404
     round_query = f"&letters={letters}" if letters else ""
+    schedule_query = scheduling_query(request)
+    if schedule_query:
+        round_query += "&" + schedule_query
     if purpose != Purpose.PRACTICE:
         round_query += f"&purpose={purpose}"
     def preview_url(target):
@@ -312,7 +329,7 @@ def preview(request, pk, key, step):
     finished = step == len(lesson["items"])
     context = {
         "preview": True, "appearance": child.appearance, "child": child, "key": key, "step": step, "lesson": lesson,
-        "round_query": round_query, "purpose": purpose,
+        "round_query": round_query, "purpose": purpose, "schedule_query": schedule_query,
         "session_purpose": Purpose(purpose).label if purpose != Purpose.PRACTICE else "", "feedback_kinds": LessonFeedback.Kind.choices, "finished": finished, "variation": number,
         "next_variant": (number+1) % round_count(key),
         "already_queued": CURRENT_VERSION.get(key, key) in active_lesson_keys(child),
@@ -483,6 +500,12 @@ def play(request, pk):
             return redirect("play", pk)
         if "board" in item and request.POST.get("action") in {"run", "hint", "parent"}:
             return puzzle_action(request, item, row)
+        try:
+            submission = uuid.UUID(request.POST["submission"]) if request.POST.get("submission") else None
+        except ValueError:
+            return HttpResponseBadRequest("Reopen this question and try again.")
+        if submission:
+            current = current.exclude(question_attempts__submission=submission)
         skip = request.POST.get("action") == "skip"
         accepted, artwork = (False, None) if skip else lesson_response(request, lesson, item)
         catalog = LESSONS[row.lesson]
@@ -517,12 +540,16 @@ def play(request, pk):
                 score = None
             if "board" in item:
                 score = 100 if accepted else None
+            pace = key_pace(request, catalog, item) if not skip else None
+            if updated:
+                record_attempt(row, item, lesson, request.POST, submission=submission, method=method, accepted=accepted, skip=skip,
+                               advanced=advance, score=score, pace=pace, help_used=help_used)
             if updated and not skip and score is not None:
                 sample, created = SkillSample.objects.get_or_create(
                     assignment=row, step=row.step, defaults={
                         "strand": catalog["strand"], "level": item.get("level",catalog["level"]),
                         "score": score if accepted else 0, "puzzle_help": help_used,
-                        "ms_per_key": key_pace(request, catalog, item) if accepted else None,
+                        "ms_per_key": pace if accepted else None,
                     })
                 if created and not help_used:
                     milestone = record_tier(sample, row.learner_id)
@@ -545,6 +572,9 @@ def play(request, pk):
             destination = reverse("home") if done else reverse("play", args=[pk])
             return answer_transition(request, destination, lesson, bool(updated and accepted), tier_gain)
         if request.headers.get("Accept") == "application/json":
-            return JsonResponse({"result": "retry"})
+            reply = {"result": "retry"}
+            if submission:
+                reply["submission"] = uuid.uuid4()
+            return JsonResponse(reply)
         error = "Take another look. You can try again."
-    return render(request, "play.html", {"session_purpose": row.get_purpose_display() if row.purpose != Purpose.PRACTICE else "", **lesson_clips(item, row.lesson), "key": row.lesson, "autoplay_directions": row.learner.autoplay_directions and not error, "appearance": row.learner.appearance, "assignment_id": row.pk, "puzzle_help": row.puzzle_help, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})
+    return render(request, "play.html", {"session_purpose": row.get_purpose_display() if row.purpose != Purpose.PRACTICE else "", **lesson_clips(item, row.lesson), "key": row.lesson, "autoplay_directions": row.learner.autoplay_directions and not error, "appearance": row.learner.appearance, "assignment_id": row.pk, "submission": uuid.uuid4(), "puzzle_help": row.puzzle_help, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})

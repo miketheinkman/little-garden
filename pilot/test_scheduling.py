@@ -42,6 +42,23 @@ class PlannerTests(TestCase):
             self.assertEqual(self.client.get("/").context["queue"][0].pk, queue[0].pk)
         self.assertIsNone(self.child.lessonplan_set.get().next_on)
 
+    def test_dialog_batch_is_atomic_and_safe_to_resubmit(self):
+        url = self.url + "?batch=ten-v1,five-v1,ten-v1"
+        headers = {"X-Garden-Dialog": "schedule"}
+        response = self.client.get(url, headers=headers)
+        self.assertContains(response, "2 selected lessons")
+        data = self.plan(start=self.today, repeat="weekly")
+        self.assertEqual(self.client.post(url, data, headers=headers).status_code, 422)
+        self.assertFalse(self.child.lessonplan_set.exists())
+        data["repeat"] = "once"
+        for _ in range(2):
+            result = self.client.post(url, data, headers=headers).json()
+            self.assertCountEqual(result["active"], ["ten-v1", "five-v1"])
+        self.assertEqual(self.child.lessonplan_set.count(), 2)
+        self.assertEqual(self.child.assignment_set.count(), 2)
+        self.assertEqual(self.client.post(url + ",unknown", data, headers=headers).status_code, 404)
+        self.assertEqual(self.child.lessonplan_set.count(), 2)
+
     def test_weekly_catch_up_fresh_round_end_and_unfinished_session(self):
         monday = date(2027, 1, 4)
         plan = self.child.lessonplan_set.create(lesson="ten-v1", repeat="weekly", weekdays="03", next_on=monday,

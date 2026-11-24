@@ -5,22 +5,10 @@
 <h1>Lesson planner</h1>
 <p>Choose when lessons appear in <strong>{{ child.nickname }}’s queue</strong>. Dates follow {{ zone }} time.</p>
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
-<article class="planner-form">
+{% if show_form %}<article class="planner-form">
 <h2>{% if editing %}Edit upcoming dates{% else %}Schedule a lesson{% endif %}</h2>
-<form method="post">{% csrf_token %}{{ form.submission }}{{ form.submission.errors }}{{ form.non_field_errors }}
-<label for="{{ form.lesson.id_for_label }}">Lesson</label>{{ form.lesson }}{{ form.lesson.errors }}
-{{ form.purpose.label_tag }}{{ form.purpose }}{{ form.purpose.errors }}
-{% if variation != None %}<p>First session uses preview round {{ variation|add:1 }}{% if letters %} with letters {{ letters }}{% endif %}.</p>{% endif %}
-<div class="planner-fields">
-<div>{{ form.start.label_tag }}{{ form.start }}{{ form.start.errors }}</div>
-<div>{{ form.repeat.label_tag }}{{ form.repeat }}{{ form.repeat.errors }}</div>
-</div>
-<fieldset data-weekdays><legend>Practice days</legend>{{ form.weekdays }}{{ form.weekdays.errors }}</fieldset>
-<div data-end>{{ form.end.label_tag }}{{ form.end }}{{ form.end.errors }}</div>
-<p data-repeat-note>Each repeat gets a fresh round. If a previous session from this plan is still in the queue, it stays there for {{ child.nickname }} to finish.</p>
-<button>{% if editing %}Save changes{% else %}Schedule lesson{% endif %}</button>
-{% if editing %}<a href="{% if calendar_back %}{{ calendar_back }}{% else %}{% url 'planner' child.pk %}{% endif %}">Discard changes</a>{% endif %}
-</form></article>
+{% include "schedule_form.html" %}</article>{% else %}
+<a class="button" href="{% url 'library' child.pk %}{% querystring browse='schedule' %}">Choose a lesson to schedule</a>{% endif %}
 {% if plans or agenda %}<section class="plan-agenda" id="lesson-dates" aria-label="Lesson dates">
 <h2>{{ week_start|date:"M j" }} – {{ week_end|date:"M j" }}</h2>
 <nav aria-label="Planning weeks">{% if previous_week %}<a href="?day={{ previous_week|date:'Y-m-d' }}#lesson-dates">Previous week</a> · {% endif %}{% if next_week %}<a href="?day={{ next_week|date:'Y-m-d' }}#lesson-dates">Next week</a>{% endif %}</nav>
@@ -35,5 +23,5 @@
 <button class="link" name="action" value="cancel">Cancel plan</button></form></div></article>
 {% empty %}<p>No upcoming plans for {{ child.nickname }}. Lessons scheduled for today appear in the <a href="{% url 'home' %}">family queue</a>.</p>{% endfor %}
 </section>
-<script defer src="{% static 'planner.js' %}?v=1"></script>
+<script defer src="{% static 'planner.js' %}?v=2"></script>
 {% endblock %}

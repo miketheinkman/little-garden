@@ -1,0 +1,15 @@
+<form method="post" action="{{ request.get_full_path }}" data-schedule-form>{% csrf_token %}{{ form.submission }}{{ form.submission.errors }}{{ form.non_field_errors }}
+{% if batch_count %}<h3>{{ batch_count }} selected lessons</h3>{% elif title %}<h3>{{ title }}</h3>{{ form.lesson }}{% else %}{{ form.lesson.label_tag }}{{ form.lesson }}{% endif %}{{ form.lesson.errors }}
+<p>For <strong>{{ child.nickname }}</strong></p>
+{{ form.purpose.label_tag }}{{ form.purpose }}{{ form.purpose.errors }}
+{% if variation != None %}<p>First session uses preview round {{ variation|add:1 }}{% if letters %} with letters {{ letters }}{% endif %}.</p>{% endif %}
+<div class="planner-fields">
+<div>{{ form.start.label_tag }}{{ form.start }}{{ form.start.errors }}</div>
+<div>{{ form.repeat.label_tag }}{{ form.repeat }}{{ form.repeat.errors }}</div>
+</div>
+<fieldset data-weekdays><legend>Practice days</legend>{{ form.weekdays }}{{ form.weekdays.errors }}</fieldset>
+<div data-end>{{ form.end.label_tag }}{{ form.end }}{{ form.end.errors }}</div>
+<p data-repeat-note>Each repeat gets a fresh round. If a previous session from this plan is still in the queue, it stays there for {{ child.nickname }} to finish.</p>
+<button>{% if editing %}Save changes{% elif batch_count %}Schedule {{ batch_count }} lessons{% else %}Schedule lesson{% endif %}</button>
+{% if editing %}<a href="{% if calendar_back %}{{ calendar_back }}{% else %}{% url 'planner' child.pk %}{% endif %}">Discard changes</a>{% endif %}
+</form>

@@ -1,15 +1,16 @@
-<div class="preview-nav"><a href="{% url 'library' child.pk %}">Back to lesson library</a>{% if session_purpose %} · <a href="{% url 'placement_reviews' child.pk %}">Placement &amp; reviews</a>{% endif %}
-<a class="link" href="#feedback">Give feedback</a> · <a href="{% url 'planner' child.pk %}?lesson={{ key }}&amp;v={{ variation }}{{ round_query }}">Schedule this round</a></div>
+<div class="preview-nav"><a href="{% url 'library' child.pk %}?{{ schedule_query }}">Back to lesson library</a>{% if session_purpose %} · <a href="{% url 'placement_reviews' child.pk %}">Placement &amp; reviews</a>{% endif %}
+<a class="link" href="#feedback">Give feedback</a></div>
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
 <div class="preview-tools"><p><strong>Parent preview</strong>{% if session_purpose %} · {{ session_purpose }}{% endif %} · {{ lesson.participation }} · Ages {{ lesson.age }}</p>
 <p>Round {{ variation|add:1 }} · {% if variation %}<a href="{% url 'preview' child.pk key 0 %}?v={{ variation|add:-1 }}{{ round_query }}">Previous round</a> · {% endif %} <a href="{% url 'preview' child.pk key 0 %}?v={{ next_variant }}{{ round_query }}">Try another round</a> · <a href="{% url 'preview' child.pk key 0 %}?v={{ variation }}&amp;shuffle=1{{ round_query }}">Shuffle round</a></p>
 {% if lesson.letters %}<form method="get" action="{% url 'preview' child.pk key 0 %}">
+{% if request.GET.day %}<input type="hidden" name="day" value="{{ request.GET.day }}">{% endif %}{% if request.GET.calendar %}<input type="hidden" name="calendar" value="{{ request.GET.calendar }}">{% endif %}{% if request.GET.browse %}<input type="hidden" name="browse" value="{{ request.GET.browse }}">{% endif %}
 <input type="hidden" name="purpose" value="{{ purpose }}"><input type="hidden" name="v" value="{{ variation }}"><label>Letters to practice <input name="letters" value="{{ lesson.letters }}" pattern="[A-Za-z ,]+" maxlength="78" required></label>
 <button>Preview these letters</button></form>{% endif %}
-{% if already_queued %}<span>In {{ child.nickname }}’s queue</span>{% else %}<form data-queue-form method="post" action="{% url 'library' child.pk %}">{% csrf_token %}
+<div class="card-actions">{% if already_queued %}<span>In {{ child.nickname }}’s queue</span>{% else %}<form data-queue-form method="post" action="{% url 'library' child.pk %}">{% csrf_token %}
 {% if lesson.letters %}<input type="hidden" name="letters" value="{{ lesson.letters }}">{% endif %}
-<input type="hidden" name="purpose" value="{{ purpose }}"><input type="hidden" name="variation" value="{{ variation }}"><input type="hidden" name="lesson" value="{{ key }}"><button>Add to {{ child.nickname }}’s queue</button></form>{% endif %}
+<input type="hidden" name="purpose" value="{{ purpose }}"><input type="hidden" name="variation" value="{{ variation }}"><input type="hidden" name="lesson" value="{{ key }}"><button>Add to {{ child.nickname }}’s queue</button></form>{% endif %} <a class="button secondary" data-schedule href="{% url 'planner' child.pk %}?lesson={{ key }}&amp;v={{ variation }}{{ round_query }}">Schedule this round</a></div>
 </div>
 
-{% load static %}<p data-queue-status role="status" class="queue-notice"></p>
-<script defer src="{% static 'lesson-queue.js' %}"></script>
+{% load static %}{% include "schedule_dialog.html" %}<p data-queue-status role="status" class="queue-notice"></p>
+<script defer src="{% static 'lesson-queue.js' %}?v=schedule"></script>

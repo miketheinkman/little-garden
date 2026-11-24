@@ -1,6 +1,7 @@
 function startAnswerFeedback(activity) {
   const skip = document.querySelector(".skip-step");
   const feedback = document.querySelector("#answer-feedback");
+  const sounds = startAnswerSounds(lessonEvents.signal);
   let busy = false;
 
   function lock(locked) {
@@ -12,6 +13,8 @@ function startAnswerFeedback(activity) {
   async function submit(event) {
     event.preventDefault();
     if (busy) return;
+    if (event.currentTarget === activity) sounds.prepare();
+    else sounds.silence();
     const focus = document.activeElement;
     const data = new FormData(event.currentTarget); // Also captures active keyboard time.
     if (event.submitter?.name) data.append(event.submitter.name, event.submitter.value);
@@ -30,16 +33,23 @@ function startAnswerFeedback(activity) {
       const reply = await response.json();
       if (!activity.isConnected) return;
       if (reply.result === "retry") {
+        if (reply.submission) {
+          for (const form of [activity, skip]) {
+            if (form.elements.submission) form.elements.submission.value = reply.submission;
+          }
+        }
         lock(false);
         focus?.focus({preventScroll: true});
         if (focus?.matches('input[type="text"]')) focus.select();
         feedback.replaceChildren(gardenAnswerNote("retry"));
+        sounds.play("retry");
         document.dispatchEvent(new Event("garden-answer"));
         return;
       }
       if (!reply.next) throw new Error();
       if (reply.result === "correct" || reply.result === "finished") {
         feedback.replaceChildren(gardenAnswerNote(reply.result, Number(feedback.dataset.successSeed), reply.tier_gain));
+        sounds.play(reply.result);
         document.dispatchEvent(new Event("garden-answer"));
         await new Promise(resolve => setTimeout(resolve, 2000));
       }

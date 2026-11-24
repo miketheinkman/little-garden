@@ -1,0 +1,7 @@
+{% load static %}
+<dialog class="schedule-dialog planner-form" aria-labelledby="schedule-heading">
+  <div class="dialog-heading"><h2 id="schedule-heading">Schedule lessons</h2><button type="button" class="secondary" data-close>Close</button></div>
+  <div data-schedule-body></div>
+  <p role="status" data-schedule-status></p>
+</dialog>
+<script defer src="{% static 'planner.js' %}?v=2"></script>

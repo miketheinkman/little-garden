@@ -148,3 +148,29 @@ class Observation(models.Model):
     class Meta:
         ordering = ["-observed_on", "-pk"]
         constraints = [models.UniqueConstraint(fields=["learner", "submission"], name="unique_learner_observation")]
+
+
+class QuestionAttempt(models.Model):
+    class Outcome(models.TextChoices):
+        CORRECT = "correct", "Correct"
+        INCORRECT = "incorrect", "Incorrect"
+        SKIPPED = "skipped", "Skipped"
+        COMPLETED = "completed", "Completed activity"
+        RETRY = "retry", "Tried activity again"
+
+    assignment = models.ForeignKey(Assignment, related_name="question_attempts", on_delete=models.CASCADE)
+    step = models.PositiveIntegerField()
+    outcome = models.CharField(max_length=10, choices=Outcome.choices)
+    submission = models.UUIDField(null=True)
+    prompt = models.CharField(max_length=600)
+    expected = models.CharField(max_length=300, blank=True)
+    response = models.CharField(max_length=300, blank=True)
+    score = models.PositiveSmallIntegerField(null=True)
+    ms_per_key = models.PositiveIntegerField(null=True)
+    help_used = models.PositiveSmallIntegerField(default=0)
+    advanced = models.BooleanField()
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["assignment_id", "step", "pk"]
+        constraints = [models.UniqueConstraint(fields=["assignment", "submission"], name="unique_question_submission")]
