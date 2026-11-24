@@ -112,6 +112,10 @@ Keyboard lessons and check-ins measure focused time to submit a physical key or 
 
 Each strand’s estimate fits the latest 24 observations, weighting recent ones more heavily and limiting the estimate to one tier above the highest attempted task. The family and learner views plot the most recent 12 scored-round checkpoints on a fixed 1–5 scale. These pilot estimates are provisional. After initial placement, a first-time gain to a higher whole tier in a skill triggers a two-second beanstalk climb on the learner screen and the parent mirror. The reduced-motion view shows the climber at the top. The dated round history shows raw scores and changes for comparable tasks. Suggestions stay within one tier of the current estimate, prioritize practice after difficulty, rotate among strands, and rest a lesson for two weeks following two recent fluent rounds. The parent queue always takes priority. A child can opt into a suggested activity when the parent queue is empty.
 
+## Capacity testing
+
+The [two-vCPU lesson benchmark](qa/CAPACITY.md) includes measured concurrency, answer latency, memory use, and instructions for repeating the trial with synthetic families.
+
 ## Visual review
 
 Install the optional browser tests with `.venv/bin/pip install -r requirements-visual.txt` and `.venv/bin/python -m playwright install chromium`. Run `.venv/bin/python manage.py test` and `.venv/bin/python manage.py test qa.visual`. On Linux with Chrome already installed, you can use `PLAYWRIGHT_CHROME_PATH=/usr/bin/google-chrome .venv/bin/python manage.py test qa.visual` for the browser run.
