@@ -127,3 +127,15 @@ class SkillSample(models.Model):
 
     class Meta:
         constraints = [models.UniqueConstraint(fields=["assignment", "step"], name="one_skill_sample_per_step")]
+
+
+class Observation(models.Model):
+    learner = models.ForeignKey(Learner, on_delete=models.CASCADE)
+    assignment = models.ForeignKey(Assignment, null=True, blank=True, on_delete=models.SET_NULL)
+    observed_on = models.DateField(db_index=True)
+    text = models.CharField(max_length=2000)
+    submission = models.UUIDField(default=uuid.uuid4)
+
+    class Meta:
+        ordering = ["-observed_on", "-pk"]
+        constraints = [models.UniqueConstraint(fields=["learner", "submission"], name="unique_learner_observation")]

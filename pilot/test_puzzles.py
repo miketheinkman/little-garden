@@ -44,6 +44,22 @@ class RouteRulesTests(TestCase):
         self.assertGreater(len(winning_moves(train[4]["board"])), 1)
         self.assertEqual(simulate(train[0]["board"], (0,))["trace"], [4, 5])
 
+    def test_workshop_rules(self):
+        cases = [
+            ("gates-switches-v1", 3, (1, 0), "gates"),
+            ("gates-switches-v1", 3, (0, 1), "gates"),
+            ("bridges-v1", 1, (1,), "bridge"),
+            ("bridges-v1", 1, (2,), ""),
+            ("gears-motion-v1", 3, (0, 1), "spin"),
+            ("gears-motion-v1", 3, (1, 1), ""),
+            ("delivery-routes-v1", 3, (0, 0, 1, 0), "pickup"),
+            ("delivery-routes-v1", 3, (0, 1, 3, 3), "loop"),
+        ]
+        for key, stage, moves, reason in cases:
+            board = route_lesson(key)["items"][stage]["board"]
+            with self.subTest(key=key, moves=moves):
+                self.assertEqual(simulate(board, moves)["reason"], reason)
+
     def test_invalid_boards_cannot_be_submitted(self):
         board = route_lesson("train-tracks-v1")["items"][0]["board"]
         for bad in ("", "yes", "2", "-1", "01", "１"):

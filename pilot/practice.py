@@ -7,6 +7,7 @@ from django.conf import settings
 from .discovery import DISCOVERY, discovery_round
 from .explorations import EXPLORATIONS, exploration_round
 from . import remix
+from .question_sets import identity
 from .paint import PAINT_LESSONS, paint_lesson
 from .puzzles import PUZZLES, route_lesson
 
@@ -56,26 +57,15 @@ def options(rng, answer, pool):
 
 
 def five_prompt_round(key, number, rng):
-    original = build_round(key.replace("-v2", "-v1"), number)
+    original = _raw_round(key.replace("-v2", "-v1"), number)
+    if original["kind"] != "key":
+        return original
     items = original["items"]
-    first, second, third = [item["answer"] for item in items]
-    if original["kind"] == "key":
-        pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if key == "keys-v2" else "0123456789"
-        fresh = rng.choice(sorted(set(pool) - {first, second, third}))
-        extra = [
-            dict(prompt=prompt, display=target, answer=target, choices=options(rng, target, pool))
-            for prompt, target in [(f"Find {first} again.", first), (f"Can you find the {fresh} key?", fresh)]
-        ]
-    else:
-        extra = []
-        for item in items[:2]:
-            # Count the same quantity in a different collection.
-            pictures = [("🌼", "flowers"), ("🍃", "leaves"), ("🌱", "sprouts")]
-            symbol, noun = rng.choice([pair for pair in pictures if pair[0] not in item["display"]])
-            count = item["answer"]
-            extra.append(dict(prompt=f"How many {noun} do you see?", display=" ".join([symbol] * int(count)),
-                              answer=count, choices=options(rng, count, [first, second, third])))
-    return dict(original, items=items + extra)
+    pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ" if key == "keys-v2" else "0123456789"
+    fresh = rng.sample(sorted(set(pool) - {item["answer"] for item in items}), 2)
+    extra = [dict(prompt=f"Find the {target} key.", display=target, answer=target, choices=options(rng,target,pool))
+             for target in fresh]
+    return dict(original, items=items+extra)
 
 
 # The same word banks supply the bundled spoken examples.
@@ -85,9 +75,12 @@ DIGRAPH_WORDS = {"sh": ("ship", "shop", "shell"), "ch": ("chat", "chin", "chip")
                  "th": ("thin", "thick", "thumb")}
 
 
-def build_round(key, number):
-    lesson = LESSONS[key]
-    if number == 0:
+ORIGINALS = LESSONS.copy()
+
+
+def _raw_round(key, number):
+    lesson = ORIGINALS[key]
+    if number == 0 and key not in FIVE_PROMPT_ROUNDS:
         return lesson
     expanded = number >= original_round_count(key)
     if key in EXPLORATIONS:
@@ -260,3 +253,35 @@ def build_round(key, number):
     else:
         raise ValueError(f"Missing practice generator for {key}")
     return dict(lesson,items=items)
+
+
+def distinct_round(key, lesson, number):
+    group = key.rsplit("-v", 1)[0]
+    seen, items = set(), []
+    for index, item in enumerate(lesson["items"]):
+        signature = identity(group, item, index)
+        if signature in seen:
+            # Draw the same step from another round to preserve its skill and tier.
+            # A finite or explicitly selected set can finish early.
+            for offset in range(1, 25):
+                other = _raw_round(key, (number+offset) % round_count(key))["items"]
+                candidate = other[index % len(other)]
+                signature = identity(group, candidate, index)
+                if signature not in seen:
+                    item = candidate
+                    break
+            else:
+                continue
+        seen.add(signature)
+        items.append(item)
+    return dict(lesson, items=items, _set_round=True)
+
+
+def build_round(key, number):
+    return distinct_round(key, _raw_round(key, number), number)
+
+
+for _key in LESSONS:
+    LESSONS[_key] = build_round(_key, 0)
+    if _key in CURRENT_LESSONS:
+        CURRENT_LESSONS[_key] = LESSONS[_key]

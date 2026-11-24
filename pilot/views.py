@@ -31,7 +31,7 @@ from .art import art_item, evaluate
 from .coview import recent_response
 from .models import FONT_CHOICES, SkillSample
 from .progression import FIT_LABELS, Progress, item_score, record_tier
-from .practice import CURRENT_LESSONS, CURRENT_VERSION, LESSONS, build_round, round_count
+from .practice import CURRENT_LESSONS, CURRENT_VERSION, LESSONS, ORIGINALS, build_round, round_count
 
 
 def puzzle_action(request, item, row=None):
@@ -466,10 +466,13 @@ def play(request, pk):
     row = get_object_or_404(Assignment.objects.select_related("learner"), pk=pk, learner_id=request.session.get("child"))
     if row.completed or row.removed_at:
         return redirect("home")
-    raw = row.round_snapshot or LESSONS[row.lesson]
+    raw = row.round_snapshot or ORIGINALS[row.lesson]
     if "_opened_theme" not in raw:
         # Pin the first rendered theme so a parent changing it cannot change an answer mid-round.
         theme = "garden" if row.step or row.retries or request.method == "POST" else row.learner.lesson_theme
+        if not raw.get("_set_round") and not row.step and not row.retries and request.method == "GET":
+            raw = (discovery_round(row.lesson, row.variation, raw["letters"])
+                   if row.lesson == PATCH and raw.get("letters") else build_round(row.lesson, row.variation))
         snapshot = dict(raw, _opened_theme=theme)
         if Assignment.objects.filter(pk=row.pk, round_snapshot=row.round_snapshot).update(round_snapshot=snapshot):
             row.round_snapshot = snapshot

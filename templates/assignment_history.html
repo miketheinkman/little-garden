@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% block title %}{{ child.nickname }}’s assignment history · Little Garden{% endblock %}
 {% block content %}
-<nav class="history-nav" aria-label="Family navigation"><a href="{% url 'home' %}">Family garden</a><a href="{% url 'library' child.pk %}">Lesson library</a></nav>
+<nav class="history-nav" aria-label="Family navigation"><a href="{% url 'home' %}">Family garden</a><a href="{% url 'library' child.pk %}">Lesson library</a><a href="{% url 'weekly_record' child.pk %}">Weekly record &amp; observations</a></nav>
 <h1>Assignment history</h1>
 <p>Every round for <strong>{{ child.nickname }}</strong>, newest first.</p>
 {% if lesson_options %}
@@ -22,7 +22,7 @@
 <li><div><strong>{{ row.info.title }}</strong><span class="history-status">{{ row.status }}</span></div>
 <p>Round {{ row.variation|add:1 }}{% if row.scheduled_for %} · Planned for {{ row.scheduled_for|date:"M j" }}{% endif %}{% if row.step or row.retries %} · {{ row.answered }} answered{% if row.skipped %} · {{ row.skipped }} skipped{% endif %}{% if row.retries %} · {{ row.retries }} retr{{ row.retries|pluralize:"y,ies" }}{% endif %}{% endif %}</p>
 {% if row.history_date %}<small>{% if row.removed_at %}Removed{% elif row.completed %}Finished{% else %}Assigned{% endif %} <time datetime="{{ row.history_date|date:'c' }}">{{ row.history_date|date:"g:i a T" }}</time>{% if row.assigned_at and row.history_date != row.assigned_at %} · Assigned <time datetime="{{ row.assigned_at|date:'c' }}">{{ row.assigned_at|date:"M j, Y" }}</time>{% endif %}</small>{% else %}<small>Assignment date wasn’t recorded.</small>{% endif %}
-</li>{% endfor %}</ul></section>
+<a href="{% url 'weekly_record' child.pk %}?assignment={{ row.pk }}#write-note">Add an observation</a></li>{% endfor %}</ul></section>
 {% endfor %}
 {% if page.has_other_pages %}<nav class="history-nav" aria-label="Assignment history pages">{% if page.has_previous %}<a href="{% querystring page=page.previous_page_number %}">Newer assignments</a>{% endif %}<span>Page {{ page.number }} of {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a href="{% querystring page=page.next_page_number %}">Older assignments</a>{% endif %}</nav>{% endif %}
 {% elif lesson_options %}<article><h2>No matching assignments</h2><p>Try another month, lesson, or status.</p></article>

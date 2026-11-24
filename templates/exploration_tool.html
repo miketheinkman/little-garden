@@ -13,8 +13,8 @@
 <button name="answer" value="{{ variant }}" class="scene-option" aria-label="{% if item.place %}{{ item.noun }} {{ variant }}{% if variant == 'left' or variant == 'right' %} of{% endif %} the {{ item.place }}{% else %}{{ variant }} object{% endif %}">
 <span class="mini-scene pos-{{ variant }}" aria-hidden="true">
 {% if item.place %}<span class="landmark landmark-{{ item.place }}">{% if item.place == 'tree' %}🌳{% elif item.place == 'fridge' %}<i></i>{% endif %}</span>{% endif %}
-{% if variant == 'tall' or variant == 'short' %}<span class="height-tower"><b>{{ lesson.world.actor.icon|default:"🐞" }}</b></span>
-{% else %}<span class="scene-object">{% if lesson.tool == 'compare' %}{{ lesson.world.cargo_icon|default:item.specimen }}{% else %}{{ item.specimen }}{% endif %}</span>{% endif %}
+{% if variant == 'tall' or variant == 'short' %}<span class="height-tower"><b>{{ item.specimen }}</b></span>
+{% else %}<span class="scene-object">{% if lesson.tool == 'compare' %}{{ item.specimen }}{% else %}{{ item.specimen }}{% endif %}</span>{% endif %}
 </span></button>{% endfor %}</div>
 {% elif lesson.tool == 'arithmetic' %}
 <div class="object-equation" role="img" aria-label="{{ item.equation }}"><div>{% for i in item.left %}<span>{{ lesson.world.cargo_icon|default:'🍎' }}</span>{% empty %}{% if not item.subtract %}0{% endif %}{% endfor %}</div>

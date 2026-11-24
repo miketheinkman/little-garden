@@ -503,3 +503,23 @@ main:has(#live-room) {max-width:1600px}
 @media (orientation:landscape) and (pointer:coarse) and (max-height:900px) {
   .learner-step {min-height:100svh}
 }
+
+.weekly-record textarea {display:block;width:100%;max-width:42rem;margin:.25rem 0 1rem;padding:.65rem;font:inherit;color:var(--ink);background:var(--input);border:1px solid var(--edge);border-radius:.6rem}
+.weekly-record form.inline,.weekly-record .print-controls {margin:1rem 0}
+.weekly-record #write-note label {margin-top:.75rem}
+.weekly-record .note-text {white-space:pre-wrap;overflow-wrap:anywhere}
+.print-controls input {display:inline-block}
+@media print {
+  body:has(.weekly-record) {color:#111;background:white;font:11pt/1.4 system-ui,sans-serif}
+  body:has(.weekly-record) :is(header,footer,.screen-only) {display:none!important}
+  body:has(.weekly-record) main {max-width:none;padding:0}
+  .weekly-record h1 {font-size:23pt}
+  .weekly-record h2 {font-size:15pt;break-after:avoid}
+  .weekly-record li,.weekly-record article {background:white;color:#111;border:0;border-bottom:1px solid #aaa;box-shadow:none;break-inside:avoid;padding:.5rem 0}
+  .weekly-record .report-notes {display:none}
+  .weekly-record:has(#print-notes:checked) .report-notes {display:block}
+}
+
+.sign-keys {display:flex;flex-wrap:wrap;gap:.35rem;max-width:35rem;margin:.55rem 0}
+.sign-keys button,[data-trace-arrow] {min-width:44px;min-height:44px}
+#trace-next {color:#395d43;pointer-events:none}

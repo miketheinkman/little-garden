@@ -102,6 +102,19 @@ function startActivity(form, signal) {
     }, {signal});
   }
 
+  const signKeys = form.querySelector("[data-sign-keys]");
+  if (signKeys) {
+    const input = form.elements.answer;
+    signKeys.addEventListener("click", event => {
+      const button = event.target.closest("button");
+      if (!button || form.inert) return;
+      const start = input.selectionStart, end = input.selectionEnd;
+      const erase = button.hasAttribute("data-erase");
+      input.setRangeText(erase ? "" : button.dataset.type, erase && start === end ? Math.max(0,start-1) : start, end, "end");
+      input.dispatchEvent(new Event("input", {bubbles:true}));
+    });
+  }
+
   const trail = document.querySelector("#trail");
   if (trail) {
     const ink = document.querySelector("#ink");
@@ -113,7 +126,14 @@ function startActivity(form, signal) {
     let length = ink.getTotalLength();
     let distance = 0, pointer = null;
     ink.style.strokeDasharray = length + " " + length;
+    const steps = form.querySelector("[data-trace-steps]");
+    const ring = trail.querySelector("#trace-next");
+    function nextDistance() { return Math.min(length, distance+18); }
     function paint() {
+      const next = ink.getPointAtLength(nextDistance());
+      ring.setAttribute("cx",next.x);
+      ring.setAttribute("cy",next.y);
+      ring.setAttribute("visibility",steps.open ? "visible" : "hidden");
       trail.dataset.percent = Math.round(100 * (stroke + distance / length) / strokes.length);
       const at = ink.getPointAtLength(distance);
       dot.setAttribute("cx", at.x);
@@ -136,6 +156,31 @@ function startActivity(form, signal) {
       document.querySelector("[data-stroke-help]").textContent =
         "Stroke " + (stroke + 1) + " of " + strokes.length + ". Lift and start at the gold dot.";
     }
+    function traceArrow(arrow) {
+      if (form.inert) return;
+      const current = ink.getPointAtLength(distance), next = ink.getPointAtLength(nextDistance());
+      const dx = next.x-current.x, dy = next.y-current.y;
+      const wanted = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? "→":"←") : (dy >= 0 ? "↓":"↑");
+      if (length >= 3 && arrow !== wanted) {
+        document.querySelector("[data-stroke-help]").textContent = "Look for the ring. Which way is it from the gold dot?";
+        return;
+      }
+      document.querySelector("[data-stroke-help]").textContent = "";
+      distance = nextDistance();
+      paint();
+      if (distance >= length) finishStroke();
+    }
+    steps.ontoggle = paint;
+    steps.querySelectorAll("[data-trace-arrow]").forEach(button => {
+      button.onclick = () => traceArrow(button.dataset.traceArrow);
+    });
+    steps.onkeydown = event => {
+      const arrow = {ArrowLeft:"←",ArrowRight:"→",ArrowUp:"↑",ArrowDown:"↓"}[event.key];
+      if (steps.open && arrow) {
+        event.preventDefault();
+        if (!event.repeat) traceArrow(arrow);
+      }
+    };
     paint();
     trail.onpointerdown = event => {
       if (gap(event, distance) <= 14) {

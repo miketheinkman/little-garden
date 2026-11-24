@@ -63,6 +63,10 @@ function routeRenderer(root) {
   const source = board.cells.findIndex(cell => cell.kind === "source");
 
   function paint(moves, trace = [], spot = -1, hint = -1) {
+    if (workshopMessages[board.mode]) {
+      paintWorkshop(root, board, nodes, mutable, token, moves, trace, spot, hint);
+      return;
+    }
     board.cells.forEach((cell, index) => {
       const node = nodes[index], state = moves[mutable.indexOf(index)] || 0;
       if (node.dataset.state !== String(state)) {
@@ -214,7 +218,7 @@ function startRoutePuzzle(root, form, signal) {
       if (signal.aborted || id !== version || !root.isConnected) return;
       if (action === "run") {
         trace = []; spot = highlight = -1;
-        message.textContent = board.mode === "water" ? "Here comes the water…" : "All aboard!";
+        message.textContent = workshopMessages[board.mode]?.[0] || (board.mode === "water" ? "Here comes the water…" : "All aboard!");
         for (const at of result.trace) {
           if (id !== version || signal.aborted || !root.isConnected) return;
           trace.push(at); refresh();
@@ -223,14 +227,17 @@ function startRoutePuzzle(root, form, signal) {
         if (id !== version || signal.aborted || !root.isConnected) return;
         solved = result.success;
         spot = solved ? -1 : result.spot;
-        const reasons = {closed: "The water stopped at this closed wheel.", gap: "The path stops at the marked square.", goal: "Can you reach the marked flag?",
-          passenger: "The passenger is still waiting at the marked square.", loop: "The train came back to this track."};
-        message.textContent = solved ? (board.mode === "water" ? "Splash! Every flag got water." : "Pulling in. You reached the station!") : reasons[result.reason] + " Try a change.";
+        const reasons = {edge:"The path ran off the board.", rock:"A rock blocks this path.", pickup:"A stop was missed.",
+          spin:"The flower is turning the other way.", gears:"The gears stop turning here.", bridge:"There is still a gap at the bank.",
+          gates:"The marked gate is locked.", closed: "The water stopped at this closed wheel.", gap: "The path stops at the marked square.", goal: "Can you reach the marked flag?",
+          passenger: "The passenger is still waiting at the marked square.", loop: "The route came back to the same place."};
+        message.textContent = solved ? workshopMessages[board.mode]?.[1] || (board.mode === "water" ? "Splash! Every flag got water." : "Pulling in. You reached the station!") : reasons[result.reason] + " Try a change.";
       } else if (action === "hint") {
         help |= 1; spot = -1; highlight = result.spot ?? -1; hintDepth++;
         const at = board.cells[highlight];
         if (!at) message.textContent = "Your route is ready. Press Go!";
         else if (hintDepth === 1) message.textContent = "Look at the piece marked with a sun.";
+        else if (workshopMessages[board.mode]) message.textContent = workshopMessages[board.mode][2];
         else if (at.kind === "socket" && !moves[mutable.indexOf(highlight)]) message.textContent = "Pick the spare bend, then tap the sun.";
         else if (at.kind === "switch") message.textContent = "Tap the sunny switch to try its other track.";
         else if (at.kind.toLowerCase().includes("valve")) message.textContent = "Tap the sunny valve to change where water can flow.";

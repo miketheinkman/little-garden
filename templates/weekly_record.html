@@ -1,0 +1,28 @@
+{% extends 'base.html' %}{% block title %}Weekly learning record · {{ child.nickname }}{% endblock %}
+{% block content %}
+<nav class="history-nav screen-only" aria-label="Family navigation"><a href="{% url 'home' %}">Family garden</a><a href="{% url 'assignment_history' child.pk %}">Assignment history</a></nav>
+<section class="weekly-record">
+<h1>Weekly learning record</h1><p class="record-date"><strong>{{ child.nickname }}</strong> · {{ start|date:"M j, Y" }} – {{ end|date:"M j, Y" }}</p>
+<div class="screen-only"><nav class="history-nav" aria-label="Report weeks">{% if previous %}<a href="?week={{ previous|date:'Y-m-d' }}">Previous week</a>{% endif %}<a href="{% url 'weekly_record' child.pk %}">This week</a>{% if following %}<a href="?week={{ following|date:'Y-m-d' }}">Next week</a>{% endif %}</nav>
+<form method="get" class="inline"><label>Choose a date <input type="date" name="week" value="{{ start|date:'Y-m-d' }}" required></label><button>View week</button></form></div>
+{% for message in messages %}<p role="status" class="screen-only">{{ message }}</p>{% endfor %}
+<h2>Finished lessons</h2>
+{% if rows %}<p>{{ rows|length }} round{{ rows|length|pluralize }} · {{ answered }} question{{ answered|pluralize }} answered · {{ skipped }} skipped</p>
+<ul class="history-list">{% for row in rows %}<li><strong>{{ row.info.title }}</strong> · {{ row.completed|date:"D, M j" }}<br>{{ row.info.strand }} · {{ row.answered }} answered{% if row.skipped %} · {{ row.skipped }} skipped{% endif %}</li>{% endfor %}</ul>
+{% else %}<p>No lessons finished during this week.</p>{% endif %}
+{% if skills %}<h2>Practice by skill</h2>
+<ul>{% for skill in skills %}<li><strong>{{ skill.strand }}</strong> · {% if skill.independent %}{{ skill.independent }} scored step{{ skill.independent|pluralize }} averaging {{ skill.average|floatformat:"0" }}%{% endif %}{% if skill.independent and skill.assisted %} · {% endif %}{% if skill.assisted %}{{ skill.assisted }} puzzle{{ skill.assisted|pluralize }} solved with help{% endif %}</li>{% endfor %}</ul>{% endif %}
+<section id="observations" class="report-notes"><h2>Parent observations</h2>
+{% for note in notes %}<article><strong>{{ note.observed_on|date:"D, M j" }}{% if note.lesson_title %} · {{ note.lesson_title }}{% endif %}</strong><p class="note-text">{{ note.text }}</p>
+<div class="screen-only"><a href="?week={{ start|date:'Y-m-d' }}&amp;edit={{ note.pk }}#write-note">Edit observation</a>
+<details><summary>Delete observation</summary><form method="post" action="?week={{ start|date:'Y-m-d' }}">{% csrf_token %}<input type="hidden" name="note" value="{{ note.pk }}"><button name="action" value="delete">Confirm deletion</button></form></details></div></article>{% empty %}<p>No parent observations for this week.</p>{% endfor %}
+</section>
+<div class="screen-only print-controls">{% if notes %}<label><input type="checkbox" id="print-notes"> Include my observations in the printed report</label>{% endif %}
+<button type="button" onclick="window.print()">Print or save PDF</button></div>
+<article id="write-note" class="screen-only"><h2>{% if editing %}Edit observation{% else %}Add an observation{% endif %}</h2>
+{% if assignment_title %}<p>About <strong>{{ assignment_title }}</strong></p>{% endif %}
+<form method="post">{{ form.non_field_errors }}{% csrf_token %}{{ form.submission }}{{ form.submission.errors }}
+{{ form.observed_on.label_tag }}{{ form.observed_on }}{{ form.observed_on.errors }}
+{{ form.text.label_tag }}{{ form.text }}{{ form.text.errors }}
+<button>Save observation</button>{% if editing or assignment_title %} <a href="?week={{ start|date:'Y-m-d' }}">Cancel</a>{% endif %}
+</form></article></section>{% endblock %}

@@ -4,6 +4,7 @@ from django.urls import path
 from django.views.generic import TemplateView
 from pilot import coview, views
 from pilot.planner import planner
+from pilot.records import weekly_record
 from pilot.dashboard import dashboard, technical_dashboard
 
 urlpatterns = [
@@ -40,6 +41,7 @@ urlpatterns = [
     path("children/<int:pk>/library/<slug:key>/preview/<int:step>/", views.preview, name="preview"),
     path("children/<int:pk>/library/", views.library, name="library"),
     path("children/<int:pk>/planner/", planner, name="planner"),
+    path("children/<int:pk>/record/", weekly_record, name="weekly_record"),
     path("children/<int:pk>/history/", views.assignment_history, name="assignment_history"),
     path("children/add/", views.add_child, name="add_child"),
     path("children/<int:pk>/", views.manage, name="manage"),

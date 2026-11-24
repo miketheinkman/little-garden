@@ -2,7 +2,8 @@
 import json
 import random
 
-from .practice import CONTENT, LESSONS
+from .practice import CONTENT, LESSONS, ORIGINALS
+from .question_sets import identity
 
 THEMES = json.loads((CONTENT / "themes.json").read_text())
 MAGIC_PICTURES = {"cape":"🦸","kite":"🪁","cube":"🧊","cane":"🦯","tube":"🧪","pane":"🪟",
@@ -67,6 +68,11 @@ def themed_round(key, lesson, theme, variation=0):
     items = [dict(item) for item in lesson["items"]]
     for index, item in enumerate(items):
         style_item(group, item, w, variation, index, rng)
+    if lesson.get("_set_round"):
+        # If the small theme vocabulary collapses two tasks, retain the bank's distinct examples.
+        signatures = [identity(group, item, i) for i,item in enumerate(items)]
+        if len(set(signatures)) != len(items):
+            items = lesson["items"]
     return dict(result, items=items)
 
 
@@ -249,7 +255,7 @@ def style_item(group, it, w, variation, i, rng):
 
 
 def assignment_lesson(row, current_theme=None):
-    raw = row.round_snapshot or LESSONS[row.lesson]
+    raw = row.round_snapshot or ORIGINALS[row.lesson]
     theme = raw.get("_opened_theme")
     if theme is None:
         theme = "garden" if row.step or row.retries or row.completed else current_theme or row.learner.lesson_theme

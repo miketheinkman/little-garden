@@ -1,0 +1,4 @@
+<details data-trace-steps><summary>Trace with arrow steps</summary>
+<p>Follow the gold dot toward the ring. Press an arrow key or tap its button.</p>
+<div class="arrow-pad" role="group" aria-label="Trace direction">{% for arrow in '↑←↓→' %}<button type="button" data-trace-arrow="{{ arrow }}" aria-label="Trace {% cycle 'up' 'left' 'down' 'right' %}">{{ arrow }}</button>{% endfor %}</div>
+</details>

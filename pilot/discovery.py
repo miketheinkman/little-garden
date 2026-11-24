@@ -46,12 +46,11 @@ def discovery_round(key, variation, letters=None):
             rng.shuffle(pieces)
             items.append(dict(prompt=rule["prompt"], bins=rule["bins"], pieces=pieces, choices=[], answer=""))
     elif tool == "letter-patch":
-        # Visit the entire chosen set; small sets recur across five steps.
+        # A custom selection defines the entire practice set.
         targets = list(letters)
         rng.shuffle(targets)
         items = []
-        for i in range(max(5, len(targets))):
-            letter = targets[i % len(targets)]
+        for letter in targets:
             candidates = letters if len(letters) >= 2 else ascii_uppercase
             items.append(dict(answer=letter, prompt=f"Find the {letter} key.", choices=options(rng, letter, candidates)))
     elif tool == "gap":

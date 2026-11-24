@@ -114,6 +114,74 @@ class VisualReview(StaticLiveServerTestCase):
                 expect(page.locator("#activity button[name=answer]").first).to_be_in_viewport()
             browser.close()
 
+    def test_workshop_and_weekly_record(self):
+        from pilot.test_puzzles import winning_moves
+        from pilot.workshop import GAMES, layouts
+        family = Client()
+        family.force_login(get_user_model().objects.get(username="reviewer"))
+        cookie = family.cookies["sessionid"].value
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375,1200):
+                for theme in ("light","dark"):
+                    self.variant = f"workshop-{width}-{theme}"
+                    with browser.new_context(viewport={"width":width,"height":820}, color_scheme=theme, has_touch=width==375) as ctx:
+                        ctx.add_cookies([{"name":"sessionid","value":cookie,"url":self.live_server_url}])
+                        page = ctx.new_page()
+                        errors = []
+                        page.on("pageerror", lambda e: errors.append(str(e)))
+                        for key in GAMES:
+                            page.goto(self.live_server_url + reverse("preview",args=[self.child_id,key,0]))
+                            board = page.locator(".route-game")
+                            board.locator("[data-run]").click()
+                            expect(board.locator(".is-stop")).to_be_visible()
+                            board.locator("[data-hint]").click()
+                            expect(board.locator(".is-hint")).to_be_visible()
+                            controls = board.locator(".route-editable")
+                            for i, turns in enumerate(winning_moves(layouts(key,0,0))[0]):
+                                for _ in range(turns):
+                                    if width == 375:
+                                        controls.nth(i).tap()
+                                    else:
+                                        controls.nth(i).press("Space")
+                            board.locator("[data-run]").click()
+                            expect(board.locator("[data-next]")).to_be_visible(timeout=10000)
+                            board.screenshot(path=self.out / f"{self.variant}-{key}.png")
+                            self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"))
+                            board.locator("[data-next]").click()
+                            expect(page.get_by_text("Step 2 of 5",exact=True)).to_be_visible()
+                        page.goto(self.live_server_url + reverse("weekly_record",args=[self.child_id]))
+                        note = f"Recognized both shapes on the second try ({width} {theme})."
+                        page.get_by_label("What did you notice?").fill(note)
+                        page.get_by_role("button",name="Save observation").click()
+                        expect(page.get_by_text(note,exact=True)).to_be_visible()
+                        self.capture(page,"weekly-record")
+                        page.emulate_media(media="print")
+                        expect(page.get_by_text(note,exact=True)).to_be_hidden()
+                        page.emulate_media(media="screen")
+                        page.get_by_label("Include my observations").check()
+                        page.emulate_media(media="print")
+                        expect(page.get_by_text(note,exact=True)).to_be_visible()
+                        expect(page.get_by_role("button",name="Save observation")).to_be_hidden()
+                        if width == 1200 and theme == "light":
+                            page.pdf(path=self.out/"weekly-record.pdf",format="Letter")
+                        page.emulate_media(media="screen")
+                        page.goto(self.live_server_url+reverse("preview",args=[self.child_id,"lines-v1",0]))
+                        page.get_by_text("Trace with arrow steps").click()
+                        right = page.get_by_role("button",name="Trace right")
+                        for _ in range(10):
+                            if page.locator(".answer-party").count(): break
+                            right.press("ArrowRight")
+                        expect(page.get_by_text(f"Step 2 of {len(LESSONS['lines-v1']['items'])}",exact=True)).to_be_visible()
+                        page.goto(self.live_server_url+reverse("preview",args=[self.child_id,"signs-v1",0]))
+                        page.get_by_text("Use letter buttons").click()
+                        for ch in LESSONS["signs-v1"]["items"][0]["answer"]:
+                            page.locator(f'[data-type="{ch}"]').click()
+                        page.get_by_role("button",name="Check sign").click()
+                        expect(page.get_by_text("Step 2 of 3",exact=True)).to_be_visible()
+                        self.assertEqual(errors,[])
+            browser.close()
+
     def test_feature_screens(self):
         for device, width in [("desktop", 1200), ("phone", 375)]:
             for theme in ("light", "dark"):
@@ -1217,15 +1285,15 @@ class VisualReview(StaticLiveServerTestCase):
         page.get_by_role("link", name="Browse lesson library").click()
         self.capture(page, "library")
         card = page.locator("article").filter(has=page.get_by_role("heading", name="Count the seeds", exact=True))
-        expect(card).to_contain_text("5 steps")
+        expect(card).to_contain_text("3 steps")
         card.get_by_role("link", name="Preview lesson").click()
-        page.get_by_role("navigation", name="Preview steps").get_by_role("link", name="5").click()
-        expect(page.get_by_text("Step 5 of 5", exact=True)).to_be_visible()
-        self.capture(page, "five-count-preview")
+        page.get_by_role("navigation", name="Preview steps").get_by_role("link", name="3").click()
+        expect(page.get_by_text("Step 3 of 3", exact=True)).to_be_visible()
+        self.capture(page, "counting-preview")
         page.emulate_media(reduced_motion="reduce")
-        page.locator('#activity button[value="2"]').click()
+        page.locator('#activity button[value="3"]').click()
         party = page.locator(".answer-party")
-        expect(party).to_have_text("🎉Correct!")
+        expect(party).to_be_visible()
         self.assertEqual(party.evaluate("(el) => el.getAnimations({subtree: true}).length"), 0)
         expect(page.get_by_role("heading", name="Preview complete")).to_be_visible()
         page.emulate_media(reduced_motion="no-preference")
@@ -1266,14 +1334,15 @@ class VisualReview(StaticLiveServerTestCase):
         page.get_by_role("button", name="Skip this question").click()
         page.get_by_role("button", name="Skip this question").click()
         expect(page.get_by_text("Step 4 of 5", exact=True)).to_be_visible()
-        page.keyboard.press("x")
+        target4, target5 = [i["answer"] for i in LESSONS["keys-v2"]["items"][3:]]
+        page.keyboard.press("z" if target4 != "Z" else "x")
         retry = page.get_by_text("Try again", exact=True)
         expect(retry).to_be_visible()
         self.capture(page, "try-again")
-        page.get_by_role("button", name="S", exact=True).click()
+        page.get_by_role("button", name=target4, exact=True).click()
         expect(page.get_by_text("Step 5 of 5", exact=True)).to_be_visible()
         self.capture(page, "five-key-finish")
-        page.keyboard.press("m")
+        page.keyboard.press(target5.lower())
         expect(page).to_have_url(self.live_server_url + "/")
         page.get_by_role("link", name="Parent sign in").click()
         page.locator("#id_username").fill("reviewer")

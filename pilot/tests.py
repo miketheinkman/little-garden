@@ -434,23 +434,15 @@ class PracticeRoundTests(TestCase):
             history.append(n)
         self.assertIn(suggested_round(child, key, history), history[:len(history)//2])
 
-    def test_five_prompt_rounds_preserve_level_and_spaced_recall(self):
+    def test_key_and_counting_rounds_sample_without_replacement(self):
         from .practice import CURRENT_VERSION, build_round
-
         for original, current in CURRENT_VERSION.items():
-            for number in (0, 1, 17, 999):
+            for number in (0, 1, 17, 999, 9999):
                 lesson = build_round(current, number)
                 items = lesson["items"]
                 self.assertEqual(items[:3], build_round(original, number)["items"])
-                self.assertEqual(len(items), 5)
-                self.assertEqual(items[3]["answer"], items[0]["answer"])
-                if lesson["kind"] == "key":
-                    self.assertNotIn(items[4]["answer"], [item["answer"] for item in items[:3]])
-                else:
-                    self.assertEqual(items[4]["answer"], items[1]["answer"])
-                    for old, new in zip(items[:2], items[3:]):
-                        self.assertNotEqual(old["display"], new["display"])
-                        self.assertEqual(len(new["display"].split()), int(new["answer"]))
+                self.assertEqual(len(items), 5 if lesson["kind"] == "key" else 3)
+                self.assertEqual(len({item["answer"] for item in items}), len(items))
 
     def test_preview_assign_resume_repeat(self):
         from .practice import build_round

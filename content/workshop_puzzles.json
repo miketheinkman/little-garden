@@ -1,0 +1,37 @@
+{
+  "light-paths-v1":{"mode":"light","title":"Light Paths","skill":"Predict reflections and steer a beam through targets","levels":[
+    ["First reflection","Turn the mirror to shine the light on the star.",["..G","S.m","..#"]],
+    ["Round the rock","Place a mirror in the dotted mount. Send the beam around the rock.",["..G.","..:#","S.n."]],
+    ["Two reflections","Turn both mirrors. Follow the beam around the corner.",["..m.G","..:..","S.m#."]],
+    ["Light the lantern","Shine through the lantern on the way to the star.",["..n.LG","..:...","SLm#.."]],
+    ["Lantern trail","Light every lantern, then reach the star. Check each turn.",[".nL.m.","Sm#.L.","....mG"]]
+  ]},
+  "bridges-v1":{"mode":"bridge","title":"Bridges and Crossings","skill":"Match bridge length and direction to gaps between banks","levels":[
+    ["One small stream","Choose a plank on the marked water square. Join the two banks.",["~~~~","Sb.G","~~~~"]],
+    ["A wider stream","Choose a bridge long enough to cross both water squares.",["~~~~~","Sb~.G","~~~~~"]],
+    ["Around the island","Build two crossings. One bridge must run up and down.",["Sb.~~","~~b~~","~~..G"]],
+    ["Stepping islands","Match a short bridge and a long bridge to the two gaps.",["~~~~~~~","Sb.b~.G","~~~~~~~"]],
+    ["Across the inlet","Cross to the island, then turn and bridge the wide inlet.",["Sb~.~~","~~~b~~","~~~~~~","~~~..G"]]
+  ]},
+  "delivery-routes-v1":{"mode":"delivery","title":"Delivery Routes","skill":"Arrange directional commands and predict a route through stops","levels":[
+    ["The first delivery","Set the arrow to guide the courier to the flag.",["##G","##p","Spa"]],
+    ["Turn at the corner","Set the direction at each arrow, then press Go.",["##apG","##p##","Spa##"]],
+    ["Pick up a parcel","Collect the parcel before reaching the flag.",["#aPpa","Sa##p","####G"]],
+    ["The long way home","Choose the turns that collect both parcels.",["#aPpa","Sa##P","#Gppa"]],
+    ["Delivery day","Collect every parcel. Watch each arrow as the courier follows it.",["#aPpa","Sa##P","##G#p","##apa"]]
+  ]},
+  "gears-motion-v1":{"mode":"gears","title":"Gears and Motion","skill":"Connect touching gears and predict their rotation","levels":[
+    ["Start the spinner","Place a gear on the empty peg. Turn the crank to drive the flower.",[".#..","SgOG","...."]],
+    ["Around a corner","Place the gears so each touches the next.",[".gG.","Sg.#","...."]],
+    ["A chain of teeth","Connect the crank to the spinner. Look for touching teeth.",[".#gG","Sgg.","..g."]],
+    ["Which way?","Connect the gears. Tap the crank to match the arrow on the flower.",[".G..","Sg.#","...."]],
+    ["The turning garden","Build a gear chain, then choose the crank direction that turns the flower the way shown.",["..gG.","Sgg#.","..g.."]]
+  ]},
+  "gates-switches-v1":{"mode":"gates","title":"Gates and Switches","skill":"Predict how linked switches change a path","levels":[
+    ["Open the gate","Tap the circle switch to open the matching gate. Help your friend reach the flag.",["1###","SAG#"]],
+    ["One switch, two gates","Find both circle gates. What changes when you flip the circle switch?",["##1##","SApAG"]],
+    ["Two switches","Use the circle and triangle switches to open their matching gates.",["1###2","SApBG"]],
+    ["The double lock","This gate has two locks. Turn on both switches to open it.",["1##2","SpXG"]],
+    ["Garden gatekeepers","Follow the path. Open the gates and the double lock to reach the flag.",["1#2##","SAB##","##pXG"]]
+  ]}
+}

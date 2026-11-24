@@ -6,7 +6,10 @@ from functools import lru_cache
 from itertools import product
 from pathlib import Path
 
+from . import workshop
+
 PUZZLES = json.loads((Path(__file__).resolve().parents[1] / "content/route_puzzles.json").read_text())
+PUZZLES.update(workshop.GAMES)
 # Clockwise quarter turns from north. Mutable pieces carry a small local state.
 TILES = {
     ".": ("grass", 0), "S": ("source", 1), "G": ("goal", 0),
@@ -86,6 +89,8 @@ def round_layouts(key, index):
 
 
 def route_lesson(key, turns=0):
+    if key in workshop.GAMES:
+        return workshop.lesson(key, turns)
     spec = PUZZLES[key]
     items = []
     for index, (name, prompt, _) in enumerate(spec["levels"]):
@@ -128,6 +133,8 @@ def connections(cell, state):
 
 
 def simulate(board, moves):
+    if board["mode"] not in {"water","train"}:
+        return workshop.simulate(board, moves)
     cells, width = board["cells"], board["width"]
     changes = iter(moves)
     states = [next(changes) if cell["states"] > 1 else 0 for cell in cells]
