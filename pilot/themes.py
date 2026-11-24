@@ -67,7 +67,8 @@ def themed_round(key, lesson, theme, variation=0):
     rng = random.Random(f"{theme}/{key}/{variation}")
     items = [dict(item) for item in lesson["items"]]
     for index, item in enumerate(items):
-        style_item(group, item, w, variation, index, rng)
+        if not lesson.get("light_trail"):
+            style_item(group, item, w, variation, index, rng)
     if lesson.get("_set_round"):
         # If the small theme vocabulary collapses two tasks, retain the bank's distinct examples.
         signatures = [identity(group, item, i) for i,item in enumerate(items)]

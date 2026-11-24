@@ -57,6 +57,11 @@ def options(rng, answer, pool):
 
 
 def five_prompt_round(key, number, rng):
+    if key == "digits-v2":
+        numbers = [1, 2, 5, 10, 20] if number == 0 else rng.sample(range(21), 5)
+        return dict(ORIGINALS[key], light_trail=True, items=[
+            dict(prompt=f"Trace {n} to light the trail.", answer=str(n), choices=[]) for n in numbers
+        ])
     original = _raw_round(key.replace("-v2", "-v1"), number)
     if original["kind"] != "key":
         return original

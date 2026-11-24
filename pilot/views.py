@@ -98,14 +98,16 @@ def lesson_response(request, lesson, item):
     return submitted.casefold() in {answer.casefold() for answer in [item["answer"], *item.get("also_accept", [])]}, None
 
 
-def success_result(lesson):
+def success_result(lesson, final_step):
+    if lesson["kind"] == "mouse" and not final_step:
+        return "advance"
     return "finished" if lesson["kind"] in {"draw", "color", "mirror", "adult"} else "correct"
 
 
-def answer_transition(request, destination, lesson, accepted=False, tier_gain=None):
+def answer_transition(request, destination, lesson, accepted=False, tier_gain=None, final_step=False):
     if request.headers.get("Accept") != "application/json":
         return redirect(destination)
-    result = success_result(lesson) if accepted else "advance"
+    result = success_result(lesson, final_step) if accepted else "advance"
     return JsonResponse({"result": result, "next": destination, **({"tier_gain": tier_gain} if tier_gain else {})})
 
 
@@ -373,7 +375,7 @@ def preview(request, pk, key, step):
         if accepted or checkin and submitted_response(request.POST, lesson, item):
             if artwork:
                 messages.success(request, artwork["feedback"])
-            return answer_transition(request, preview_url(step+1), lesson, accepted)
+            return answer_transition(request, preview_url(step+1), lesson, accepted, final_step=step+1 == len(lesson["items"]))
         if request.headers.get("Accept") == "application/json":
             return JsonResponse({"result": "retry"})
         context["error"] = "Take another look. You can try again."
@@ -539,7 +541,7 @@ def play(request, pk):
                 if artwork:
                     changes["artwork"] = artwork
             updated = current.update(**changes)
-            help_used = 0
+            help_used = int((lesson["kind"] == "basket" or lesson.get("tool") == "coins") and request.POST.get("amount_hint") == "1")
             if updated and advance and "board" in item:
                 # The guarded update holds the row through reading and clearing this step's help.
                 saved = Assignment.objects.filter(pk=pk)
@@ -575,13 +577,15 @@ def play(request, pk):
                 action = "Answered " + request.POST.get("answer", "")[:80]
             else:
                 action = "Finished" if advance else "Tried again"
-            celebration = success_result(lesson) if accepted and request.headers.get("Accept") == "application/json" else None
+            celebration = success_result(lesson, done) if accepted and request.headers.get("Accept") == "application/json" else None
+            if celebration == "advance":
+                celebration = None
             transaction.on_commit(lambda: recent_response(row, lesson["title"], action, celebration, request.POST, tier_gain), robust=True)
         if done and updated:
             messages.success(request, artwork["feedback"] if artwork else f"Finished {lesson['title']}! Well done.")
         if advance or not updated:
             destination = reverse("home") if done else reverse("play", args=[pk])
-            return answer_transition(request, destination, lesson, bool(updated and accepted), tier_gain)
+            return answer_transition(request, destination, lesson, bool(updated and accepted), tier_gain, final_step=done)
         if request.headers.get("Accept") == "application/json":
             reply = {"result": "retry"}
             if submission:

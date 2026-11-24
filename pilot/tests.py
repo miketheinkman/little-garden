@@ -405,7 +405,7 @@ class PracticeRoundTests(TestCase):
         expected = {"keys-v2": ascii_uppercase, "letters-v1": ascii_uppercase, "shift-v1": ascii_uppercase,
                     "alphabet-gap-v1": ascii_uppercase, "my-letters-v1": ascii_uppercase, "key-check-v1": ascii_uppercase,
                     "case-match-v1": ascii_lowercase, "lowercase-v1": ascii_lowercase,
-                    "number-keys-v2": digits, "digits-v1": digits, "five-v1": list(map(str, range(6))),
+                    "number-keys-v2": digits, "digits-v1": digits, "digits-v2": list(map(str,range(21))), "five-v1": list(map(str, range(6))),
                     "ten-v1": list(map(str, range(11))), "hear-number-v1": list(map(str, range(13))),
                     "clock-v1": [f"{h}:{m:02d}" for h in range(1,13) for m in (0,30)]}
         for key, targets in expected.items():
@@ -445,6 +445,11 @@ class PracticeRoundTests(TestCase):
             for number in (0, 1, 17, 999, 9999):
                 lesson = build_round(current, number)
                 items = lesson["items"]
+                if current == "digits-v2":
+                    self.assertEqual(len(items), 5)
+                    self.assertEqual(len({item["answer"] for item in items}), 5)
+                    self.assertTrue(all(0 <= int(item["answer"]) <= 20 for item in items))
+                    continue
                 self.assertEqual(items[:3], build_round(original, number)["items"])
                 self.assertEqual(len(items), 5 if lesson["kind"] == "key" else 3)
                 self.assertEqual(len({item["answer"] for item in items}), len(items))
@@ -710,6 +715,29 @@ class CoViewTests(TestCase):
         frames = self.client.post("/co-view/watch/", {"child": "all"}).json()["children"]
         self.assertEqual(list(frames), [str(self.child.pk)])
         self.assertEqual(self.device.post(self.share, dict(self.payload, assignment=wrong.pk)).status_code, 404)
+
+    def test_ladybug_catches_advance_quietly_until_the_last_catch(self):
+        self.row.lesson = "ladybugs-v1"
+        self.row.save()
+        def watch():
+            return self.client.post("/co-view/watch/", {"child": "all"}).json()["children"][str(self.child.pk)]
+        watch()
+        items = LESSONS[self.row.lesson]["items"]
+        for step, item in enumerate(items):
+            self.device.post(self.share, dict(self.payload, step=step))
+            with self.captureOnCommitCallbacks(execute=True):
+                reply = self.device.post(f"/play/{self.row.pk}/", {"step": step, "answer": item["answer"]},
+                                         HTTP_ACCEPT="application/json")
+            final = step == len(items) - 1
+            self.assertEqual(reply.json()["result"], "correct" if final else "advance")
+            if final:
+                self.assertEqual(watch()["celebration"], "correct")
+            else:
+                self.assertIsNone(watch())
+        self.row.refresh_from_db()
+        self.assertIsNotNone(self.row.completed)
+        self.assertEqual(self.row.answered, len(items))
+        self.assertEqual(self.row.retries, 0)
 
     def test_mirror_keeps_the_answered_step_until_celebration_ends(self):
         from django.core.cache import caches

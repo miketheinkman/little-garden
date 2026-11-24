@@ -1,3 +1,13 @@
+function paintAmountHint(root, count, coins = false) {
+  const hint = root.querySelector("[data-amount-hint]");
+  if (!hint) return;
+  const left = Number(hint.dataset.target) - count;
+  const cue = left === 0 ? "✓ Just right!" : left > 0 ? "↑ Add more." : "↓ Take some out.";
+  hint.querySelector("[data-hint-message]").textContent = coins
+    ? count + "¢ on the counter. " + (left > 0 ? left + "¢ to go." : left < 0 ? "Take back " + (-left) + "¢." : cue)
+    : cue;
+}
+
 // The same drawing code updates a child's board and its read-only parent mirror.
 function paintGardenTool(board, encoded = "") {
   const steps = /^(\d{1,2},){0,39}\d{1,2}$/.test(encoded) ? encoded.split(",").map(Number) : [];
@@ -76,7 +86,9 @@ function paintGardenTool(board, encoded = "") {
       value = String(count);
       break;
     case "coins":
-      value = String(steps.reduce((sum, coin) => sum + coin, 0));
+      const total = steps.reduce((sum, coin) => sum + coin, 0);
+      value = String(total);
+      paintAmountHint(board, total, true);
       board.querySelector("output").textContent = steps.map(coin => coin + "¢").join(" + ");
       break;
   }
@@ -94,15 +106,52 @@ function startGardenTool(board, form, answer, signal) {
     paintGardenTool(board, form.elements.tool_state.value);
   }
   if (tool === "dots") {
-    board.addEventListener("click", event => {
-      const dot = event.target.closest("[data-dot]");
-      if (!dot || form.inert) return;
-      const index = Number(dot.dataset.dot);
+    const surface = board.querySelector(".dot-board");
+    const dots = [...surface.querySelectorAll("[data-dot]")];
+    const pencil = surface.querySelector("[data-dot-pencil]");
+    let pointer = null;
+    function join(index) {
       if (index < steps.length) return;
       if (index !== steps.length) { answer("retry"); return; }
       steps.push(index);
       update();
+    }
+    function lift() {
+      pointer = null;
+      pencil.setAttribute("visibility", "hidden");
+    }
+    lift();
+    surface.addEventListener("click", event => {
+      const dot = event.target.closest("[data-dot]");
+      if (dot && !form.inert) join(Number(dot.dataset.dot));
     });
+    surface.addEventListener("pointerdown", event => {
+      const dot = event.target.closest("[data-dot]");
+      if (!dot || pointer !== null || form.inert || event.button !== 0) return;
+      const index = Number(dot.dataset.dot);
+      if (index !== steps.length && index !== steps.length - 1) return;
+      if (index === steps.length) join(index);
+      pointer = event.pointerId;
+      surface.setPointerCapture(pointer);
+    });
+    surface.addEventListener("pointermove", event => {
+      if (pointer !== event.pointerId || !steps.length || form.inert) return;
+      const next = dots[steps.length];
+      if (!next) { lift(); return; }
+      const target = next.getBoundingClientRect();
+      if (event.clientX >= target.left && event.clientX <= target.right &&
+          event.clientY >= target.top && event.clientY <= target.bottom) join(steps.length);
+      const last = dots[steps.length - 1];
+      const bounds = surface.getBoundingClientRect();
+      pencil.setAttribute("x1", last.dataset.x);
+      pencil.setAttribute("y1", last.dataset.y);
+      pencil.setAttribute("x2", 100 * (event.clientX - bounds.left) / bounds.width);
+      pencil.setAttribute("y2", 100 * (event.clientY - bounds.top) / bounds.height);
+      pencil.setAttribute("visibility", steps.length === dots.length ? "hidden" : "visible");
+    });
+    surface.addEventListener("lostpointercapture", lift);
+    surface.addEventListener("pointercancel", lift);
+    surface.addEventListener("pointerup", lift);
     update();
     return;
   }
@@ -112,16 +161,25 @@ function startGardenTool(board, form, answer, signal) {
     board.addEventListener("click", event => {
       const piece = event.target.closest("[data-piece]");
       const bin = event.target.closest("[data-bin]");
-      if (piece) {
+      const remove = board.querySelector("[data-unplace]");
+      if (event.target.closest("[data-sort-reset]")) {
+        steps.fill(0);
+      } else if (event.target.closest("[data-unplace]") && selected !== null) {
+        steps[selected] = 0;
+      } else if (piece) {
         selected = Number(piece.dataset.piece);
         board.querySelectorAll("[data-piece]").forEach(p => p.setAttribute("aria-pressed", String(p === piece)));
-        board.querySelector("[data-sort-status]").textContent = piece.textContent.trim() + " selected. Choose a basket.";
+        remove.disabled = steps[selected] === 0;
+        board.querySelector("[data-sort-status]").textContent = piece.textContent.trim() +
+          (remove.disabled ? " selected. Choose a basket." : " selected. Choose another basket or take it out.");
+        return;
       } else if (bin && selected !== null) {
         steps[selected] = Number(bin.dataset.bin);
-        board.querySelector('[aria-pressed="true"]').setAttribute("aria-pressed", "false");
-        selected = null;
-        update();
-      }
+      } else return;
+      board.querySelector('[data-piece][aria-pressed="true"]')?.setAttribute("aria-pressed", "false");
+      selected = null;
+      remove.disabled = true;
+      update();
     });
     update();
     return;
@@ -142,7 +200,21 @@ function startGardenTool(board, form, answer, signal) {
     const maze = board.querySelector("[data-maze]").dataset.maze;
     const here = steps[0] ?? maze.indexOf("B");
     const next = here + moveBy[direction];
-    if (next < 0 || next >= maze.length || Math.abs(next % 5 - here % 5) > 1 || maze[next] === "#") return;
+    const status = board.querySelector("[data-maze-status]");
+    if (next < 0 || next >= maze.length || Math.abs(next % 5 - here % 5) > 1 || maze[next] === "#") {
+      const pad = board.querySelector(`[data-direction="${direction}"]`);
+      status.textContent = direction + " Blocked. Try another arrow.";
+      const cell = board.querySelector("[data-maze]").children[here];
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const offset = {"↑":"0,-5px", "↓":"0,5px", "←":"-5px,0", "→":"5px,0"}[direction];
+        cell.animate([{transform:"none"}, {transform:"translate(" + offset + ")"}, {transform:"none"}], 240);
+      }
+      board.querySelector("[data-blocked]")?.removeAttribute("data-blocked");
+      pad.setAttribute("data-blocked", "");
+      return;
+    }
+    status.textContent = "";
+    board.querySelector("[data-blocked]")?.removeAttribute("data-blocked");
     steps = [next];
     update();
     if (maze[next] === "L") answer(String(next));
@@ -185,7 +257,9 @@ function startGardenTool(board, form, answer, signal) {
   if (["shift", "maze", "backspace"].includes(tool)) {
     document.addEventListener("keydown", event => {
       if (form.inert || event.ctrlKey || event.metaKey || event.altKey ||
-          event.target.closest("a,button,input,textarea,select,summary") && !board.contains(event.target)) return;
+          event.target.closest("textarea,select,input,[contenteditable=true]") ||
+          (event.target.closest("a,button,summary") && !board.contains(event.target) &&
+           !event.target.closest("#listen,#stop-audio"))) return;
       if (tool === "shift" && event.key === "Shift" && !event.repeat) { steps = [1]; update(); }
       const arrows = {ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→"};
       if (tool === "maze" && arrows[event.key]) { event.preventDefault(); move(arrows[event.key]); }
@@ -355,6 +429,8 @@ function paintSort(board, steps) {
   }
   const check = board.querySelector("[data-sort-check]");
   if (check) check.disabled = count < pieces.length;
+  const reset = board.querySelector("[data-sort-reset]");
+  if (reset) reset.disabled = count === 0;
   board.querySelector("[data-sort-status]").textContent = count === pieces.length
-    ? "All items placed. Check your baskets, or move an item." : "Choose an item, then a basket.";
+    ? "Check your baskets. To fix one, select the item and choose another basket." : "Choose an item, then a basket.";
 }

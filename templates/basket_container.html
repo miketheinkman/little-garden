@@ -1,0 +1,11 @@
+<figure class="fill-container" data-container="{{ lesson.world_key|default:'garden' }}">
+  {% if lesson.world_key == "space" %}<svg class="cargo-bay-art" viewBox="0 0 160 88" aria-label="Open cargo bay with a loading ramp" role="img">
+    <path fill="var(--surface)" stroke="currentColor" stroke-width="3" d="M8 62V32Q8 17 24 15L109 8Q128 9 132 24L147 59Z"/>
+    <circle cx="30" cy="32" r="7" fill="var(--wash)" stroke="currentColor" stroke-width="3"/>
+    <path fill="var(--button)" d="M57 24H117V62H57Z"/><path fill="var(--warm)" stroke="currentColor" stroke-width="3" d="M57 61H117L136 79H38Z"/>
+    <path fill="none" stroke="var(--edge)" stroke-width="2" d="M55 72H122M59 67H117"/>
+    <path fill="var(--warm)" d="M64 42H80V58H64ZM82 42H98V58H82ZM74 25H90V40H74Z"/>
+  </svg>{% endif %}
+  <figcaption><span aria-hidden="true">{{ lesson.world.box_icon|default:"🧺" }}</span> {{ lesson.world.box|default:"basket"|capfirst }}</figcaption>
+  <p class="basket" {% if mirror %}data-basket{% else %}id="berries" aria-live="polite"{% endif %} data-icon="{{ lesson.world.cargo_icon|default:'🍓' }}" data-box="{{ lesson.world.box|default:'basket' }}">Empty {{ lesson.world.box|default:"basket" }}</p>
+</figure>

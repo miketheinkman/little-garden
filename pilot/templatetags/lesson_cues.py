@@ -1,4 +1,6 @@
 """Action cues follow the lesson skill, independently of the correct answer."""
+import re
+
 from django import template
 
 register = template.Library()
@@ -67,3 +69,23 @@ def choice_icon(key, lesson, choice):
     if str(key).startswith("snail-v"):
         return STORY_ICONS.get(choice, "📍")
     return ""
+
+@register.filter
+def basket_labels(item):
+    """Use a category exemplar even on rounds saved before the visual hints."""
+    result = []
+    for index, label in enumerate(item["bins"], 1):
+        if isinstance(label, dict):
+            result.append(label)
+        else:
+            example = next(piece["icon"] for piece in item["pieces"] if piece["bin"] == index)
+            result.append({"label": label, "example": example})
+    return result
+
+
+@register.filter
+def bundle_groups(display):
+    # Saved prompts describe the starting configuration, including unbundling tasks.
+    counts = re.findall(r"\d+", display)
+    if len(counts) == 2:
+        return {"bags": range(int(counts[0])), "loose": range(int(counts[1]))}

@@ -1,4 +1,9 @@
 {
+  "digits-v2": [
+    {"prompt": "Trace 5 to light the trail.", "answer": "5", "choices": []},
+    {"prompt": "Trace 10 to light the trail.", "answer": "10", "choices": []},
+    {"prompt": "Trace 20 to light the trail.", "answer": "20", "choices": []}
+  ],
   "keys-v2": [
     {"prompt": "Find S again.", "display": "S", "answer": "S", "choices": ["A", "S", "T"]},
     {"prompt": "Can you find the M key?", "display": "M", "answer": "M", "choices": ["M", "N", "S"]}

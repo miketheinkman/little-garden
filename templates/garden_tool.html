@@ -6,15 +6,18 @@
 {% elif lesson.tool == 'memory' or lesson.tool == 'balance' %}{% include 'table_game.html' %}
 {% elif lesson.tool == 'shift' %}
 <p class="garden-sign"><output data-initial>_</output>{{ item.name_tail }}</p>
-<div data-keyboard tabindex="0" aria-label="Capital letter keyboard">
+<p>Hold <kbd>Shift ⇧</kbd> and press <kbd>{{ item.answer }}</kbd> on your keyboard.</p>
+<details data-screen-keyboard><summary>Show on-screen keyboard</summary><div data-keyboard aria-label="Capital letter keyboard">
 <button type="button" data-action="shift" aria-pressed="false">Shift ⇧</button>
-{% for ch in item.letters %}<button type="button" data-letter="{{ ch }}">{{ ch }}</button>{% endfor %}</div>
+{% for ch in item.letters %}<button type="button" data-letter="{{ ch }}">{{ ch }}</button>{% endfor %}</div></details>
 {% elif lesson.tool == 'backspace' %}
+<p>Press <kbd>⌫ Backspace</kbd> on your keyboard to erase the last letter.</p>
 <p class="garden-sign" data-label="{{ item.label }}"><output>{{ item.label }}</output></p>
 <button type="button" data-action="erase">⌫ Backspace</button><button type="button" data-action="reset"><span aria-hidden="true">↺</span> Start over</button>
 {% elif lesson.tool == 'maze' %}
 <div class="beetle-maze" data-maze="{{ item.maze }}" data-player="{{ lesson.world.actor.icon|default:'🐞' }}" data-goal="{{ lesson.world.goal.icon|default:'🍃' }}" tabindex="0" role="group" aria-label="Use the arrow keys to move the {{ lesson.world.actor.name|default:"beetle" }} to the {{ lesson.world.goal.name|default:"leaf" }}.">
 {% for cell in item.maze %}<span class="{% if cell == '#' %}hedge{% endif %}">{% if cell == 'B' %}{{ lesson.world.actor.icon|default:'🐞' }}{% elif cell == 'L' %}{{ lesson.world.goal.icon|default:'🍃' }}{% endif %}</span>{% endfor %}</div>
+<p data-maze-status role="status"></p>
 <div class="arrow-pad">{% for arrow in '↑←↓→' %}<button type="button" data-direction="{{ arrow }}" aria-label="Move {% cycle 'up' 'left' 'down' 'right' %}">{{ arrow }}</button>{% endfor %}</div>
 {% elif lesson.tool == 'sides' %}
 <div class="two-sides">{% for side in item.sides %}<button name="answer" value="{% cycle 'left' 'right' %}"><span>{{ side.icon }}</span>{{ side.label }}</button>{% endfor %}</div>
@@ -43,6 +46,7 @@
 {% elif lesson.tool == 'coins' %}
 <div class="coin-drawer">{% for coin in 'pnd' %}<button type="button" data-coin="{% cycle '1' '5' '10' %}"><b>{% cycle '1¢' '5¢' '10¢' %}</b>{% cycle 'Penny' 'Nickel' 'Dime' %}</button>{% endfor %}</div>
 <p class="coin-counter" aria-label="Coins on the counter"><output></output></p><button type="button" data-action="undo"><span aria-hidden="true">↶</span> Take one back</button>
+{% if not mirror %}<details data-amount-hint data-target="{{ item.price }}"><summary>💡 Show a hint</summary><p data-hint-message role="status"></p></details>{% endif %}
 {% elif lesson.tool == 'clock' %}
 <svg class="lesson-clock" viewBox="0 0 140 140" role="img" aria-label="Analog clock with the short hand at {{ item.hour_position }} and the long hand at {{ item.minute_position }}">
 <circle cx="70" cy="70" r="65"/>{% for pos in '123456789012' %}<g transform="rotate({% widthratio forloop.counter 12 360 %} 70 70)"><line x1="70" y1="10" x2="70" y2="15"/><text x="70" y="24" transform="rotate(-{% widthratio forloop.counter 12 360 %} 70 24)">{{ forloop.counter }}</text></g>{% endfor %}

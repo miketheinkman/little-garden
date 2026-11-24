@@ -1,4 +1,4 @@
-{% load static %}{% include 'activity_props.html' %}
+{% load static lesson_cues %}{% include 'activity_props.html' %}
 {% if item.keycap %}
 <p class="key-example"><kbd>{{ item.keycap }}</kbd></p>
 {% elif item.seeds != None %}
@@ -13,3 +13,12 @@
   <details><summary>{% if lesson.tool == 'listen-number' %}Show the number word{% else %}Show the word{% endif %}</summary><p>{{ item.word }}</p></details>
 </div>{% endif %}
 {% elif item.display %}<p class="display">{{ item.display }}</p>{% endif %}
+
+{% if key == 'tens-v1' %}
+{% with groups=item.display|bundle_groups %}
+<div class="bundle-model" role="img" aria-label="{{ item.display }}">
+  {% for bag in groups.bags %}<span class="ten-bag" aria-hidden="true">🛍️<b>10</b></span>{% endfor %}
+  <span class="loose-pieces" aria-hidden="true">{% for unit in groups.loose %}<i>{{ lesson.world.cargo_icon|default:"🫘" }}</i>{% endfor %}</span>
+</div>{% endwith %}
+{% endif %}
+{% if lesson.light_trail %}<div class="trace-lights" aria-hidden="true">{% for light in "12345" %}<span>★</span>{% endfor %}</div>{% endif %}

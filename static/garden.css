@@ -589,3 +589,18 @@ main:has(#live-room) {max-width:1600px}
   .question-scenery {display:none}
   .question-landscape :is(h2,h3) {padding:0}
 }
+
+[data-screen-keyboard] summary,[data-amount-hint] summary{cursor:pointer;padding:.5rem 0;font-weight:650}
+.arrow-pad [data-blocked]{outline:3px dashed var(--focus);outline-offset:2px}
+[data-maze-status]{min-height:1.5em;margin:.3rem 0}
+.fill-container{margin:1rem 0;max-width:26rem;border:2px solid var(--edge);border-radius:1.2rem;background:var(--wash);padding:.65rem 1rem}
+.fill-container figcaption{font-weight:700}.fill-container figcaption span{font-size:1.8rem}
+.fill-container .basket{margin:.35rem 0;min-height:2.5rem}
+.fill-container[data-container="space"]{border:5px double var(--edge);border-radius:1.5rem .4rem;background:repeating-linear-gradient(90deg,transparent 0 36px,var(--line) 37px 38px),var(--wash)}
+.sort-edits,.bundle-model,.loose-pieces,.trace-lights{display:flex;gap:.45rem;align-items:center;flex-wrap:wrap}
+.bundle-model{margin:.7rem 0}.ten-bag{display:inline-grid;place-items:center;font-size:2.2rem;line-height:1}.ten-bag b{font:700 .85rem system-ui;padding:.1rem .25rem;border-radius:.35rem;background:var(--button);color:var(--button-text)}
+.loose-pieces{max-width:12rem}.loose-pieces i{font-style:normal;font-size:1.4rem}
+.dot-board{touch-action:none;user-select:none}.dot-board [data-dot-pencil]{stroke:var(--focus);stroke-width:1.2;stroke-dasharray:2 1}
+.trace-lights span{font-size:1.75rem;color:var(--edge)}.trace-lights .lit{color:var(--focus);text-shadow:0 0 .3rem var(--focus)}
+
+.cargo-bay-art{display:block;width:9rem;max-width:100%;margin:auto}

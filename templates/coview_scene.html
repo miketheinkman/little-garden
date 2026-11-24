@@ -14,7 +14,7 @@
 <canvas class="live-art" width="640" height="480" data-kind="{{ lesson.kind }}" data-mask="{{ item.mask }}" aria-label="Live drawing"></canvas>
 {% elif lesson.kind == "trace" %}
 <svg class="live-trail" viewBox="0 0 200 150" data-shape="{{ item.answer }}" data-path="{{ item.path }}" role="img" aria-label="Live tracing">{% include 'soil_lines.html' %}<path class="live-guide"/><path class="live-ink"/><circle r="6"/></svg>
-{% elif lesson.kind == "basket" %}<p class="display" data-basket data-icon="{{ lesson.world.cargo_icon|default:'🍓' }}" data-box="{{ lesson.world.box|default:'basket' }}"></p>
+{% elif lesson.kind == "basket" %}{% include 'basket_container.html' with mirror=True %}
 {% elif lesson.kind == "type" %}<p class="live-writing"><span>{% if lesson.world %}{{ lesson.world.place|capfirst }} sign{% else %}Garden sign{% endif %}</span><output data-typed></output></p>
 {% elif lesson.kind == "mouse" %}<div class="meadow" aria-label="{{ item.target|default:'Ladybug' }} area"><span class="bug step{{ step }}" {% if item.x %}style="left:{{ item.x }}%;top:{{ item.y }}%"{% endif %}>{{ item.icon|default:"🐞" }}</span><i class="live-pointer" hidden></i></div>
 {% else %}<div class="live-choices">{% for choice in item.choices %}<span>{% include 'choice_contents.html' %}</span>{% endfor %}</div>{% endif %}

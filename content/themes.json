@@ -20,6 +20,7 @@
       "icon": "🐇"
     },
     "box": "basket",
+    "box_icon": "🧺",
     "one": "berry",
     "many": "berries",
     "goal": {
@@ -126,6 +127,7 @@
       "icon": "👷"
     },
     "box": "toolbox",
+    "box_icon": "🧰",
     "one": "bolt",
     "many": "bolts",
     "goal": {
@@ -232,6 +234,7 @@
       "icon": "🤖"
     },
     "box": "cargo bay",
+    "box_icon": "🚀",
     "one": "moon rock",
     "many": "moon rocks",
     "goal": {
@@ -338,6 +341,7 @@
       "icon": "🤿"
     },
     "box": "treasure chest",
+    "box_icon": "🪙",
     "one": "seashell",
     "many": "seashells",
     "goal": {
@@ -444,6 +448,7 @@
       "icon": "🧑‍✈️"
     },
     "box": "boxcar",
+    "box_icon": "🚃",
     "one": "ticket",
     "many": "tickets",
     "goal": {
@@ -550,6 +555,7 @@
       "icon": "🏕️"
     },
     "box": "pack",
+    "box_icon": "🎒",
     "one": "acorn",
     "many": "acorns",
     "goal": {
@@ -656,6 +662,7 @@
       "icon": "👩‍🍳"
     },
     "box": "mixing bowl",
+    "box_icon": "🥣",
     "one": "cookie",
     "many": "cookies",
     "goal": {
@@ -762,6 +769,7 @@
       "icon": "🧑‍🔬"
     },
     "box": "sample box",
+    "box_icon": "📦",
     "one": "fossil",
     "many": "fossils",
     "goal": {
@@ -868,6 +876,7 @@
       "icon": "🧑‍🌾"
     },
     "box": "pail",
+    "box_icon": "🪣",
     "one": "apple",
     "many": "apples",
     "goal": {

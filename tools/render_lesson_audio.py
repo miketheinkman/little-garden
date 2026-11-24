@@ -26,8 +26,8 @@ LETTER_PHONES = dict(zip("ABCDEFGHIJKLMNOPQRSTUVWXYZ", (
     "dʒˈeɪ", "kˈeɪ", "ˈɛl", "ˈɛm", "ˈɛn", "ˈoʊ", "pˈiː", "kjˈuː", "ˈɑːɹ",
     "ˈɛs", "tˈiː", "jˈuː", "vˈiː", "dˈʌbəljuː", "ˈɛks", "wˈaɪ", "zˈiː"), strict=True))
 TARGET = re.compile(r'“(?P<quoted>[a-z]+)[.!?]?”|'
-                    r'(?:trace (?:lowercase )?|to form |press |capital |Look for |[Ff]ind (?:the (?:number )?)?)'
-                    r'(?P<key>[A-Za-z0-9])\b|Use your (?P<side>left|right) hand')
+                    r'(?:(?i:trace) (?:lowercase )?|to form |press |capital |Look for |[Ff]ind (?:the (?:number )?)?)'
+                    r'(?P<key>[A-Za-z]|[0-9]+)\b|Use your (?P<side>left|right) hand')
 
 
 @lru_cache(maxsize=1)

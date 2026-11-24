@@ -88,6 +88,14 @@ function startActivity(form, signal) {
     form.requestSubmit();
   }
 
+  const hint = form.querySelector("[data-amount-hint]");
+  if (hint) {
+    let used = false;
+    hint.addEventListener("toggle", () => { if (hint.open) used = true; });
+    form.addEventListener("formdata", event => {
+      if (used || hint.open) event.formData.set("amount_hint", "1");
+    });
+  }
   const tool = form.querySelector(".garden-tool");
   if (tool) startGardenTool(tool, form, answer, signal);
 
@@ -135,6 +143,7 @@ function startActivity(form, signal) {
       ring.setAttribute("cy",next.y);
       ring.setAttribute("visibility",steps.open ? "visible" : "hidden");
       trail.dataset.percent = Math.round(100 * (stroke + distance / length) / strokes.length);
+      paintTraceLights(trail.closest("article"), Number(trail.dataset.percent));
       const at = ink.getPointAtLength(distance);
       dot.setAttribute("cx", at.x);
       dot.setAttribute("cy", at.y);
@@ -147,7 +156,7 @@ function startActivity(form, signal) {
     }
     function finishStroke() {
       pointer = null;
-      if (stroke + 1 === strokes.length) { answer(shape); return; }
+      if (stroke + 1 === strokes.length) { distance = length; paint(); answer(shape); return; }
       setTraceStroke(trail, strokes, ++stroke);
       length = ink.getTotalLength();
       ink.style.strokeDasharray = length + " " + length;
@@ -209,6 +218,7 @@ function startActivity(form, signal) {
     const take = document.querySelector("#take-berry");
     function update(change) {
       count += change;
+      paintAmountHint(form, count);
       const berries = document.querySelector("#berries");
       berries.textContent = count ? (berries.dataset.icon + " ").repeat(count) : "Empty " + berries.dataset.box;
       berries.setAttribute("aria-label", count + " in the " + berries.dataset.box);
@@ -216,6 +226,7 @@ function startActivity(form, signal) {
       take.disabled = count === 0;
       add.disabled = count === 12;
     }
+    update(0);
     add.onclick = () => update(1);
     take.onclick = () => update(-1);
   }

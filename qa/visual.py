@@ -376,6 +376,110 @@ class VisualReview(StaticLiveServerTestCase):
             self.assertEqual(page.evaluate("cuePeaks.length"), 0)
             browser.close()
 
+    def test_family_lesson_feedback(self):
+        parent = get_user_model().objects.get(username="reviewer")
+        child = Learner.objects.create(parent=parent, nickname="Fern", lesson_theme="space")
+        client = Client()
+        client.force_login(parent)
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375, 1200):
+                for theme in ("light", "dark"):
+                    self.variant = f"feedback-{width}-{theme}"
+                    with browser.new_context(viewport={"width":width, "height":820}, has_touch=width==375, color_scheme=theme) as ctx:
+                        ctx.add_cookies([{"name":"sessionid", "value":client.cookies["sessionid"].value, "url":self.live_server_url}])
+                        page = ctx.new_page()
+                        errors = []
+                        page.on("pageerror", lambda e: errors.append(str(e)))
+                        def preview(key, step=0):
+                            page.goto(self.live_server_url + reverse("preview", args=[child.pk,key,step]))
+                        def screen(name):
+                            page.locator("article:has(#activity)").screenshot(path=self.out / f"{self.variant}-{name}.png")
+                            self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"))
+                        preview("shift-v1")
+                        expect(page.locator("[data-keyboard]")).to_be_hidden()
+                        page.get_by_text("Show on-screen keyboard").click()
+                        expect(page.locator("[data-keyboard]")).to_be_visible()
+                        preview("backspace-v1")
+                        before = page.locator("[data-label] output").inner_text()
+                        page.locator("#listen").click()
+                        page.keyboard.press("Backspace")
+                        expect(page.locator("[data-label] output")).to_have_text(before[:-1])
+                        preview("arrow-maze-v1")
+                        page.locator('[data-direction="↑"]').click()
+                        expect(page.locator("[data-maze-status]")).to_contain_text("Blocked")
+                        screen("wall")
+                        preview("berry-basket-v1")
+                        expect(page.locator(".cargo-bay-art")).to_be_visible()
+                        hint = page.locator("[data-amount-hint]")
+                        hint.locator("summary").click()
+                        expect(hint).to_contain_text("Add more")
+                        target = int(hint.get_attribute("data-target"))
+                        for _ in range(target): page.locator("#add-berry").click()
+                        expect(hint).to_contain_text("Just right")
+                        page.locator("#add-berry").click()
+                        expect(hint).to_contain_text("Take some out")
+                        screen("cargo")
+                        preview("coins-v1")
+                        page.locator("[data-amount-hint] summary").click()
+                        page.locator('[data-coin="5"]').click()
+                        expect(page.locator("[data-hint-message]")).to_contain_text("5¢ on the counter")
+                        screen("coins")
+                        preview("tens-v1")
+                        expect(page.locator(".ten-bag")).to_have_count(2)
+                        expect(page.locator(".loose-pieces i")).to_have_count(3)
+                        screen("bundles")
+                        preview("sort-baskets-v1")
+                        pieces = LESSONS["sort-baskets-v1"]["items"][0]["pieces"]
+                        for i, piece in enumerate(pieces):
+                            page.locator(f'[data-piece="{i}"]').click()
+                            dest = piece["bin"] if i else 3-piece["bin"]
+                            page.locator(f'[data-bin="{dest}"]').click()
+                        page.locator("[data-sort-check]").click()
+                        expect(page.locator(".retry-note")).to_be_visible()
+                        page.locator('[data-piece="0"]').click()
+                        page.locator("[data-unplace]").click()
+                        expect(page.locator('[data-area="0"] [data-piece]')).to_have_count(1)
+                        screen("sort")
+                        page.locator("[data-sort-reset]").click()
+                        expect(page.locator('[data-area="0"] [data-piece]')).to_have_count(len(pieces))
+                        preview("number-dots-v1")
+                        surface = page.locator(".dot-board")
+                        surface.scroll_into_view_if_needed()
+                        centers = surface.locator("[data-dot]").evaluate_all(
+                            "els => els.map(e => { const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}; })")
+                        if width == 375:
+                            touch = ctx.new_cdp_session(page)
+                            for i, point in enumerate(centers):
+                                touch.send("Input.dispatchTouchEvent", {"type":"touchMove" if i else "touchStart","touchPoints":[point]})
+                            touch.send("Input.dispatchTouchEvent", {"type":"touchEnd", "touchPoints":[]})
+                        else:
+                            page.mouse.move(**centers[0])
+                            page.mouse.down()
+                            for point in centers[1:]: page.mouse.move(**point,steps=6)
+                            page.mouse.up()
+                        expect(page.locator("[data-dot-finish]")).to_be_enabled()
+                        screen("trail")
+                        preview("digits-v2",4)
+                        svg = page.locator("#trail")
+                        expect(svg).to_have_attribute("data-shape","20")
+                        svg.scroll_into_view_if_needed()
+                        for _ in range(2):
+                            points = svg.locator("#ink").evaluate("""p => {
+                                const len=p.getTotalLength(), screen=p.getScreenCTM();
+                                return Array.from({length:Math.ceil(len/3)+1},(_,i)=>{
+                                    const pt=p.getPointAtLength(Math.min(len,i*3)).matrixTransform(screen);
+                                    return {x:pt.x,y:pt.y}; }); }""")
+                            page.mouse.move(**points[0])
+                            page.mouse.down()
+                            for point in points[1:]: page.mouse.move(**point)
+                            page.mouse.up()
+                            if _ == 0: screen("trace")
+                        expect(page.locator(".answer-party")).to_be_visible()
+                        self.assertEqual(errors, [])
+
+            browser.close()
+
     def test_feature_screens(self):
         for device, width in [("desktop", 1200), ("phone", 375)]:
             for theme in ("light", "dark"):
@@ -1090,7 +1194,7 @@ class VisualReview(StaticLiveServerTestCase):
                             kid.keyboard.press("f")
                             expect(kid.locator(".retry-note")).to_be_visible()
                             kid.keyboard.down("Shift")
-                            expect(board.get_by_role("button", name="Shift ⇧")).to_have_attribute("aria-pressed", "true")
+                            expect(board.locator('[data-action="shift"]')).to_have_attribute("aria-pressed", "true")
                         elif name == "arrow-maze":
                             kid.keyboard.press("ArrowDown")
                             expect(board.locator("[data-maze] span").first).to_have_text("🐞")

@@ -1,4 +1,4 @@
-{% load static %}
+{% load static lesson_cues %}
 {% if item.animals %}
 {% if item.call %}{% if not mirror %}<audio preload="none" controls data-call-audio src="{% static item.call %}" aria-label="Animal call"></audio><button class="button" type="button" data-hear-call hidden><span aria-hidden="true">🎧</span> Hear animal call</button>{% endif %}
 <details><summary>Show sound clue</summary><span>{{ item.clue }}</span></details>{% endif %}
@@ -10,6 +10,7 @@
 <section class="sort-board">
 <div class="sort-loose" data-area="0" aria-label="Items to sort">{% for piece in item.pieces %}
 <button class="sort-piece" type="button" data-piece="{{ forloop.counter0 }}" aria-pressed="false"{% if piece.color %} aria-label="{{ piece.color }} {{ piece.name }}"{% endif %}><b aria-hidden="true"{% if piece.ink %} class="sort-color" style="color:{{ piece.ink }}"{% endif %}>{{ piece.icon }}</b>{{ piece.name }}</button>{% endfor %}</div>
-<div class="sort-bins">{% for bin in item.bins %}<div class="sort-bin"><button type="button" data-bin="{{ forloop.counter }}" aria-label="Place in {{ bin.label|default:bin }}">{% if bin.ink %}<span class="basket-swatch" style="background:{{ bin.ink }}" aria-hidden="true"></span>{% else %}🧺{% endif %} {{ bin.label|default:bin }}</button><div data-area="{{ forloop.counter }}"></div></div>{% endfor %}</div>
+<div class="sort-bins">{% for bin in item|basket_labels %}<div class="sort-bin"><button type="button" data-bin="{{ forloop.counter }}" aria-label="Place in {{ bin.label|default:bin }}">{% if bin.ink %}<span class="basket-swatch" style="background:{{ bin.ink }}" aria-hidden="true"></span>{% else %}<span aria-hidden="true">{{ bin.example }}</span>{% endif %} {{ bin.label }}</button><div data-area="{{ forloop.counter }}"></div></div>{% endfor %}</div>
+{% if not mirror %}<div class="sort-edits"><button type="button" data-unplace disabled>↩ Take item out</button> <button type="button" data-sort-reset disabled>↺ Start over</button></div>{% endif %}
 <p role="status" data-sort-status>Choose an item, then a basket.</p>{% if not mirror %}<button data-sort-check disabled><span aria-hidden="true">✓</span> Check baskets</button>{% endif %}
 </section>{% endif %}

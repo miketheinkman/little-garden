@@ -16,6 +16,7 @@
     if (art) renderPicture(art, state.pixels || "0".repeat(768), null);
     const trace = scene.querySelector(".live-trail");
     if (trace) {
+      paintTraceLights(scene, state.percent || 0);
       const ink = trace.querySelector(".live-ink");
       const strokes = traceStrokes(trace);
       const positionInStrokes = (state.percent || 0) / 100 * strokes.length;

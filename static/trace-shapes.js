@@ -57,8 +57,31 @@ const traceShapes = {
     1: "M76 48L102 24V126", 2: "M58 49C67 0 162 18 132 65L59 125H146"
   };
 
+// Two-digit numerals use separate strokes so a child can lift between digits.
+const tensDigits = {
+  "1": "M36 49L58 26V124",
+  "2": "M22 49C30 9 95 23 82 57Q76 75 22 124H86"
+};
+const unitsDigits = [
+  "M149 24C105 24 105 125 149 125C193 125 193 24 149 24",
+  "M123 49L149 25V124",
+  "M118 49C126 8 189 22 179 55Q175 73 118 124H183",
+  "M118 39Q183 5 175 53Q171 70 144 75Q192 79 175 111Q153 139 117 117",
+  "M167 125V26L116 93H184",
+  "M178 26H122V68C154 52 187 72 177 102C168 132 138 133 117 114",
+  "M171 25C135 38 111 78 120 106C132 140 182 128 180 97C177 67 140 61 120 88",
+  "M116 27H184L140 125",
+  "M149 72C103 51 131 9 161 26C188 43 171 63 149 72C107 90 118 128 148 126C187 128 192 91 149 72",
+  "M177 69C154 95 113 82 118 51C125 14 171 14 179 47C185 76 164 112 133 127"
+];
+function paintTraceLights(root, percent) {
+  root.querySelectorAll(".trace-lights span").forEach((light, i) => light.classList.toggle("lit", percent >= (i+1)*20));
+}
+
 // The child and mirror use the same stroke boundaries, including lifts for dots and crossbars.
 function traceStrokes(svg) {
+  const digits = svg.dataset.shape;
+  if (/^(1[0-9]|20)$/.test(digits)) return [tensDigits[digits[0]], unitsDigits[Number(digits[1])]];
   const shape = svg.dataset.path || traceShapes[svg.dataset.shape];
   return Array.isArray(shape) ? shape : [shape];
 }
