@@ -7,7 +7,7 @@ from pilot.reviews import placement_reviews
 from pilot.calendar import family_calendar
 from pilot.planner import planner
 from pilot.records import weekly_record
-from pilot.dashboard import dashboard, technical_dashboard
+from pilot.dashboard import dashboard, reopen_feedback, technical_dashboard
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -21,6 +21,7 @@ urlpatterns = [
     path("co-view/share/<int:pk>/", coview.broadcast, name="coview_broadcast"),
     path("dashboard/", dashboard, name="dashboard"),
     path("dashboard/technical/", technical_dashboard, name="technical_dashboard"),
+    path("feedback/<int:pk>/reopen/", reopen_feedback, name="reopen_feedback"),
     path("feedback/preferences/", views.feedback_preferences, name="feedback_preferences"),
     path("feedback/", views.feedback_history, name="feedback_history"),
     path("account/email/", views.recovery_email, name="recovery_email"),

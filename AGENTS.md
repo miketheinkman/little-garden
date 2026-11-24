@@ -12,4 +12,4 @@ Run `/home/mike/piper/.venv/bin/python tools/render_lesson_audio.py` after curri
 
 ## Family lesson feedback
 
-When a change comes from lesson feedback, verify it in the affected lesson and make it available on the pilot before replying on the original entry. Say what changed and how the family can try it. If part of a request is still open, name that part in the reply. Use the dashboard reply flow so the family’s email preference is respected. Check the existing replies before posting another update.
+When a change comes from lesson feedback, verify it in the affected lesson and make it available on the pilot before replying on the original entry. Say what changed and how the family can try it. If part of a request is still open, name that part in the reply. Use the dashboard reply flow so the family’s email preference is respected. Check the existing replies before posting another update. Mark the entry resolved after the fix and its reply are live. Leave partial fixes open. Read the family’s latest follow-up when a thread reopens.

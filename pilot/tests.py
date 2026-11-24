@@ -362,6 +362,49 @@ class FeedbackWorkflowTests(TestCase):
         self.client.post("/dashboard/", dict(self.reply, submission="d4df4a2f-d55c-4f8f-b4d1-922218f1bc00"))
         self.assertEqual(len(mail.outbox), 2)
 
+    def test_resolution_filters_reopen_permissions_and_stale_forms(self):
+        from django.core import mail
+        from .models import FeedbackEmailPreference
+        FeedbackEmailPreference.objects.create(parent=self.parent, enabled=True)
+        resolve = {"feedback": self.note.pk, "action": "resolve", "version": "0"}
+        reopen_url = f"/feedback/{self.note.pk}/reopen/"
+        self.client.force_login(self.staff)
+        self.client.post("/dashboard/", self.reply)
+        self.assertContains(self.client.get("/dashboard/"), self.reply["reply"])
+        for _ in range(2):
+            self.client.post("/dashboard/", resolve)
+        self.assertNotContains(self.client.get("/dashboard/"), self.reply["reply"])
+        self.assertContains(self.client.get("/dashboard/?resolution=resolved&state=read"), self.reply["reply"])
+        self.assertEqual(len(mail.outbox), 2)
+        outsider = get_user_model().objects.create_user("another-parent")
+        self.client.force_login(outsider)
+        self.assertEqual(self.client.post(reopen_url, {"version": 1}).status_code, 404)
+        self.client.force_login(self.parent)
+        self.assertEqual(self.client.get(reopen_url).status_code, 405)
+        self.assertEqual(self.client.post(reopen_url, {"version": 1, "reason": "x" * 1501}).status_code, 400)
+        for _ in range(2):
+            self.client.post(reopen_url, {"version": 1, "reason": "Still hard to hear."})
+        self.assertEqual(self.client.post("/dashboard/", resolve).status_code, 403)
+        self.client.force_login(self.staff)
+        self.client.post("/dashboard/", resolve)
+        self.client.post("/dashboard/", self.reply)  # A replayed old reply cannot acknowledge a new follow-up.
+        self.note.refresh_from_db()
+        self.assertFalse(self.note.resolved)
+        self.assertIsNone(self.note.read_at)
+        self.assertEqual(self.note.status_version, 2)
+        self.assertEqual(list(self.note.replies.values_list("kind", flat=True)), ["reply", "resolve", "reopen"])
+        for link in ("/dashboard/?state=unread&lesson=keys-v1&resolution=open", "/dashboard/?resolution=all"):
+            self.assertContains(self.client.get(link), "Still hard to hear.")
+        self.client.post("/dashboard/", dict(resolve, version=2))
+        self.client.force_login(self.parent)
+        self.client.post(reopen_url, {"version": 1})
+        self.note.refresh_from_db()
+        self.assertTrue(self.note.resolved)
+        self.client.post(reopen_url, {"version": 3})
+        self.note.refresh_from_db()
+        self.assertFalse(self.note.resolved)
+        self.assertEqual(len(mail.outbox), 3)
+
     def test_default_off_reply_marks_read_and_is_private(self):
         from django.core import mail
         self.client.force_login(self.staff)

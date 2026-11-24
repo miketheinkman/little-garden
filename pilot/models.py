@@ -98,6 +98,8 @@ class LessonFeedback(models.Model):
     step = models.PositiveIntegerField(null=True)
     kind = models.CharField(max_length=12, choices=Kind.choices)
     note = models.CharField(max_length=1500, blank=True)
+    resolved = models.BooleanField(default=False)
+    status_version = models.PositiveIntegerField(default=0)
     read_at = models.DateTimeField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
@@ -107,10 +109,16 @@ class LessonFeedback(models.Model):
 
 
 class FeedbackReply(models.Model):
+    class Kind(models.TextChoices):
+        REPLY = "reply", "Team reply"
+        RESOLVE = "resolve", "Marked resolved"
+        REOPEN = "reopen", "Reopened"
+
+    kind = models.CharField(max_length=8, choices=Kind.choices, default=Kind.REPLY)
     feedback = models.ForeignKey(LessonFeedback, related_name="replies", on_delete=models.CASCADE)
     reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
     submission = models.UUIDField()
-    text = models.CharField(max_length=2000)
+    text = models.CharField(max_length=2000, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 
     class Meta:

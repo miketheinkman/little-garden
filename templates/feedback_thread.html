@@ -1,5 +1,5 @@
-<p class="meta">{% if feedback.read_at %}Read by the team · {{ feedback.read_at|date:"M j, Y" }}{% else %}Awaiting review{% endif %}</p>
+<p class="meta"><strong>{% if feedback.resolved %}Resolved{% else %}Open{% endif %}</strong> · {% if feedback.read_at %}Read by the team · {{ feedback.read_at|date:"M j, Y" }}{% else %}Awaiting review{% endif %}</p>
 {% for reply in feedback.replies.all %}
-<section class="team-reply"><strong>Little Garden team</strong> · {{ reply.created|date:"M j, Y" }}
-<p>{{ reply.text|linebreaksbr }}</p></section>
+<section class="team-reply"><strong>{% if reply.kind == "reply" %}Little Garden team{% else %}{{ reply.get_kind_display }}{% endif %}</strong> · {{ reply.created|date:"M j, Y" }}
+{% if reply.text %}<p>{{ reply.text|linebreaksbr }}</p>{% endif %}</section>
 {% endfor %}

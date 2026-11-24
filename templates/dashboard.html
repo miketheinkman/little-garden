@@ -7,24 +7,27 @@
 <form class="inline" method="get">
 <label>Lesson <select name="lesson"><option value="">All lessons</option>{% for key, lesson in lessons.items %}<option value="{{ key }}" {% if selected == key %}selected{% endif %}>{{ lesson.title }}</option>{% endfor %}</select></label>
 <label>Feedback notes <select name="flag"><option value="">All flags</option>{% for key, label in flags %}<option value="{{ key }}" {% if key == flag %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></label>
+<label><span id="resolution-label">Resolution</span> <select name="resolution" aria-labelledby="resolution-label"><option value="open" {% if resolution == "open" %}selected{% endif %}>Open</option><option value="resolved" {% if resolution == "resolved" %}selected{% endif %}>Resolved</option><option value="all" {% if resolution == "all" %}selected{% endif %}>Open and resolved</option></select></label>
 <label>Review status <select name="state"><option value="">All statuses</option><option value="unread" {% if state == "unread" %}selected{% endif %}>Unread</option><option value="read" {% if state == "read" %}selected{% endif %}>Read</option></select></label>
 <button>Apply filters</button> <a href="{% url 'dashboard' %}">Reset</a>
 </form>
 <div class="review-totals"><div><strong>{{ totals.assigned }}</strong> Assigned</div><div><strong>{{ totals.started }}</strong> Started</div><div><strong>{{ totals.finished }}</strong> Completed</div></div>
-<h2>Lesson activity</h2>
-<p>All-time assignment counts. Started means a child submitted a response. Repeat assignments count separately. Completion shows participation. Retry totals appear after five distinct learners have tried a lesson.</p>
-<div class="review-table" tabindex="0" role="region" aria-label="Lesson activity table">
-<table><thead><tr><th>Lesson</th><th>Assigned</th><th>Started</th><th>Completed</th><th>Retries</th><th>Worked</th><th>Confusing</th><th>Change</th></tr></thead><tbody>
-{% for row in rows %}<tr><th scope="row"><a href="?lesson={{ row.key|urlencode }}">{{ row.title }}</a></th><td>{{ row.assigned }}</td><td>{{ row.started }}</td><td>{{ row.finished }}</td><td>{{ row.retries|default_if_none:"—" }}</td><td>{{ row.worked }}</td><td>{{ row.confusing }}</td><td>{{ row.change }}</td></tr>{% empty %}<tr><td colspan="8">No matching lessons.</td></tr>{% endfor %}
-</tbody></table></div>
 <h2 id="family-feedback">Family feedback ({{ notes.paginator.count }})</h2>
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
-{% for note in notes %}<article><p class="meta">{{ note.get_kind_display }} · Round {{ note.variation|add:1 }} · {% if note.step == None %}Whole lesson{% else %}Step {{ note.step|add:1 }}{% endif %} · {{ note.created|date:"M j, Y" }}</p><h3>{{ note.title }}</h3>{% if note.note %}<p>{{ note.note|linebreaksbr }}</p>{% endif %}
+{% for note in notes %}<article id="note-{{ note.pk }}"><p class="meta">{{ note.get_kind_display }} · Round {{ note.variation|add:1 }} · {% if note.step == None %}Whole lesson{% else %}Step {{ note.step|add:1 }}{% endif %} · {{ note.created|date:"M j, Y" }}</p><h3>{{ note.title }}</h3>{% if note.note %}<p>{{ note.note|linebreaksbr }}</p>{% endif %}
 {% include "feedback_thread.html" with feedback=note %}
+{% if note.resolved %}{% include "feedback_reopen.html" with feedback=note %}{% else %}
+<form method="post">{% csrf_token %}<input type="hidden" name="feedback" value="{{ note.pk }}"><input type="hidden" name="version" value="{{ note.status_version }}"><button name="action" value="resolve">Mark resolved</button></form>{% endif %}
 {% if not note.read_at %}<form method="post">{% csrf_token %}<input type="hidden" name="feedback" value="{{ note.pk }}"><button name="action" value="read">Mark as read</button></form>{% endif %}
 <details><summary>Respond to parent</summary>
 <form method="post">{% csrf_token %}<input type="hidden" name="feedback" value="{{ note.pk }}"><input type="hidden" name="submission" value="{{ note.submission }}">
 <label>Reply <textarea name="reply" rows="3" maxlength="2000" required></textarea></label><button name="action" value="reply">Send reply</button>
-</form></details></article>{% empty %}<p>No feedback matches these filters.</p>{% endfor %}
+</form></details></article>{% empty %}<p>{% if resolution == 'open' %}No open feedback matches these filters.{% else %}No feedback matches these filters.{% endif %}</p>{% endfor %}
 {% if notes.has_other_pages %}<nav aria-label="Feedback pages">{% if notes.has_previous %}<a href="{% querystring page=notes.previous_page_number %}">Previous</a>{% endif %} Page {{ notes.number }} of {{ notes.paginator.num_pages }} {% if notes.has_next %}<a href="{% querystring page=notes.next_page_number %}">Next</a>{% endif %}</nav>{% endif %}
+<h2>Lesson activity</h2>
+<p>All-time assignment counts. Started means a child submitted a response. Repeat assignments count separately. Completion shows participation. Retry totals appear after five distinct learners have tried a lesson.</p>
+<div class="review-table" tabindex="0" role="region" aria-label="Lesson activity table">
+<table><thead><tr><th>Lesson</th><th>Assigned</th><th>Started</th><th>Completed</th><th>Retries</th><th>Worked</th><th>Confusing</th><th>Change</th></tr></thead><tbody>
+{% for row in rows %}<tr><th scope="row"><a href="{% querystring lesson=row.key page=None %}">{{ row.title }}</a></th><td>{{ row.assigned }}</td><td>{{ row.started }}</td><td>{{ row.finished }}</td><td>{{ row.retries|default_if_none:"—" }}</td><td>{{ row.worked }}</td><td>{{ row.confusing }}</td><td>{{ row.change }}</td></tr>{% empty %}<tr><td colspan="8">No matching lessons.</td></tr>{% endfor %}
+</tbody></table></div>
 {% endblock %}

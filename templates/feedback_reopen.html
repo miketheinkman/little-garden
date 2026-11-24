@@ -1,0 +1,7 @@
+<details><summary>Reopen feedback</summary>
+<form method="post"{% if post_url %} action="{{ post_url }}"{% endif %}>{% csrf_token %}
+  <input type="hidden" name="feedback" value="{{ feedback.pk }}">
+  <input type="hidden" name="version" value="{{ feedback.status_version }}">
+  <label>What still needs work? (optional)<textarea name="reason" maxlength="1500" rows="2"></textarea></label>
+  <button name="action" value="reopen">Reopen for review</button>
+</form></details>

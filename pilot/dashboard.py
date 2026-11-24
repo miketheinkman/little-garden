@@ -7,17 +7,55 @@ from django.db import transaction
 from django.http import HttpResponseBadRequest
 from django.urls import reverse
 from django.utils import timezone
-from django.views.decorators.http import require_http_methods, require_safe
+from django.views.decorators.http import require_http_methods, require_POST, require_safe
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, F, Max, Q, Sum
+from django.db.models.functions import Coalesce
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.cache import never_cache
 
 from .operations import pilot_usage, server_health
 from .models import Assignment, LessonFeedback, FeedbackEmailPreference, FeedbackReply
 from .practice import CURRENT_VERSION, FIVE_PROMPT_ROUNDS, LESSONS
+
+
+def change_feedback_status(request, feedback, action):
+    try:
+        version = int(request.POST.get("version", ""))
+    except ValueError:
+        return HttpResponseBadRequest("Reload the feedback entry and try again.")
+    reason = request.POST.get("reason", "").strip() if action == "reopen" else ""
+    if len(reason) > 1500:
+        return HttpResponseBadRequest("Use up to 1500 characters for your follow-up.")
+
+    resolving = action == "resolve"
+    team_review = request.resolver_match.url_name == "dashboard"
+    with transaction.atomic():
+        changed = LessonFeedback.objects.filter(pk=feedback.pk, status_version=version, resolved=not resolving).update(
+            resolved=resolving, status_version=F("status_version") + 1,
+            read_at=Coalesce("read_at", timezone.now()) if resolving else None,
+        )
+        if changed:
+            FeedbackReply.objects.create(feedback=feedback, reviewer=request.user, kind=action,
+                                         text=reason, submission=uuid.uuid4())
+    if changed:
+        messages.success(request, "Feedback marked resolved." if resolving else "Feedback reopened for review.")
+        if team_review:
+            notify_parent(request, feedback, "been marked resolved" if resolving else "been reopened")
+    else:
+        messages.info(request, "This entry was already updated. Its current status is shown.")
+    if team_review:
+        return redirect(request.get_full_path() + "#family-feedback")
+    return redirect(reverse("feedback_history") + f"#note-{feedback.pk}")
+
+
+@login_required
+@require_POST
+def reopen_feedback(request, pk):
+    feedback = get_object_or_404(LessonFeedback, parent=request.user, pk=pk)
+    return change_feedback_status(request, feedback, "reopen")
 
 
 def review_feedback(request):
@@ -27,6 +65,8 @@ def review_feedback(request):
         return HttpResponseBadRequest("Select a feedback note.")
     feedback = get_object_or_404(LessonFeedback, pk=feedback_id)
     action = request.POST.get("action")
+    if action in ("resolve", "reopen"):
+        return change_feedback_status(request, feedback, action)
     if action == "reply":
         body = request.POST.get("reply", "").strip()
         if not body or len(body) > 2000:
@@ -39,15 +79,25 @@ def review_feedback(request):
         return HttpResponseBadRequest("Unknown feedback action.")
 
     with transaction.atomic():
-        changed = LessonFeedback.objects.filter(pk=feedback.pk, read_at=None).update(read_at=timezone.now())
+        unread = LessonFeedback.objects.filter(pk=feedback.pk, read_at=None)
         if action == "reply":
             _, changed = FeedbackReply.objects.get_or_create(
                 feedback=feedback, submission=submission,
                 defaults={"reviewer": request.user, "text": body},
             )
-    if changed and FeedbackEmailPreference.objects.filter(parent_id=feedback.parent_id, enabled=True).exists():
+            if changed:
+                unread.update(read_at=timezone.now())
+        else:
+            changed = unread.update(read_at=timezone.now())
+    if changed:
+        notify_parent(request, feedback, "received a reply" if action == "reply" else "been marked as read")
+    messages.success(request, "Reply saved." if action == "reply" else "Marked as read.")
+    return redirect(request.get_full_path() + "#family-feedback")
+
+
+def notify_parent(request, feedback, event):
+    if FeedbackEmailPreference.objects.filter(parent_id=feedback.parent_id, enabled=True).exists():
         parent_email = feedback.parent.email
-        event = "received a reply" if action == "reply" else "been marked as read"
         url = request.build_absolute_uri(reverse("feedback_history")) + f"#note-{feedback.pk}"
         invitation = "Open Lesson feedback in your Family garden."
         if request.get_host().split(":")[0] not in ("localhost", "127.0.0.1"):
@@ -60,8 +110,6 @@ def review_feedback(request):
                           None, [parent_email])
             except (SMTPException, OSError):
                 messages.warning(request, "The update was saved, but the email could not be sent.")
-    messages.success(request, "Reply saved." if action == "reply" else "Marked as read.")
-    return redirect(request.get_full_path() + "#family-feedback")
 
 
 def require_dashboard_access(user):
@@ -125,11 +173,17 @@ def dashboard(request):
     state = request.GET.get("state", "")
     if state in ("read", "unread"):
         notes = notes.filter(read_at__isnull=state == "unread")
+    resolution = request.GET.get("resolution", "open")
+    if resolution not in ("all", "open", "resolved"):
+        resolution = "open"
+    if resolution != "all":
+        notes = notes.filter(resolved=resolution == "resolved")
+    notes = notes.annotate(last_activity=Coalesce(Max("replies__created"), F("created"))).order_by("-last_activity", "-pk")
     page = Paginator(notes.prefetch_related("replies"), 15).get_page(request.GET.get("page"))
     for note in page:
         note.title = lessons[note.lesson]["title"]
         note.submission = uuid.uuid4()
     return render(request, "dashboard.html", {
         "lessons": catalog, "selected": selected, "flags": LessonFeedback.Kind.choices,
-        "flag": flag, "state": state, "rows": rows, "notes": page, "totals": totals,
+        "flag": flag, "state": state, "resolution": resolution, "rows": rows, "notes": page, "totals": totals,
     })

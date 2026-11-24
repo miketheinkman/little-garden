@@ -662,6 +662,55 @@ class VisualReview(StaticLiveServerTestCase):
             expect(page.get_by_text("Step 2 of 5")).to_be_visible()
             browser.close()
 
+    def test_feedback_resolution(self):
+        from pilot.models import LessonFeedback
+
+        reviewer = Client()
+        reviewer.force_login(get_user_model().objects.get(username="reviewer"))
+        writer = get_user_model().objects.create_user("family-tester")
+        family = Client()
+        family.force_login(writer)
+        cases = [(width, theme, LessonFeedback.objects.create(
+            parent=writer, lesson="coins-v1", kind="confusing", note=f"Coin hint needs another look ({width}, {theme})."))
+            for width in (375, 1200) for theme in ("light", "dark")]
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width, theme, note in cases:
+                self.variant = f"resolution-{width}-{theme}"
+                with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as team, \
+                     browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as parent:
+                    for ctx, client in [(team, reviewer), (parent, family)]:
+                        ctx.add_cookies([{"name": "sessionid", "value": client.cookies["sessionid"].value, "url": self.live_server_url}])
+                    review, history = team.new_page(), parent.new_page()
+                    review.goto(self.live_server_url + reverse("dashboard") + "?lesson=coins-v1&flag=confusing")
+                    expect(review.get_by_role("combobox", name="Resolution", exact=True)).to_have_value("open")
+                    card = review.locator(f"#note-{note.pk}")
+                    card.get_by_role("button", name="Mark resolved").click()
+                    expect(card).to_have_count(0)
+                    review.get_by_role("combobox", name="Resolution", exact=True).select_option("resolved")
+                    review.get_by_role("button", name="Apply filters").click()
+                    expect(card).to_contain_text("Marked resolved")
+                    review.locator("form[method=get]").screenshot(path=self.out / f"{self.variant}-filter.png")
+                    history.goto(self.live_server_url + reverse("feedback_history") + f"#note-{note.pk}")
+                    entry = history.locator(f"#note-{note.pk}")
+                    entry.get_by_text("Reopen feedback", exact=True).click()
+                    entry.get_by_label("What still needs work?", exact=False).fill("It happens again after taking a coin back.")
+                    entry.screenshot(path=self.out / f"{self.variant}-parent.png")
+                    entry.get_by_role("button", name="Reopen for review").click()
+                    expect(entry).to_contain_text("Open · Awaiting review")
+                    expect(entry).to_contain_text("It happens again after taking a coin back.")
+                    review.reload()
+                    expect(card).to_have_count(0)
+                    expect(review.get_by_text("No feedback matches these filters.")).to_be_visible()
+                    review.get_by_role("combobox", name="Resolution", exact=True).select_option("open")
+                    review.get_by_label("Review status").select_option("unread")
+                    review.get_by_role("button", name="Apply filters").click()
+                    expect(card).to_contain_text("It happens again after taking a coin back.")
+                    card.screenshot(path=self.out / f"{self.variant}-reopened.png")
+                    for page in (history, review):
+                        self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"))
+            browser.close()
+
     def test_technical_dashboard(self):
         from unittest.mock import patch
 
