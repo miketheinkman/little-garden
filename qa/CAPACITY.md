@@ -4,6 +4,33 @@
 
 **A 2-vCPU / 8 GiB host looks reasonable for the early pilot.** At 192 children plus 48 watching parents, co-located PostgreSQL and Django used 45.5% CPU and answer p95 was 25 ms. At 768 learners, an eight-second arrival burst against a freshly bulk-loaded database drove p95 to 2.49 seconds. Running PostgreSQL `ANALYZE` before the same burst brought p95 to 20 ms and average combined CPU to 63%. In a separate overloaded run, dropping from 768 to 192 learners cleared all pre-existing requests in 1.87 seconds. Use 100–200 simultaneous children as an initial planning range until the mixed workload has a longer run on the actual Linode.
 
+### Capacity with parents watching and PostgreSQL statistics refreshed
+
+**The 500 ms answer threshold fell between 512 and 576 active learners in the two-minute trials, with one parent watching per four learners.** An 8-second burst brought all learners online. After 12 more seconds, measurements ran for 75 seconds. One parent watched for every four learners. Half the viewers followed the established direct connection path and half used relay. The direct path models server traffic and scene reuse. The proportions are workload choices. Every run used a fresh database, `ANALYZE` after bulk loading, three synchronous workers, 60-second database connections and a 3,000-entry co-view cache. Django and PostgreSQL shared two CPUs and 8 GiB. These runs used native request handling with the profiler disabled.
+
+| Learners | Watching parents | Answer p95 (ms) | Mirror request p95 (ms) | Combined CPU (%) | Peak sampled memory (MiB) |
+|---:|---:|---:|---:|---:|---:|
+| 384 | 96 | 25 | 20 | 78.2 | 263 |
+| 512 | 128 | 285 | 278 | 97.6 | 271 |
+| 576 | 144 | 485 / 491 | 479 / 487 | 98.3 / 98.3 | 291 / 291 |
+| 608 | 152 | 637 / 595 | 630 / 592 | 97.9 / 98.1 | 292 / 293 |
+| 640 | 160 | 698 | 691 | 98.2 | 294 |
+
+Paired figures are independent repetitions of the same workload. The warning threshold is 500 ms for answer p95. At 576 learners, the last 25 seconds of the two ordinary runs reached 508 ms and 514 ms.
+
+The longer runs used the same arrival pattern and database setup.
+
+| Learners | Watching parents | Overall answer p95 | Answer p95 in successive 40-second windows | Combined CPU |
+|---:|---:|---:|---|---:|
+| 512 | 128 | 430 ms | 219 ms → 293 ms → 471 ms | 98.0% |
+| 576 | 144 | 690 ms | 414 ms → 510 ms → 739 ms | 98.3% |
+
+Every learner had assignments available through the end of both holds. At 384 learners with 96 parents the 75-second run still had about one fifth of CPU capacity available.
+
+All 57,975 acknowledged attempts across the sweep and both holds were saved. Every learner answered and every simulated direct viewer exercised the scene-reuse path. At 640 learners, 8,493 of 8,693 mirror polls returned a frame. A missing frame can leave the parent displaying the previous one. The implementation's pilot cache default is 300 entries. The higher benchmark limit matters for applying these numbers in production.
+
+To reproduce, use the PostgreSQL command below with `--analyze-fixture --watched-percent 25 --direct-percent 50 --relay-cache-entries 3000`, omit `--profile`, and change `--learners` to the desired cohort. Use `--seconds 120` for the two longer runs.
+
 ### Ordinary lessons on the pilot SQLite configuration
 
 | Active learners | Arrival window | Answers per second | Answer p95 | Average CPU across 2 vCPUs | Peak sampled app memory |

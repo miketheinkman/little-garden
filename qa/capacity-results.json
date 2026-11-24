@@ -5535,5 +5535,1229 @@
     "separate_generator": true,
     "persisted_attempts": 8429,
     "sqlite_lock_messages": 0
+  },
+  {
+    "trial": "pg-analyzed-watched-384-run-1",
+    "wsgi_profile": {},
+    "resources_by_third": [
+      {
+        "average_cpu_pct_of_2": 72.9,
+        "peak_sampled_MiB": 253.3
+      },
+      {
+        "average_cpu_pct_of_2": 78.3,
+        "peak_sampled_MiB": 257.9
+      },
+      {
+        "average_cpu_pct_of_2": 83.5,
+        "peak_sampled_MiB": 263.3
+      }
+    ],
+    "pressure_stall_pct": {
+      "cpu_some": 36.67,
+      "cpu_full": 0.81,
+      "io_some": 0.75,
+      "io_full": 0.38,
+      "memory_some": 0.0,
+      "memory_full": 0.0
+    },
+    "max_monitor_lag_ms": 1.2,
+    "seconds": 75.0,
+    "responding_learners": 384,
+    "rounds_finished": 755,
+    "exhausted_queues": 0,
+    "answer_p95_by_third_ms": [
+      19.0,
+      25.1,
+      29.5
+    ],
+    "mirror_frames": 7913,
+    "reused_mirror_frames": 3546,
+    "direct_users_with_reuse": 48,
+    "mirror_response_bytes": 5931334,
+    "expired_previous_step_presence": 0,
+    "failed_viewers": {},
+    "cpu_pct_of_2": 78.2,
+    "cpu_p95_one_second_pct": 86.8,
+    "peak_sampled_MiB": 263.3,
+    "errors_including_warmup": {},
+    "failed_learners": {},
+    "confirmed_including_warmup": 4302,
+    "http": {
+      "presence": {
+        "n": 22699,
+        "p50_ms": 4.0,
+        "p95_ms": 16.7,
+        "p99_ms": 26.7
+      },
+      "mirror": {
+        "n": 7915,
+        "p50_ms": 7.3,
+        "p95_ms": 20.5,
+        "p99_ms": 31.0
+      },
+      "answer": {
+        "n": 3630,
+        "p50_ms": 10.6,
+        "p95_ms": 25.4,
+        "p99_ms": 35.3
+      },
+      "question": {
+        "n": 3298,
+        "p50_ms": 4.8,
+        "p95_ms": 17.7,
+        "p99_ms": 27.6
+      },
+      "garden": {
+        "n": 742,
+        "p50_ms": 10.1,
+        "p95_ms": 24.9,
+        "p99_ms": 35.0
+      }
+    },
+    "verified_host": {
+      "verified_gunicorn_workers": 3,
+      "postgres_in_same_group": true,
+      "cpu_quota_vcpus": 2.0,
+      "shared_cpu_ids": [
+        0,
+        2
+      ],
+      "group_memory_max_bytes": 8589934592,
+      "group_swap_max_bytes": 0,
+      "query_backend_in_same_group": true
+    },
+    "postgres_version": 180007,
+    "postgres_last_analyze_seconds_from_trial_start": {
+      "pilot_learner": -20.2,
+      "django_session": -20.1,
+      "pilot_skillsample": 37.4,
+      "auth_group_permissions": -20.2,
+      "auth_user_user_permissions": -20.2,
+      "auth_permission": -20.2,
+      "pilot_assignment": 37.4,
+      "auth_group": -20.2,
+      "pilot_feedbackreply": -20.2,
+      "auth_user_groups": -20.2,
+      "pilot_feedbackemailpreference": -20.2,
+      "pilot_observation": -20.1,
+      "pilot_lessonfeedback": -20.2,
+      "pilot_questionattempt": 37.4,
+      "django_content_type": -20.2,
+      "pilot_lessonplan": -20.1,
+      "django_admin_log": -20.2,
+      "django_migrations": -20.2,
+      "auth_user": -20.2
+    },
+    "whole_service_peak_MiB": 265.6,
+    "oom_kills": 0,
+    "analyzed_fixture": true,
+    "admission_policy": "native",
+    "idle_poll_seconds": 2.5,
+    "database": "postgresql",
+    "connection_age": 60,
+    "workers": 3,
+    "sqlite_wal": false,
+    "direct_percent_of_viewers": 50,
+    "relay_cache_override": 3000,
+    "learners": 384,
+    "ramp_seconds": 8,
+    "settle_seconds": 12,
+    "watched_percent": 25,
+    "server_cpus": [
+      0,
+      2
+    ],
+    "separate_generator": true,
+    "persisted_attempts": 4302,
+    "sqlite_lock_messages": 0
+  },
+  {
+    "trial": "pg-analyzed-watched-512-run-1",
+    "wsgi_profile": {},
+    "resources_by_third": [
+      {
+        "average_cpu_pct_of_2": 96.3,
+        "peak_sampled_MiB": 260.0
+      },
+      {
+        "average_cpu_pct_of_2": 98.2,
+        "peak_sampled_MiB": 265.8
+      },
+      {
+        "average_cpu_pct_of_2": 98.3,
+        "peak_sampled_MiB": 271.4
+      }
+    ],
+    "pressure_stall_pct": {
+      "cpu_some": 55.88,
+      "cpu_full": 0.69,
+      "io_some": 0.95,
+      "io_full": 0.3,
+      "memory_some": 0.0,
+      "memory_full": 0.0
+    },
+    "max_monitor_lag_ms": 1.1,
+    "seconds": 75.0,
+    "responding_learners": 512,
+    "rounds_finished": 989,
+    "exhausted_queues": 0,
+    "answer_p95_by_third_ms": [
+      99.5,
+      239.9,
+      322.3
+    ],
+    "mirror_frames": 9403,
+    "reused_mirror_frames": 4177,
+    "direct_users_with_reuse": 64,
+    "mirror_response_bytes": 7170955,
+    "expired_previous_step_presence": 0,
+    "failed_viewers": {},
+    "cpu_pct_of_2": 97.6,
+    "cpu_p95_one_second_pct": 99.2,
+    "peak_sampled_MiB": 271.4,
+    "errors_including_warmup": {},
+    "failed_learners": {},
+    "confirmed_including_warmup": 5581,
+    "http": {
+      "mirror": {
+        "n": 9414,
+        "p50_ms": 99.1,
+        "p95_ms": 277.6,
+        "p99_ms": 323.0
+      },
+      "presence": {
+        "n": 26234,
+        "p50_ms": 95.8,
+        "p95_ms": 272.9,
+        "p99_ms": 319.9
+      },
+      "question": {
+        "n": 4261,
+        "p50_ms": 104.1,
+        "p95_ms": 276.6,
+        "p99_ms": 322.3
+      },
+      "answer": {
+        "n": 4688,
+        "p50_ms": 110.2,
+        "p95_ms": 285.1,
+        "p99_ms": 331.4
+      },
+      "garden": {
+        "n": 968,
+        "p50_ms": 207.4,
+        "p95_ms": 287.5,
+        "p99_ms": 328.9
+      }
+    },
+    "verified_host": {
+      "verified_gunicorn_workers": 3,
+      "postgres_in_same_group": true,
+      "cpu_quota_vcpus": 2.0,
+      "shared_cpu_ids": [
+        0,
+        2
+      ],
+      "group_memory_max_bytes": 8589934592,
+      "group_swap_max_bytes": 0,
+      "query_backend_in_same_group": true
+    },
+    "postgres_version": 180007,
+    "postgres_last_analyze_seconds_from_trial_start": {
+      "pilot_learner": -20.3,
+      "django_session": -20.2,
+      "pilot_skillsample": 36.8,
+      "auth_group_permissions": -20.3,
+      "auth_user_user_permissions": -20.3,
+      "auth_permission": -20.3,
+      "pilot_assignment": 36.8,
+      "auth_group": -20.3,
+      "pilot_feedbackreply": -20.3,
+      "auth_user_groups": -20.3,
+      "pilot_feedbackemailpreference": -20.3,
+      "pilot_observation": -20.2,
+      "pilot_lessonfeedback": -20.3,
+      "pilot_questionattempt": 36.9,
+      "django_content_type": -20.3,
+      "pilot_lessonplan": -20.2,
+      "django_admin_log": -20.3,
+      "django_migrations": -20.3,
+      "auth_user": -20.3
+    },
+    "whole_service_peak_MiB": 273.8,
+    "oom_kills": 0,
+    "analyzed_fixture": true,
+    "admission_policy": "native",
+    "idle_poll_seconds": 2.5,
+    "database": "postgresql",
+    "connection_age": 60,
+    "workers": 3,
+    "sqlite_wal": false,
+    "direct_percent_of_viewers": 50,
+    "relay_cache_override": 3000,
+    "learners": 512,
+    "ramp_seconds": 8,
+    "settle_seconds": 12,
+    "watched_percent": 25,
+    "server_cpus": [
+      0,
+      2
+    ],
+    "separate_generator": true,
+    "persisted_attempts": 5581,
+    "sqlite_lock_messages": 0
+  },
+  {
+    "trial": "pg-analyzed-watched-576-run-1",
+    "wsgi_profile": {},
+    "resources_by_third": [
+      {
+        "average_cpu_pct_of_2": 98.3,
+        "peak_sampled_MiB": 263.1
+      },
+      {
+        "average_cpu_pct_of_2": 98.4,
+        "peak_sampled_MiB": 269.2
+      },
+      {
+        "average_cpu_pct_of_2": 98.3,
+        "peak_sampled_MiB": 291.3
+      }
+    ],
+    "pressure_stall_pct": {
+      "cpu_some": 56.7,
+      "cpu_full": 0.75,
+      "io_some": 1.03,
+      "io_full": 0.28,
+      "memory_some": 0.0,
+      "memory_full": 0.0
+    },
+    "max_monitor_lag_ms": 1.8,
+    "seconds": 75.0,
+    "responding_learners": 576,
+    "rounds_finished": 1073,
+    "exhausted_queues": 0,
+    "answer_p95_by_third_ms": [
+      301.7,
+      402.4,
+      507.5
+    ],
+    "mirror_frames": 9006,
+    "reused_mirror_frames": 3938,
+    "direct_users_with_reuse": 72,
+    "mirror_response_bytes": 7024809,
+    "expired_previous_step_presence": 0,
+    "failed_viewers": {},
+    "cpu_pct_of_2": 98.3,
+    "cpu_p95_one_second_pct": 99.2,
+    "peak_sampled_MiB": 291.3,
+    "errors_including_warmup": {},
+    "failed_learners": {},
+    "confirmed_including_warmup": 6054,
+    "http": {
+      "presence": {
+        "n": 25268,
+        "p50_ms": 281.0,
+        "p95_ms": 474.3,
+        "p99_ms": 507.5
+      },
+      "answer": {
+        "n": 5059,
+        "p50_ms": 293.0,
+        "p95_ms": 485.2,
+        "p99_ms": 517.6
+      },
+      "question": {
+        "n": 4576,
+        "p50_ms": 287.8,
+        "p95_ms": 478.8,
+        "p99_ms": 509.3
+      },
+      "mirror": {
+        "n": 9068,
+        "p50_ms": 286.2,
+        "p95_ms": 478.9,
+        "p99_ms": 512.0
+      },
+      "garden": {
+        "n": 1035,
+        "p50_ms": 377.1,
+        "p95_ms": 498.4,
+        "p99_ms": 521.3
+      }
+    },
+    "verified_host": {
+      "verified_gunicorn_workers": 3,
+      "postgres_in_same_group": true,
+      "cpu_quota_vcpus": 2.0,
+      "shared_cpu_ids": [
+        0,
+        2
+      ],
+      "group_memory_max_bytes": 8589934592,
+      "group_swap_max_bytes": 0,
+      "query_backend_in_same_group": true
+    },
+    "postgres_version": 180007,
+    "postgres_last_analyze_seconds_from_trial_start": {
+      "pilot_learner": -20.2,
+      "django_session": -20.1,
+      "pilot_skillsample": 36.6,
+      "auth_group_permissions": -20.2,
+      "auth_user_user_permissions": -20.2,
+      "auth_permission": -20.2,
+      "pilot_assignment": 36.5,
+      "auth_group": -20.2,
+      "pilot_feedbackreply": -20.2,
+      "auth_user_groups": -20.2,
+      "pilot_feedbackemailpreference": -20.2,
+      "pilot_observation": -20.1,
+      "pilot_lessonfeedback": -20.2,
+      "pilot_questionattempt": 36.6,
+      "django_content_type": -20.2,
+      "pilot_lessonplan": -20.1,
+      "django_admin_log": -20.2,
+      "django_migrations": -20.2,
+      "auth_user": -20.2
+    },
+    "whole_service_peak_MiB": 293.8,
+    "oom_kills": 0,
+    "analyzed_fixture": true,
+    "admission_policy": "native",
+    "idle_poll_seconds": 2.5,
+    "database": "postgresql",
+    "connection_age": 60,
+    "workers": 3,
+    "sqlite_wal": false,
+    "direct_percent_of_viewers": 50,
+    "relay_cache_override": 3000,
+    "learners": 576,
+    "ramp_seconds": 8,
+    "settle_seconds": 12,
+    "watched_percent": 25,
+    "server_cpus": [
+      0,
+      2
+    ],
+    "separate_generator": true,
+    "persisted_attempts": 6054,
+    "sqlite_lock_messages": 0
+  },
+  {
+    "trial": "pg-analyzed-watched-576-run-2",
+    "wsgi_profile": {},
+    "resources_by_third": [
+      {
+        "average_cpu_pct_of_2": 98.3,
+        "peak_sampled_MiB": 262.9
+      },
+      {
+        "average_cpu_pct_of_2": 98.3,
+        "peak_sampled_MiB": 268.9
+      },
+      {
+        "average_cpu_pct_of_2": 98.3,
+        "peak_sampled_MiB": 291.3
+      }
+    ],
+    "pressure_stall_pct": {
+      "cpu_some": 56.76,
+      "cpu_full": 0.65,
+      "io_some": 1.02,
+      "io_full": 0.3,
+      "memory_some": 0.0,
+      "memory_full": 0.0
+    },
+    "max_monitor_lag_ms": 1.0,
+    "seconds": 75.0,
+    "responding_learners": 576,
+    "rounds_finished": 1073,
+    "exhausted_queues": 0,
+    "answer_p95_by_third_ms": [
+      319.0,
+      423.2,
+      514.5
+    ],
+    "mirror_frames": 8979,
+    "reused_mirror_frames": 3938,
+    "direct_users_with_reuse": 72,
+    "mirror_response_bytes": 7000412,
+    "expired_previous_step_presence": 0,
+    "failed_viewers": {},
+    "cpu_pct_of_2": 98.3,
+    "cpu_p95_one_second_pct": 99.2,
+    "peak_sampled_MiB": 291.3,
+    "errors_including_warmup": {},
+    "failed_learners": {},
+    "confirmed_including_warmup": 6048,
+    "http": {
+      "presence": {
+        "n": 25159,
+        "p50_ms": 281.7,
+        "p95_ms": 480.6,
+        "p99_ms": 514.0
+      },
+      "mirror": {
+        "n": 9030,
+        "p50_ms": 286.4,
+        "p95_ms": 486.9,
+        "p99_ms": 519.6
+      },
+      "question": {
+        "n": 4568,
+        "p50_ms": 288.6,
+        "p95_ms": 486.6,
+        "p99_ms": 519.8
+      },
+      "answer": {
+        "n": 5056,
+        "p50_ms": 293.7,
+        "p95_ms": 490.8,
+        "p99_ms": 522.7
+      },
+      "garden": {
+        "n": 1031,
+        "p50_ms": 383.7,
+        "p95_ms": 500.1,
+        "p99_ms": 519.6
+      }
+    },
+    "verified_host": {
+      "verified_gunicorn_workers": 3,
+      "postgres_in_same_group": true,
+      "cpu_quota_vcpus": 2.0,
+      "shared_cpu_ids": [
+        0,
+        2
+      ],
+      "group_memory_max_bytes": 8589934592,
+      "group_swap_max_bytes": 0,
+      "query_backend_in_same_group": true
+    },
+    "postgres_version": 180007,
+    "postgres_last_analyze_seconds_from_trial_start": {
+      "pilot_learner": -20.2,
+      "django_session": -20.2,
+      "pilot_skillsample": 36.4,
+      "auth_group_permissions": -20.3,
+      "auth_user_user_permissions": -20.3,
+      "auth_permission": -20.3,
+      "pilot_assignment": 36.3,
+      "auth_group": -20.3,
+      "pilot_feedbackreply": -20.2,
+      "auth_user_groups": -20.3,
+      "pilot_feedbackemailpreference": -20.2,
+      "pilot_observation": -20.2,
+      "pilot_lessonfeedback": -20.2,
+      "pilot_questionattempt": 36.4,
+      "django_content_type": -20.3,
+      "pilot_lessonplan": -20.2,
+      "django_admin_log": -20.3,
+      "django_migrations": -20.3,
+      "auth_user": -20.3
+    },
+    "whole_service_peak_MiB": 293.7,
+    "oom_kills": 0,
+    "analyzed_fixture": true,
+    "admission_policy": "native",
+    "idle_poll_seconds": 2.5,
+    "database": "postgresql",
+    "connection_age": 60,
+    "workers": 3,
+    "sqlite_wal": false,
+    "direct_percent_of_viewers": 50,
+    "relay_cache_override": 3000,
+    "learners": 576,
+    "ramp_seconds": 8,
+    "settle_seconds": 12,
+    "watched_percent": 25,
+    "server_cpus": [
+      0,
+      2
+    ],
+    "separate_generator": true,
+    "persisted_attempts": 6048,
+    "sqlite_lock_messages": 0
+  },
+  {
+    "trial": "pg-analyzed-watched-608-run-1",
+    "wsgi_profile": {},
+    "resources_by_third": [
+      {
+        "average_cpu_pct_of_2": 98.4,
+        "peak_sampled_MiB": 264.4
+      },
+      {
+        "average_cpu_pct_of_2": 97.9,
+        "peak_sampled_MiB": 287.1
+      },
+      {
+        "average_cpu_pct_of_2": 97.6,
+        "peak_sampled_MiB": 292.5
+      }
+    ],
+    "pressure_stall_pct": {
+      "cpu_some": 56.87,
+      "cpu_full": 0.94,
+      "io_some": 1.06,
+      "io_full": 0.31,
+      "memory_some": 0.0,
+      "memory_full": 0.0
+    },
+    "max_monitor_lag_ms": 1.1,
+    "seconds": 75.0,
+    "responding_learners": 608,
+    "rounds_finished": 1097,
+    "exhausted_queues": 0,
+    "answer_p95_by_third_ms": [
+      408.3,
+      560.6,
+      667.1
+    ],
+    "mirror_frames": 8632,
+    "reused_mirror_frames": 3734,
+    "direct_users_with_reuse": 76,
+    "mirror_response_bytes": 6835080,
+    "expired_previous_step_presence": 0,
+    "failed_viewers": {},
+    "cpu_pct_of_2": 97.9,
+    "cpu_p95_one_second_pct": 99.1,
+    "peak_sampled_MiB": 292.5,
+    "errors_including_warmup": {},
+    "failed_learners": {},
+    "confirmed_including_warmup": 6214,
+    "http": {
+      "presence": {
+        "n": 24370,
+        "p50_ms": 384.7,
+        "p95_ms": 624.8,
+        "p99_ms": 667.8
+      },
+      "question": {
+        "n": 4699,
+        "p50_ms": 394.0,
+        "p95_ms": 633.4,
+        "p99_ms": 671.0
+      },
+      "mirror": {
+        "n": 8773,
+        "p50_ms": 390.3,
+        "p95_ms": 630.4,
+        "p99_ms": 673.1
+      },
+      "answer": {
+        "n": 5178,
+        "p50_ms": 399.2,
+        "p95_ms": 637.1,
+        "p99_ms": 673.8
+      },
+      "garden": {
+        "n": 1059,
+        "p50_ms": 501.6,
+        "p95_ms": 647.6,
+        "p99_ms": 677.1
+      }
+    },
+    "verified_host": {
+      "verified_gunicorn_workers": 3,
+      "postgres_in_same_group": true,
+      "cpu_quota_vcpus": 2.0,
+      "shared_cpu_ids": [
+        0,
+        2
+      ],
+      "group_memory_max_bytes": 8589934592,
+      "group_swap_max_bytes": 0,
+      "query_backend_in_same_group": true
+    },
+    "postgres_version": 180007,
+    "postgres_last_analyze_seconds_from_trial_start": {
+      "pilot_learner": -20.3,
+      "django_session": -20.2,
+      "pilot_skillsample": 36.4,
+      "auth_group_permissions": -20.3,
+      "auth_user_user_permissions": -20.3,
+      "auth_permission": -20.3,
+      "pilot_assignment": 36.3,
+      "auth_group": -20.3,
+      "pilot_feedbackreply": -20.3,
+      "auth_user_groups": -20.3,
+      "pilot_feedbackemailpreference": -20.3,
+      "pilot_observation": -20.2,
+      "pilot_lessonfeedback": -20.3,
+      "pilot_questionattempt": 36.4,
+      "django_content_type": -20.3,
+      "pilot_lessonplan": -20.2,
+      "django_admin_log": -20.3,
+      "django_migrations": -20.3,
+      "auth_user": -20.3
+    },
+    "whole_service_peak_MiB": 295.0,
+    "oom_kills": 0,
+    "analyzed_fixture": true,
+    "admission_policy": "native",
+    "idle_poll_seconds": 2.5,
+    "database": "postgresql",
+    "connection_age": 60,
+    "workers": 3,
+    "sqlite_wal": false,
+    "direct_percent_of_viewers": 50,
+    "relay_cache_override": 3000,
+    "learners": 608,
+    "ramp_seconds": 8,
+    "settle_seconds": 12,
+    "watched_percent": 25,
+    "server_cpus": [
+      0,
+      2
+    ],
+    "separate_generator": true,
+    "persisted_attempts": 6214,
+    "sqlite_lock_messages": 0
+  },
+  {
+    "trial": "pg-analyzed-watched-608-run-2",
+    "wsgi_profile": {},
+    "resources_by_third": [
+      {
+        "average_cpu_pct_of_2": 98.2,
+        "peak_sampled_MiB": 264.7
+      },
+      {
+        "average_cpu_pct_of_2": 98.2,
+        "peak_sampled_MiB": 287.3
+      },
+      {
+        "average_cpu_pct_of_2": 98.0,
+        "peak_sampled_MiB": 292.8
+      }
+    ],
+    "pressure_stall_pct": {
+      "cpu_some": 56.84,
+      "cpu_full": 0.82,
+      "io_some": 1.05,
+      "io_full": 0.3,
+      "memory_some": 0.0,
+      "memory_full": 0.0
+    },
+    "max_monitor_lag_ms": 1.0,
+    "seconds": 75.0,
+    "responding_learners": 608,
+    "rounds_finished": 1102,
+    "exhausted_queues": 0,
+    "answer_p95_by_third_ms": [
+      410.4,
+      553.4,
+      620.7
+    ],
+    "mirror_frames": 8747,
+    "reused_mirror_frames": 3790,
+    "direct_users_with_reuse": 76,
+    "mirror_response_bytes": 6910084,
+    "expired_previous_step_presence": 0,
+    "failed_viewers": {},
+    "cpu_pct_of_2": 98.1,
+    "cpu_p95_one_second_pct": 99.2,
+    "peak_sampled_MiB": 292.8,
+    "errors_including_warmup": {},
+    "failed_learners": {},
+    "confirmed_including_warmup": 6239,
+    "http": {
+      "presence": {
+        "n": 24620,
+        "p50_ms": 370.5,
+        "p95_ms": 587.1,
+        "p99_ms": 620.5
+      },
+      "mirror": {
+        "n": 8868,
+        "p50_ms": 376.8,
+        "p95_ms": 591.8,
+        "p99_ms": 626.1
+      },
+      "question": {
+        "n": 4722,
+        "p50_ms": 380.6,
+        "p95_ms": 589.5,
+        "p99_ms": 626.4
+      },
+      "answer": {
+        "n": 5203,
+        "p50_ms": 386.4,
+        "p95_ms": 595.4,
+        "p99_ms": 628.0
+      },
+      "garden": {
+        "n": 1062,
+        "p50_ms": 491.3,
+        "p95_ms": 618.1,
+        "p99_ms": 638.1
+      }
+    },
+    "verified_host": {
+      "verified_gunicorn_workers": 3,
+      "postgres_in_same_group": true,
+      "cpu_quota_vcpus": 2.0,
+      "shared_cpu_ids": [
+        0,
+        2
+      ],
+      "group_memory_max_bytes": 8589934592,
+      "group_swap_max_bytes": 0,
+      "query_backend_in_same_group": true
+    },
+    "postgres_version": 180007,
+    "postgres_last_analyze_seconds_from_trial_start": {
+      "pilot_learner": -20.3,
+      "django_session": -20.2,
+      "pilot_skillsample": 36.3,
+      "auth_group_permissions": -20.3,
+      "auth_user_user_permissions": -20.3,
+      "auth_permission": -20.3,
+      "pilot_assignment": 36.2,
+      "auth_group": -20.3,
+      "pilot_feedbackreply": -20.3,
+      "auth_user_groups": -20.3,
+      "pilot_feedbackemailpreference": -20.3,
+      "pilot_observation": -20.2,
+      "pilot_lessonfeedback": -20.3,
+      "pilot_questionattempt": 36.3,
+      "django_content_type": -20.3,
+      "pilot_lessonplan": -20.2,
+      "django_admin_log": -20.3,
+      "django_migrations": -20.3,
+      "auth_user": -20.3
+    },
+    "whole_service_peak_MiB": 295.2,
+    "oom_kills": 0,
+    "analyzed_fixture": true,
+    "admission_policy": "native",
+    "idle_poll_seconds": 2.5,
+    "database": "postgresql",
+    "connection_age": 60,
+    "workers": 3,
+    "sqlite_wal": false,
+    "direct_percent_of_viewers": 50,
+    "relay_cache_override": 3000,
+    "learners": 608,
+    "ramp_seconds": 8,
+    "settle_seconds": 12,
+    "watched_percent": 25,
+    "server_cpus": [
+      0,
+      2
+    ],
+    "separate_generator": true,
+    "persisted_attempts": 6239,
+    "sqlite_lock_messages": 0
+  },
+  {
+    "trial": "pg-analyzed-watched-640-run-1",
+    "wsgi_profile": {},
+    "resources_by_third": [
+      {
+        "average_cpu_pct_of_2": 98.3,
+        "peak_sampled_MiB": 265.8
+      },
+      {
+        "average_cpu_pct_of_2": 98.1,
+        "peak_sampled_MiB": 288.5
+      },
+      {
+        "average_cpu_pct_of_2": 98.2,
+        "peak_sampled_MiB": 294.3
+      }
+    ],
+    "pressure_stall_pct": {
+      "cpu_some": 56.66,
+      "cpu_full": 0.72,
+      "io_some": 1.07,
+      "io_full": 0.3,
+      "memory_some": 0.0,
+      "memory_full": 0.0
+    },
+    "max_monitor_lag_ms": 1.1,
+    "seconds": 75.0,
+    "responding_learners": 640,
+    "rounds_finished": 1117,
+    "exhausted_queues": 0,
+    "answer_p95_by_third_ms": [
+      498.3,
+      673.1,
+      719.0
+    ],
+    "mirror_frames": 8493,
+    "reused_mirror_frames": 3649,
+    "direct_users_with_reuse": 80,
+    "mirror_response_bytes": 6812330,
+    "expired_previous_step_presence": 0,
+    "failed_viewers": {},
+    "cpu_pct_of_2": 98.2,
+    "cpu_p95_one_second_pct": 99.2,
+    "peak_sampled_MiB": 294.3,
+    "errors_including_warmup": {},
+    "failed_learners": {},
+    "confirmed_including_warmup": 6394,
+    "http": {
+      "presence": {
+        "n": 24154,
+        "p50_ms": 460.3,
+        "p95_ms": 686.2,
+        "p99_ms": 715.2
+      },
+      "answer": {
+        "n": 5317,
+        "p50_ms": 471.8,
+        "p95_ms": 697.6,
+        "p99_ms": 725.1
+      },
+      "mirror": {
+        "n": 8693,
+        "p50_ms": 464.8,
+        "p95_ms": 691.0,
+        "p99_ms": 719.2
+      },
+      "question": {
+        "n": 4851,
+        "p50_ms": 467.4,
+        "p95_ms": 689.3,
+        "p99_ms": 719.2
+      },
+      "garden": {
+        "n": 1087,
+        "p50_ms": 616.0,
+        "p95_ms": 707.0,
+        "p99_ms": 726.8
+      }
+    },
+    "verified_host": {
+      "verified_gunicorn_workers": 3,
+      "postgres_in_same_group": true,
+      "cpu_quota_vcpus": 2.0,
+      "shared_cpu_ids": [
+        0,
+        2
+      ],
+      "group_memory_max_bytes": 8589934592,
+      "group_swap_max_bytes": 0,
+      "query_backend_in_same_group": true
+    },
+    "postgres_version": 180007,
+    "postgres_last_analyze_seconds_from_trial_start": {
+      "pilot_learner": -20.2,
+      "django_session": -20.2,
+      "pilot_skillsample": 36.1,
+      "auth_group_permissions": -20.3,
+      "auth_user_user_permissions": -20.3,
+      "auth_permission": -20.3,
+      "pilot_assignment": 36.0,
+      "auth_group": -20.3,
+      "pilot_feedbackreply": -20.2,
+      "auth_user_groups": -20.3,
+      "pilot_feedbackemailpreference": -20.2,
+      "pilot_observation": -20.2,
+      "pilot_lessonfeedback": -20.2,
+      "pilot_questionattempt": 36.1,
+      "django_content_type": -20.3,
+      "pilot_lessonplan": -20.2,
+      "django_admin_log": -20.3,
+      "django_migrations": -20.3,
+      "auth_user": -20.3
+    },
+    "whole_service_peak_MiB": 296.5,
+    "oom_kills": 0,
+    "analyzed_fixture": true,
+    "admission_policy": "native",
+    "idle_poll_seconds": 2.5,
+    "database": "postgresql",
+    "connection_age": 60,
+    "workers": 3,
+    "sqlite_wal": false,
+    "direct_percent_of_viewers": 50,
+    "relay_cache_override": 3000,
+    "learners": 640,
+    "ramp_seconds": 8,
+    "settle_seconds": 12,
+    "watched_percent": 25,
+    "server_cpus": [
+      0,
+      2
+    ],
+    "separate_generator": true,
+    "persisted_attempts": 6394,
+    "sqlite_lock_messages": 0
+  },
+  {
+    "trial": "pg-analyzed-watched-576-hold-120s",
+    "wsgi_profile": {},
+    "resources_by_third": [
+      {
+        "average_cpu_pct_of_2": 98.5,
+        "peak_sampled_MiB": 266.3
+      },
+      {
+        "average_cpu_pct_of_2": 98.2,
+        "peak_sampled_MiB": 292.0
+      },
+      {
+        "average_cpu_pct_of_2": 98.3,
+        "peak_sampled_MiB": 297.0
+      }
+    ],
+    "pressure_stall_pct": {
+      "cpu_some": 56.64,
+      "cpu_full": 0.74,
+      "io_some": 1.01,
+      "io_full": 0.28,
+      "memory_some": 0.0,
+      "memory_full": 0.0
+    },
+    "max_monitor_lag_ms": 1.0,
+    "seconds": 120.0,
+    "responding_learners": 576,
+    "rounds_finished": 1727,
+    "exhausted_queues": 0,
+    "answer_p95_by_third_ms": [
+      413.6,
+      509.7,
+      739.4
+    ],
+    "mirror_frames": 13462,
+    "reused_mirror_frames": 5848,
+    "direct_users_with_reuse": 72,
+    "mirror_response_bytes": 10704318,
+    "expired_previous_step_presence": 0,
+    "failed_viewers": {},
+    "cpu_pct_of_2": 98.3,
+    "cpu_p95_one_second_pct": 99.3,
+    "peak_sampled_MiB": 297.0,
+    "errors_including_warmup": {},
+    "failed_learners": {},
+    "confirmed_including_warmup": 8882,
+    "http": {
+      "presence": {
+        "n": 37873,
+        "p50_ms": 375.0,
+        "p95_ms": 659.4,
+        "p99_ms": 740.0
+      },
+      "mirror": {
+        "n": 13642,
+        "p50_ms": 381.0,
+        "p95_ms": 669.7,
+        "p99_ms": 744.7
+      },
+      "question": {
+        "n": 7165,
+        "p50_ms": 388.2,
+        "p95_ms": 686.3,
+        "p99_ms": 743.3
+      },
+      "answer": {
+        "n": 7886,
+        "p50_ms": 393.2,
+        "p95_ms": 690.3,
+        "p99_ms": 750.5
+      },
+      "garden": {
+        "n": 1724,
+        "p50_ms": 442.5,
+        "p95_ms": 741.8,
+        "p99_ms": 765.1
+      }
+    },
+    "verified_host": {
+      "verified_gunicorn_workers": 3,
+      "postgres_in_same_group": true,
+      "cpu_quota_vcpus": 2.0,
+      "shared_cpu_ids": [
+        0,
+        2
+      ],
+      "group_memory_max_bytes": 8589934592,
+      "group_swap_max_bytes": 0,
+      "query_backend_in_same_group": true
+    },
+    "postgres_version": 180007,
+    "postgres_last_analyze_seconds_from_trial_start": {
+      "pilot_learner": -20.3,
+      "django_session": -20.2,
+      "pilot_skillsample": 96.5,
+      "auth_group_permissions": -20.3,
+      "auth_user_user_permissions": -20.3,
+      "auth_permission": -20.3,
+      "pilot_assignment": 96.4,
+      "auth_group": -20.3,
+      "pilot_feedbackreply": -20.3,
+      "auth_user_groups": -20.3,
+      "pilot_feedbackemailpreference": -20.3,
+      "pilot_observation": -20.2,
+      "pilot_lessonfeedback": -20.3,
+      "pilot_questionattempt": 96.5,
+      "django_content_type": -20.3,
+      "pilot_lessonplan": -20.2,
+      "django_admin_log": -20.3,
+      "django_migrations": -20.3,
+      "auth_user": -20.3
+    },
+    "whole_service_peak_MiB": 302.3,
+    "oom_kills": 0,
+    "analyzed_fixture": true,
+    "admission_policy": "native",
+    "idle_poll_seconds": 2.5,
+    "database": "postgresql",
+    "connection_age": 60,
+    "workers": 3,
+    "sqlite_wal": false,
+    "direct_percent_of_viewers": 50,
+    "relay_cache_override": 3000,
+    "learners": 576,
+    "ramp_seconds": 8,
+    "settle_seconds": 12,
+    "watched_percent": 25,
+    "server_cpus": [
+      0,
+      2
+    ],
+    "separate_generator": true,
+    "persisted_attempts": 8882,
+    "sqlite_lock_messages": 0
+  },
+  {
+    "trial": "pg-analyzed-watched-512-hold-120s",
+    "wsgi_profile": {},
+    "resources_by_third": [
+      {
+        "average_cpu_pct_of_2": 97.1,
+        "peak_sampled_MiB": 263.2
+      },
+      {
+        "average_cpu_pct_of_2": 98.4,
+        "peak_sampled_MiB": 288.5
+      },
+      {
+        "average_cpu_pct_of_2": 98.4,
+        "peak_sampled_MiB": 293.5
+      }
+    ],
+    "pressure_stall_pct": {
+      "cpu_some": 56.07,
+      "cpu_full": 0.64,
+      "io_some": 0.94,
+      "io_full": 0.27,
+      "memory_some": 0.0,
+      "memory_full": 0.0
+    },
+    "max_monitor_lag_ms": 1.1,
+    "seconds": 120.0,
+    "responding_learners": 512,
+    "rounds_finished": 1545,
+    "exhausted_queues": 0,
+    "answer_p95_by_third_ms": [
+      218.9,
+      292.9,
+      471.3
+    ],
+    "mirror_frames": 14117,
+    "reused_mirror_frames": 6236,
+    "direct_users_with_reuse": 64,
+    "mirror_response_bytes": 10976258,
+    "expired_previous_step_presence": 0,
+    "failed_viewers": {},
+    "cpu_pct_of_2": 98.0,
+    "cpu_p95_one_second_pct": 99.2,
+    "peak_sampled_MiB": 293.5,
+    "errors_including_warmup": {},
+    "failed_learners": {},
+    "confirmed_including_warmup": 8261,
+    "http": {
+      "presence": {
+        "n": 39462,
+        "p50_ms": 187.4,
+        "p95_ms": 410.2,
+        "p99_ms": 469.9
+      },
+      "mirror": {
+        "n": 14159,
+        "p50_ms": 191.8,
+        "p95_ms": 416.6,
+        "p99_ms": 475.2
+      },
+      "question": {
+        "n": 6657,
+        "p50_ms": 201.0,
+        "p95_ms": 426.1,
+        "p99_ms": 474.7
+      },
+      "answer": {
+        "n": 7369,
+        "p50_ms": 206.1,
+        "p95_ms": 430.0,
+        "p99_ms": 477.9
+      },
+      "garden": {
+        "n": 1539,
+        "p50_ms": 237.3,
+        "p95_ms": 472.5,
+        "p99_ms": 487.1
+      }
+    },
+    "verified_host": {
+      "verified_gunicorn_workers": 3,
+      "postgres_in_same_group": true,
+      "cpu_quota_vcpus": 2.0,
+      "shared_cpu_ids": [
+        0,
+        2
+      ],
+      "group_memory_max_bytes": 8589934592,
+      "group_swap_max_bytes": 0,
+      "query_backend_in_same_group": true
+    },
+    "postgres_version": 180007,
+    "postgres_last_analyze_seconds_from_trial_start": {
+      "pilot_learner": -20.2,
+      "django_session": -20.2,
+      "pilot_skillsample": 96.7,
+      "auth_group_permissions": -20.3,
+      "auth_user_user_permissions": -20.3,
+      "auth_permission": -20.3,
+      "pilot_assignment": 96.7,
+      "auth_group": -20.3,
+      "pilot_feedbackreply": -20.2,
+      "auth_user_groups": -20.3,
+      "pilot_feedbackemailpreference": -20.2,
+      "pilot_observation": -20.2,
+      "pilot_lessonfeedback": -20.2,
+      "pilot_questionattempt": 96.8,
+      "django_content_type": -20.3,
+      "pilot_lessonplan": -20.2,
+      "django_admin_log": -20.3,
+      "django_migrations": -20.3,
+      "auth_user": -20.3
+    },
+    "whole_service_peak_MiB": 298.7,
+    "oom_kills": 0,
+    "analyzed_fixture": true,
+    "admission_policy": "native",
+    "idle_poll_seconds": 2.5,
+    "database": "postgresql",
+    "connection_age": 60,
+    "workers": 3,
+    "sqlite_wal": false,
+    "direct_percent_of_viewers": 50,
+    "relay_cache_override": 3000,
+    "learners": 512,
+    "ramp_seconds": 8,
+    "settle_seconds": 12,
+    "watched_percent": 25,
+    "server_cpus": [
+      0,
+      2
+    ],
+    "separate_generator": true,
+    "persisted_attempts": 8261,
+    "sqlite_lock_messages": 0
   }
 ]
