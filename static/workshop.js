@@ -67,7 +67,8 @@ function paintWorkshop(root, board, nodes, mutable, token, moves, trace, spot, h
       }
       case "arrow": icon = arrows[(cell.angle+state)%4]; label = "command " + routeDirections[(cell.angle+state)%4]; break;
       case "leverA": case "leverB":
-        icon = cell.kind === "leverA" ? "●" : "▲"; badge = state ? "ON":"OFF";
+        badge = state ? "ON" : "OFF";
+        if (node.tagName === "BUTTON") node.setAttribute("aria-pressed", String(Boolean(state)));
         label = (cell.kind === "leverA" ? "circle":"triangle") + " switch " + badge; break;
       case "gateA": case "gateB": case "gateBoth": {
         const open = (cell.kind === "gateB" || leverOn("leverA")) && (cell.kind === "gateA" || leverOn("leverB"));
@@ -97,7 +98,12 @@ function paintWorkshop(root, board, nodes, mutable, token, moves, trace, spot, h
       face = document.createElement("span");
       face.className = "workshop-face"; face.setAttribute("aria-hidden","true"); node.append(face);
     }
-    face.textContent = icon;
+    if (cell.kind === "leverA" || cell.kind === "leverB") {
+      // Keep the arm mounted so a repaint or a new mirror frame can move it between stops.
+      if (!face.firstElementChild) face.append(root.querySelector("[data-throw-switch]").content.cloneNode(true));
+    } else {
+      face.textContent = icon;
+    }
     if (mode === "gears" && live) {
       const odd = Math.abs(i%width-start%width + Math.floor(i/width)-Math.floor(start/width)) % 2;
       face.style.animationDirection = Boolean(cells[start].clockwise ^ states[start] ^ odd) ? "normal" : "reverse";

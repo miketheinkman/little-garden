@@ -255,6 +255,61 @@ class VisualReview(StaticLiveServerTestCase):
                 expect(page.locator("#activity button[name=answer]").first).to_be_in_viewport()
             browser.close()
 
+    def test_gate_throw_switch(self):
+        parent = get_user_model().objects.get(username="reviewer")
+        family = Client()
+        family.force_login(parent)
+        child = Learner.objects.get(pk=self.child_id)
+        row = assign_lesson(child, "gates-switches-v1", 0)
+        row.step = 3  # The double lock uses both handle markings.
+        row.save(update_fields=["step"])
+        device = Client()
+        device.force_login(parent)
+        device.post(reverse("manage", args=[child.pk]), {"action": "play"})
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375, 1200):
+                for theme in ("light", "dark"):
+                    options = dict(viewport={"width": width, "height": 820}, color_scheme=theme,
+                                   has_touch=width == 375, reduced_motion="reduce" if theme == "dark" else "no-preference")
+                    with browser.new_context(**options) as kid, browser.new_context(**options) as grownup:
+                        for ctx, client in ((kid, device), (grownup, family)):
+                            ctx.add_cookies([{"name": "sessionid", "value": client.cookies["sessionid"].value, "url": self.live_server_url}])
+                        viewer, page = grownup.new_page(), kid.new_page()
+                        viewer.goto(self.live_server_url + reverse("coview"))
+                        viewer.get_by_label("Show", exact=True).select_option(str(child.pk))
+                        page.goto(self.live_server_url + reverse("play", args=[row.pk]))
+                        board = page.locator(".route-game")
+                        circle = board.get_by_role("button", name=re.compile("circle switch"))
+                        triangle = board.get_by_role("button", name=re.compile("triangle switch"))
+                        arm = circle.locator(".throw-arm")
+                        expect(circle).to_have_attribute("aria-pressed", "false")
+                        expect(circle.locator(".switch-circle")).to_be_visible()
+                        expect(triangle.locator(".switch-triangle")).to_be_visible()
+                        expect(circle.locator(".switch-triangle")).to_be_hidden()
+                        expect(arm).to_have_css("transition-duration", "0s" if theme == "dark" else "0.26s")
+                        off = arm.evaluate("el => getComputedStyle(el).transform")
+                        board.locator(".route-grid").screenshot(path=self.out / f"lever-{width}-{theme}-off.png")
+                        if width == 375:
+                            circle.tap()
+                        else:
+                            circle.press("Space")
+                        expect(circle).to_have_attribute("aria-pressed", "true")
+                        expect(board.locator("[data-kind=gateBoth]")).to_have_attribute("aria-label", re.compile("closed"))
+                        triangle.click()
+                        expect(board.locator("[data-kind=gateBoth]")).to_have_attribute("aria-label", re.compile("open"))
+                        mirror = viewer.locator(f'[data-child="{child.pk}"] .route-game')
+                        expect(mirror.locator("[data-kind=leverA]")).to_have_attribute("data-placed", "true", timeout=10000)
+                        expect(mirror.locator("[data-kind=gateBoth]")).to_have_attribute("aria-label", re.compile("open"))
+                        expect(arm).not_to_have_css("transform", off)
+                        board.locator(".route-grid").screenshot(path=self.out / f"lever-{width}-{theme}-on.png", animations="disabled")
+                        board.locator("[data-undo]").click()
+                        expect(triangle).to_have_attribute("aria-pressed", "false")
+                        board.locator("[data-reset]").click()
+                        expect(arm).to_have_css("transform", off)
+                        expect(mirror.locator("[data-kind=leverA]")).to_have_attribute("data-placed", "false", timeout=10000)
+            browser.close()
+
     def test_workshop_and_weekly_record(self):
         from pilot.test_puzzles import winning_moves
         from pilot.workshop import GAMES, layouts

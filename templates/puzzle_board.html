@@ -1,5 +1,22 @@
 <section class="route-game setting-{{ lesson.world_key|default:'garden' }}" data-actor="{{ lesson.world.actor.icon|default:'🐞' }}" data-mode="{{ item.board.mode }}" data-place="{{ lesson.world.site|default:'garden bed' }}" data-landmark="{{ lesson.world.goal.icon|default:'🌱' }}" data-friend="{{ lesson.world.friend.icon|default:'🐇' }}" data-friend-name="{{ lesson.world.friend.name|default:'rabbit' }}" data-scenery="{{ lesson.world.other.icon|default:'🌼' }}" data-help="{{ puzzle_help|default:0 }}"{% if mirror %} data-mirror{% endif %}>
   {{ item.board|json_script }}
+  {% if item.board.mode == 'gates' %}
+  <template data-throw-switch>
+    <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <rect x="6" y="39" width="52" height="17" rx="5" fill="#62797a" stroke="#263638" stroke-width="2"/>
+      <rect x="7" y="36" width="50" height="14" rx="4" fill="#c7d2c5" stroke="#263638" stroke-width="2"/>
+      <path d="M12 43h4m32 0h4" stroke="#50605d" stroke-width="2" stroke-linecap="round"/>
+      <path d="M22 44q0-11 10-11t10 11z" fill="#536867" stroke="#263638" stroke-width="2"/>
+      <g class="throw-arm">
+        <path d="M32 42V19" stroke="#263638" stroke-width="8" stroke-linecap="round"/>
+        <path d="M32 39V19" stroke="#f1d197" stroke-width="4" stroke-linecap="round"/>
+        <rect x="23" y="8" width="18" height="16" rx="6" fill="#a34229" stroke="#352c27" stroke-width="2"/>
+        <circle class="switch-circle" cx="32" cy="16" r="4" fill="#fff5ce"/>
+        <path class="switch-triangle" d="M32 10.5l5 9h-10z" fill="#fff5ce"/>
+      </g>
+      <circle cx="32" cy="42" r="4" fill="#e6cc90" stroke="#263638" stroke-width="2"/>
+    </svg>
+  </template>{% endif %}
   <div class="route-heading"><strong>{{ item.board.name }}</strong><span>⚑ {{ lesson.world.site|default:"garden bed"|capfirst }}</span></div>
   <div class="route-land"><div class="route-grid" role="group" aria-label="Puzzle board"></div></div>
   {% if not mirror %}

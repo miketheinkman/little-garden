@@ -60,3 +60,15 @@ button.route-cell:focus-visible{outline:4px solid var(--focus);z-index:3;outline
 .workshop-ray{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;fill:none;stroke:#ed930b;stroke-width:.09;stroke-linejoin:round;filter:drop-shadow(0 0 2px #fff4af)}
 .route-cell[data-kind=mirror] .workshop-face,.route-cell[data-kind=mirrorMount] .workshop-face{font-size:clamp(1.7rem,8vw,3.7rem);font-weight:900;color:var(--flow)}
 .route-cell[data-kind=rock] .workshop-face{font-size:clamp(.95rem,3.5vw,1.65rem)}
+
+.route-game .throw-arm {
+  transform-origin:32px 42px;
+  transform:rotate(-38deg);
+  transition:transform 260ms cubic-bezier(.28,.78,.24,1.12);
+}
+.route-cell[data-placed=true] .throw-arm {transform:rotate(38deg)}
+.route-cell[data-kind=leverA] .switch-triangle,
+.route-cell[data-kind=leverB] .switch-circle {display:none}
+@media (prefers-reduced-motion:reduce) {
+  .route-game .throw-arm {transition:none}
+}
