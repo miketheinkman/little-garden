@@ -6,6 +6,20 @@
   <p>Every family deserves good tools for learning at home. We’re building Little Garden so a child can practice a tricky skill as often as they like, and a parent can see what clicked and choose what to try tomorrow.</p>
   <h2>Free for every family</h2>
   <p>Every lesson, learner profile, planning tool, and progress report on the official Little Garden app is free. A family with three children has the same access for each child as a family with one.</p>
+  <section aria-labelledby="about-us">
+    <h2 id="about-us">Built for our kids. Shared with yours.</h2>
+    <p>As homeschool parents, we wanted an early childhood education tool focused on real curriculum, foundational skills, and demonstrated progress.</p>
+    <p>We tried several subscription-based educational platforms, but too often found that keeping children entertained seemed to take priority over actually teaching them. We wanted something different.</p>
+    <p>So we built Little Garden for our kids—and then decided to share it with yours.</p>
+    <p><strong>For free. Forever.</strong></p>
+    <p>We believe a child's access to educational resources shouldn't depend on their parents' ability to pay.</p>
+    <p>No subscriptions. No premium lessons. No locked features. No advertisements.</p>
+    {% if user.is_authenticated or not request.session.child %}
+    <p>Voluntary donations are accepted and deeply appreciated. They help support the operation, maintenance, and continued development of Little Garden, but they will never determine what your child has access to.</p>
+    {% endif %}
+    <p>Every lesson, every tool, and every feature of Little Garden is available to every family.</p>
+    <p>And that's how it will stay.</p>
+  </section>
   {% if user.is_authenticated or not request.session.child %}
   <h2>How lessons get better</h2>
   <p>A direction that sounds clear to its author can puzzle a child. Families can flag that moment in a lesson preview, suggest a change, or tell us which part to keep. We use those observations to revise lessons. A child who understands a skill and heads outside has had a good session here.</p>
