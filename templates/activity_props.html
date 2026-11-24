@@ -1,0 +1,6 @@
+{% if key == 'shadow-v1' %}<div class="picture-props" aria-hidden="true"><span>🔦</span><i>→</i><span>🧸</span><i>→</i><span>🧱</span></div>
+{% elif key == 'scissors-v1' %}<div class="picture-props" aria-hidden="true"><span>✏️</span><span>📄</span><span>✂️</span></div>
+{% elif key == 'beans-v1' %}<div class="picture-props" aria-hidden="true"><span>{{ lesson.world.cargo_icon|default:"🫘" }}</span><i>→</i><span>🥛</span></div>
+{% elif key == 'sink-float-v1' %}<div class="picture-props" aria-hidden="true"><span>🍃</span><span>🪨</span><i>→</i><span>💧</span></div>
+{% elif key == 'snail-v1' %}<div class="picture-props" aria-hidden="true"><span>🐌</span><span>{% if lesson.world %}📦{% else %}✉️{% endif %}</span></div>
+{% endif %}

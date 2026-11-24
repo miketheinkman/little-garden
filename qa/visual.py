@@ -53,6 +53,68 @@ class VisualReview(StaticLiveServerTestCase):
                     self.assertEqual(kept.skipped, 2)
                     self.assertGreater(kept.samples.get(step=0).ms_per_key, 0)
 
+    def test_picture_cues_and_autoplay(self):
+        parent = get_user_model().objects.get(username="reviewer")
+        variants = []
+        for device, width in (("phone",375), ("desktop",1200)):
+            for theme in ("light", "dark"):
+                child = Learner.objects.create(parent=parent, nickname=f"{device} {theme}")
+                assign_lesson(child, "hear-number-v1", variation=1)
+                family = Client()
+                family.force_login(parent)
+                variants.append((device, width, theme, child, family.cookies['sessionid'].value))
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"),
+                                         args=["--autoplay-policy=no-user-gesture-required"])
+            for device, width, theme, child, cookie in variants:
+                self.variant = f"{device}-{theme}"
+                with browser.new_context(viewport={"width":width,"height":820}, color_scheme=theme) as ctx:
+                    ctx.add_cookies([{"url":self.live_server_url, "name":"sessionid", "value":cookie}])
+                    page = ctx.new_page()
+                    if theme == "dark":
+                        page.add_init_script("""(() => {
+                          const play = HTMLMediaElement.prototype.play;
+                          HTMLMediaElement.prototype.play = function () {
+                            if (this.id === 'directions-audio' && document.querySelector('[data-autoplay-directions]')
+                                && !sessionStorage.getItem('qa-blocked-once')) {
+                              sessionStorage.setItem('qa-blocked-once', '1');
+                              return Promise.reject(new DOMException('Gesture required', 'NotAllowedError'));
+                            }
+                            return play.call(this);
+                          };
+                        })()""")
+                    page.goto(self.live_server_url)
+                    card = page.locator(f'[data-learner="{child.pk}"]')
+                    box = card.get_by_role("checkbox", name=f"Play directions automatically for {child.nickname}")
+                    expect(box).not_to_be_checked()
+                    box.check()
+                    card.get_by_role("button", name="Save lesson audio").click()
+                    expect(box).to_be_checked()
+                    card.locator(".lesson-audio-setting").screenshot(path=self.out / f"{self.variant}-audio-setting.png")
+                    page.goto(self.live_server_url + reverse("preview", args=[child.pk,"snail-v1",0]))
+                    expect(page.locator("#activity")).not_to_have_attribute("data-autoplay-directions", "")
+                    expect(page.locator(".question-heading .prompt-icon")).to_have_text("📖")
+                    page.locator("main article").first.screenshot(path=self.out / f"{self.variant}-story-cues.png")
+                    page.goto(self.live_server_url)
+                    card.get_by_role("button", name=f"Open {child.nickname}’s garden").click()
+                    page.get_by_role("link", name="Start lesson").click()
+                    expect(page.locator("#activity")).to_have_attribute("data-autoplay-directions", "")
+                    if theme == "dark":
+                        expect(page.locator("#listen")).to_have_class(re.compile("needs-tap"))
+                        self.capture(page, "blocked-audio")
+                        page.get_by_role("button", name="Hear directions").click()
+                    page.wait_for_function("document.querySelector('#directions-audio').currentTime > 0")
+                    page.get_by_role("button", name="Stop audio").click()
+                    expect(page.locator("#stop-audio")).to_be_hidden()
+                    page.get_by_role("button", name="Hear directions").click()
+                    page.wait_for_function("document.querySelector('.word-station audio').currentTime > 0")
+                    self.capture(page, "spoken-question")
+                    page.get_by_role("button", name="Skip this question").click()
+                    expect(page.get_by_text("Step 2 of 5")).to_be_visible()
+                    page.wait_for_function("document.querySelector('#directions-audio').currentTime > 0")
+                    self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"))
+            browser.close()
+
     def test_exploration_lessons(self):
         from pilot.explorations import EXPLORATIONS
         from pilot.practice import build_round

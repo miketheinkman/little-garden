@@ -4,7 +4,7 @@
 {% if titles %}<ul>{% for title in titles %}<li>{{ title }}</li>{% endfor %}</ul>{% else %}<p>Time for a garden break!</p>{% endif %}
 {% else %}
 {% include "lesson_setting.html" %}<p class="live-step">{{ lesson.title }} · Step {{ step|add:1 }} of {{ lesson.items|length }}</p>
-<h3>{{ item.prompt }}</h3>
+{% include 'question_heading.html' with mirror=True %}
 <div data-success-seed="{{ seed }}" aria-live="polite"></div>
 {% if lesson.participation == "Parent required" %}<p>Parent required · {{ lesson.prep }}</p>{% endif %}
 {% include 'lesson_visual.html' with mirror=True %}
@@ -17,7 +17,7 @@
 {% elif lesson.kind == "basket" %}<p class="display" data-basket data-icon="{{ lesson.world.cargo_icon|default:'🍓' }}" data-box="{{ lesson.world.box|default:'basket' }}"></p>
 {% elif lesson.kind == "type" %}<p class="live-writing"><span>{% if lesson.world %}{{ lesson.world.place|capfirst }} sign{% else %}Garden sign{% endif %}</span><output data-typed></output></p>
 {% elif lesson.kind == "mouse" %}<div class="meadow" aria-label="{{ item.target|default:'Ladybug' }} area"><span class="bug step{{ step }}" {% if item.x %}style="left:{{ item.x }}%;top:{{ item.y }}%"{% endif %}>{{ item.icon|default:"🐞" }}</span><i class="live-pointer" hidden></i></div>
-{% else %}<div class="live-choices">{% for choice in item.choices %}<span>{{ choice }}</span>{% endfor %}</div>{% endif %}
+{% else %}<div class="live-choices">{% for choice in item.choices %}<span>{% include 'choice_contents.html' %}</span>{% endfor %}</div>{% endif %}
 <div data-retry hidden></div>
 {% endif %}
 </div>

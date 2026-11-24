@@ -20,6 +20,13 @@ async function openLearnerPage(url, options = {}) {
   }
   const main = next.querySelector("main");
   main.querySelectorAll('script:not([type="application/json"])').forEach(script => script.remove());
+  const previousAudio = document.querySelector("#directions-audio");
+  const nextAudio = main.querySelector("#directions-audio");
+  if (previousAudio && nextAudio) {
+    previousAudio.pause();
+    previousAudio.src = nextAudio.getAttribute("src");
+    nextAudio.replaceWith(previousAudio);
+  }
   document.querySelector("main").replaceWith(main);
   if (response.url !== location.href) history.pushState(null, "", response.url);
   startLesson();

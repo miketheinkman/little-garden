@@ -12,6 +12,7 @@ FONT_CHOICES = (("default", "Garden default"), ("sans", "Simple sans serif"), ("
 class Learner(models.Model):
     parent = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     nickname = models.CharField(max_length=40)
+    autoplay_directions = models.BooleanField(default=False)
     lesson_theme = models.CharField(max_length=20, default="garden")
 
     accent = models.CharField(max_length=7, blank=True, default="")

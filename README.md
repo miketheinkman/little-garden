@@ -38,6 +38,8 @@ Eighty-one draft lessons and three placement check-ins for approximately ages 4â
 
 Django renders household, planner, and learner screens. Small browser activities handle keyboard input, pointer paths, and optional spoken instructions. Hear directions and Hear the word play local Piper recordings at the family-tested pace. Recordings follow the displayed prompt and word across themes and variations. If a recording cannot play, the written directions or target word stay available and the button can retry. The local pilot uses SQLite. Keep the database, local secret, and backups private. The development server is intended for local use.
 
+Each learner has a **Play directions automatically** setting in the family garden. During child play, enabled lessons read each new question aloud and follow listening prompts with the target word, number, or animal call when available. In Pipâ€™s independent story lesson, the recording includes the passage before the question. The speaker and headphones replay recordings on demand. Browsers that require a gesture highlight the sound button to tap. Parent previews and co-view remain quiet unless the parent requests playback in preview.
+
 Run checks with `.venv/bin/python manage.py test`. Curriculum lives in `content/lessons.json`. Keep published lesson IDs immutable and add a new version when revising a lesson used by families.
 
 The picture and listening activities include holiday clues and traditions, color sorting, same and different, spoken numerals, number and alphabet dot trails, addition and subtraction within ten, U.S. coins and bills, size and position comparisons, and real-life versus imaginary scenarios. Each has five questions per round and 32 seeded variations.

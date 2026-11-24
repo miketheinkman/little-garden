@@ -27,7 +27,7 @@ function startHarvest(board, form) {
     paintHarvest(board, form.elements.shares.value);
     reset.hidden = !used;
     finish.disabled = used > 0 && !equal;
-    finish.textContent = used ? "We shared equally" : "We shared with our own counters";
+    finish.querySelector("[data-sharing-label]").textContent = used ? "We shared equally" : "We shared with our own counters";
     board.querySelector("[data-share-hint]").textContent = used === total
       ? (equal ? "Each " + board.dataset.role + " has " + counts[0] + " " + board.dataset.plural + "." : "Look at the piles. Start over and give one to each helper in turn.") : "";
   }

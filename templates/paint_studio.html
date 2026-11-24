@@ -20,7 +20,7 @@
   </div>
   {% if lesson.tool == "paint-mix" %}
   <p data-paint-recipe aria-live="polite">Choose your first paint.</p>
-  {% if not mirror %}<div class="paint-actions"><button type="button" data-action="undo" disabled>↶ Undo</button><button name="answer" data-check disabled>Check my mix</button></div>{% endif %}
+  {% if not mirror %}<div class="paint-actions"><button type="button" data-action="undo" disabled>↶ Undo</button><button name="answer" data-check disabled><span aria-hidden="true">✓</span> Check my mix</button></div>{% endif %}
   {% else %}
   <details class="paint-key"><summary>Color names</summary><p>{% if lesson.tool == "paint-match" %}The dab is {{ item.target.name }}. {% endif %}Pots from left to right: {% for pot in item.paints %}{{ pot.name }}{% if not forloop.last %}, {% else %}.{% endif %}{% endfor %}</p></details>
   {% endif %}

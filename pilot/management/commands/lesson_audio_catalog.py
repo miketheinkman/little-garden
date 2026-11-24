@@ -3,7 +3,7 @@ import json
 from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
-from pilot.audio import clip_path
+from pilot.audio import clip_path, spoken_directions
 from pilot.practice import LESSONS, build_round, round_count
 from pilot.themes import THEMES, themed_round
 
@@ -21,7 +21,7 @@ class Command(BaseCommand):
                 base = build_round(key, variation)
                 for theme in THEMES:
                     for item in themed_round(key, base, theme, variation)["items"]:
-                        directions.add(item["prompt"])
+                        directions.add(spoken_directions(key, item))
                         directions.update(c["spoken"] for c in item.get("deck", ()) if "spoken" in c)
                         if item.get("word"):
                             words.add(item["word"])

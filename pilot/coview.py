@@ -86,7 +86,7 @@ def lesson_html(row, step):
     item = lesson["items"][step]
     if "shape" in item:
         item = art_item(item)
-    return render_to_string("coview_scene.html", {"appearance": row.learner.appearance, "lesson": lesson, "item": item, "step": step, "seed": row.pk + step})
+    return render_to_string("coview_scene.html", {"key": row.lesson, "appearance": row.learner.appearance, "lesson": lesson, "item": item, "step": step, "seed": row.pk + step})
 
 
 def recent_response(row, title, action, celebration, submitted, tier_gain=None):

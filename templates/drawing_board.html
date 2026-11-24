@@ -2,9 +2,9 @@
 <div class="art-tools" role="group" aria-label="Drawing tools">
 {% for name in palette %}<button type="button" data-color="{{ forloop.counter }}" aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}">{{ name }}</button>{% endfor %}
 <label>Brush <select id="brush"><option value="1">Small</option><option value="3" selected>Medium</option><option value="5">Large</option></select></label>
-<button type="button" id="undo" disabled>Undo</button></div>
+<button type="button" id="undo" disabled><span aria-hidden="true">↶</span> Undo</button></div>
 <canvas tabindex="0" id="board" width="640" height="480" data-kind="{{ lesson.kind }}" data-mask="{{ item.mask }}" aria-label="Drawing board" aria-describedby="draw-help"></canvas>
 <p id="draw-help">Drag to draw. With a keyboard, use the arrow keys to move and Space to paint.</p>
 <input type="hidden" name="pixels" id="pixels">
-<button id="finish-art" disabled>Finish picture</button>
+<button id="finish-art" disabled><span aria-hidden="true">✓</span> Finish picture</button>
 {% if preview %}<script defer src="{% static 'drawing.js' %}"></script>{% endif %}

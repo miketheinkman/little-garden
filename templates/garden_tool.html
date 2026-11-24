@@ -11,7 +11,7 @@
 {% for ch in item.letters %}<button type="button" data-letter="{{ ch }}">{{ ch }}</button>{% endfor %}</div>
 {% elif lesson.tool == 'backspace' %}
 <p class="garden-sign" data-label="{{ item.label }}"><output>{{ item.label }}</output></p>
-<button type="button" data-action="erase">⌫ Backspace</button><button type="button" data-action="reset">Start over</button>
+<button type="button" data-action="erase">⌫ Backspace</button><button type="button" data-action="reset"><span aria-hidden="true">↺</span> Start over</button>
 {% elif lesson.tool == 'maze' %}
 <div class="beetle-maze" data-maze="{{ item.maze }}" data-player="{{ lesson.world.actor.icon|default:'🐞' }}" data-goal="{{ lesson.world.goal.icon|default:'🍃' }}" tabindex="0" role="group" aria-label="Use the arrow keys to move the {{ lesson.world.actor.name|default:"beetle" }} to the {{ lesson.world.goal.name|default:"leaf" }}.">
 {% for cell in item.maze %}<span class="{% if cell == '#' %}hedge{% endif %}">{% if cell == 'B' %}{{ lesson.world.actor.icon|default:'🐞' }}{% elif cell == 'L' %}{{ lesson.world.goal.icon|default:'🍃' }}{% endif %}</span>{% endfor %}</div>
@@ -19,17 +19,17 @@
 {% elif lesson.tool == 'sides' %}
 <div class="two-sides">{% for side in item.sides %}<button name="answer" value="{% cycle 'left' 'right' %}"><span>{{ side.icon }}</span>{{ side.label }}</button>{% endfor %}</div>
 {% elif lesson.tool == 'pictures' or lesson.tool == 'magic' %}
-{% if lesson.tool == 'magic' %}<p class="garden-sign">{{ item.stem }}<output data-e></output></p><button type="button" data-action="add-e">Add e</button>{% endif %}
+{% if lesson.tool == 'magic' %}<p class="garden-sign">{{ item.stem }}<output data-e></output></p><button type="button" data-action="add-e"><span aria-hidden="true">➕</span> Add e</button>{% endif %}
 <div class="picture-choices">{% for pic in item.pictures %}<button name="answer" value="{{ pic.label }}"><span aria-hidden="true">{{ pic.icon }}</span>{{ pic.label }}</button>{% endfor %}</div>
 {% elif lesson.tool == 'drum' %}
 {% if not mirror %}<audio data-drum-sound hidden preload="auto" src="{% static 'sounds/hand-drum.ogg' %}"></audio>{% endif %}
 <button type="button" data-action="beat" class="drum-pad">🥁 Tap the drum</button>
-<p>Beats <output data-count>0</output></p><button type="button" data-action="reset">Start over</button>
+<p>Beats <output data-count>0</output></p><button type="button" data-action="reset"><span aria-hidden="true">↺</span> Start over</button>
 {% elif lesson.tool == 'sentence' %}
 <p class="scene-strip" role="img" aria-label="{{ item.scene_alt }}">{{ item.scene }}</p>
 <p class="word-line" aria-label="Your sentence"><output></output></p>
 <div>{% for word in item.tiles %}<button type="button" data-tile="{{ word }}">{{ word }}</button>{% endfor %}</div>
-<button type="button" data-action="undo">Undo last word</button>
+<button type="button" data-action="undo"><span aria-hidden="true">↶</span> Undo last word</button>
 {% elif lesson.tool == 'piles' %}
 <div class="two-sides">{% for n in item.piles %}<button class="acorn-card" name="answer" value="{% cycle 'left' 'right' %}" aria-label="{% cycle 'Left' 'Right' %} pile with {{ n }} {{ lesson.world.many|default:"acorns" }}"><span class="acorn-pile">{% for x in '123456' %}{% if forloop.counter <= n %}{% if lesson.world %}<i>{{ lesson.world.cargo_icon }}</i>{% else %}<i class="acorn"></i>{% endif %}{% endif %}{% endfor %}</span>{% cycle 'Left' 'Right' %} pile</button>{% endfor %}</div>
 {% elif lesson.tool == 'pairs' %}
@@ -39,10 +39,10 @@
 <div class="measure-strip" data-length="{{ item.length }}" data-unit="{{ lesson.world.cargo_icon }}" style="--units:{{ item.length }}">
 <div class="length-object {% if lesson.world %}themed-length{% else %}{{ item.object }}{% endif %}" role="img" aria-label="{{ item.measure_name|default:item.object }}"></div>
 <div class="acorn-ruler">{% for unit in '123456' %}<span></span>{% endfor %}</div></div>
-<button type="button" data-action="count">Lay one {{ lesson.world.one|default:"acorn" }}</button><button type="button" data-action="undo">Take one back</button>
+<button type="button" data-action="count"><span aria-hidden="true">➕</span> Lay one {{ lesson.world.one|default:"acorn" }}</button><button type="button" data-action="undo"><span aria-hidden="true">↶</span> Take one back</button>
 {% elif lesson.tool == 'coins' %}
 <div class="coin-drawer">{% for coin in 'pnd' %}<button type="button" data-coin="{% cycle '1' '5' '10' %}"><b>{% cycle '1¢' '5¢' '10¢' %}</b>{% cycle 'Penny' 'Nickel' 'Dime' %}</button>{% endfor %}</div>
-<p class="coin-counter" aria-label="Coins on the counter"><output></output></p><button type="button" data-action="undo">Take one back</button>
+<p class="coin-counter" aria-label="Coins on the counter"><output></output></p><button type="button" data-action="undo"><span aria-hidden="true">↶</span> Take one back</button>
 {% elif lesson.tool == 'clock' %}
 <svg class="lesson-clock" viewBox="0 0 140 140" role="img" aria-label="Analog clock with the short hand at {{ item.hour_position }} and the long hand at {{ item.minute_position }}">
 <circle cx="70" cy="70" r="65"/>{% for pos in '123456789012' %}<g transform="rotate({% widthratio forloop.counter 12 360 %} 70 70)"><line x1="70" y1="10" x2="70" y2="15"/><text x="70" y="24" transform="rotate(-{% widthratio forloop.counter 12 360 %} 70 24)">{{ forloop.counter }}</text></g>{% endfor %}
@@ -53,5 +53,5 @@
 <div class="two-sides">{% for label in item.choices %}<button class="sort-crate" name="answer" value="{{ label }}">{{ label }}</button>{% endfor %}</div>
 {% endif %}
 {% if not mirror %}<input type="hidden" name="tool_state">
-{% if lesson.tool == 'backspace' or lesson.tool == 'drum' or lesson.tool == 'sentence' or lesson.tool == 'measure' or lesson.tool == 'coins' %}<button name="answer" data-check value="" disabled>{% if lesson.tool == 'coins' %}{% if lesson.world %}Pay for the {{ lesson.world.prop.name }}{% else %}Pay for seeds{% endif %}{% else %}Check my answer{% endif %}</button>{% endif %}{% endif %}
+{% if lesson.tool == 'backspace' or lesson.tool == 'drum' or lesson.tool == 'sentence' or lesson.tool == 'measure' or lesson.tool == 'coins' %}<button name="answer" data-check value="" disabled><span aria-hidden="true">✓</span> {% if lesson.tool == 'coins' %}{% if lesson.world %}Pay for the {{ lesson.world.prop.name }}{% else %}Pay for seeds{% endif %}{% else %}Check my answer{% endif %}</button>{% endif %}{% endif %}
 </fieldset>

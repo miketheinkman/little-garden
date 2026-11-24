@@ -11,6 +11,12 @@ def clip_path(kind, text):
     return f"phonics/directions/{digest[:2]}/{digest}.ogg"
 
 
-def lesson_clips(item):
-    return {"direction_clip": clip_path("directions", item["prompt"]),
+def spoken_directions(key, item):
+    if key == "snail-v1" and item.get("display"):
+        return f'{item["display"]} {item["prompt"]}'
+    return item["prompt"]
+
+
+def lesson_clips(item, key=None):
+    return {"direction_clip": clip_path("directions", spoken_directions(key, item)),
             "word_clip": clip_path("word", item["word"]) if item.get("word") else None}

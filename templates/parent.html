@@ -4,6 +4,10 @@
 <form class="learner-theme-form" method="post" action="{% url 'manage' child.pk %}">{% csrf_token %}
 <label>Lesson theme for {{ child.nickname }} <select name="theme">{% for value, name in theme_choices %}<option value="{{ value }}"{% if value == child.lesson_theme %} selected{% endif %}>{{ name }}</option>{% endfor %}</select></label>
 <button name="action" value="theme">Save lesson theme</button><small>Applies to previews and lessons your child opens next.</small></form>
+<form method="post" action="{% url 'manage' child.pk %}" class="lesson-audio-setting">{% csrf_token %}
+<label><input type="checkbox" name="autoplay_directions"{% if child.autoplay_directions %} checked{% endif %}> Play directions automatically for {{ child.nickname }}</label>
+<small>Reads each new question aloud during play. Listening questions also play their word or animal call.</small>
+<button name="action" value="lesson-audio">Save lesson audio</button></form>
 <details class="look-editor"><summary>Colors and font for {{ child.nickname }}</summary>
 <form method="post" action="{% url 'manage' child.pk %}" data-look-form>{% csrf_token %}
 <label><input type="checkbox" name="use_accent" {% if child.accent %}checked{% endif %}> Use a custom accent</label>

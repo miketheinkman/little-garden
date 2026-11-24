@@ -2,45 +2,76 @@ function startActivity(form, signal) {
   const directions = document.querySelector("#directions-audio");
   const call = document.querySelector("[data-call-audio]");
   const word = document.querySelector(".word-station audio");
-  const status = document.querySelector("#audio-status") || document.createElement("span");
+  const status = document.querySelector("#audio-status");
+  const stopButton = document.querySelector("#stop-audio");
+  const listen = document.querySelector("#listen");
+  const wordButton = document.querySelector("[data-hear-word]");
+  const callButton = document.querySelector("[data-hear-call]");
+  const autoplay = form.hasAttribute("data-autoplay-directions");
   let playback = 0;
+  let followDirections = false;
 
   function stopPlayback() {
     playback++;
-    directions?.pause();
-    word?.pause();
-    call?.pause();
+    followDirections = false;
+    for (const audio of [directions, word, call]) audio?.pause();
+    stopButton.hidden = true;
   }
 
-  function connectAudio(button, audio) {
-    button.hidden = false;
-    if (audio) audio.controls = false;
-    button.onclick = async () => {
-      stopPlayback();
-      const attempt = playback;
-      status.hidden = true;
-      try {
-        if (!audio) throw new Error("This saved page has no recording.");
-        if (audio.error) audio.load();
-        audio.currentTime = 0;
-        await audio.play();
-      } catch {
-        if (attempt !== playback || !form.isConnected || signal.aborted) return;
+  async function playClip(audio, button, follow = false) {
+    stopPlayback();
+    const attempt = playback;
+    followDirections = follow;
+    status.hidden = true;
+    for (const control of [listen, wordButton, callButton]) control?.classList.remove("needs-tap");
+    try {
+      if (audio.error) audio.load();
+      audio.currentTime = 0;
+      await audio.play();
+      if (attempt === playback && !audio.paused) stopButton.hidden = false;
+    } catch (error) {
+      if (attempt !== playback || !form.isConnected || signal.aborted) return;
+      followDirections = false;
+      if (error.name === "NotAllowedError") {
+        button.classList.add("needs-tap");
+        status.textContent = audio === directions ? "Tap the speaker to hear directions." : "Tap the headphones to listen.";
+      } else {
         if (word && audio === word) word.closest(".word-station").querySelector("details").open = true;
         status.textContent = audio === call ? "Audio unavailable. Open the sound clue or try again." : audio === word ? "Audio unavailable. The word is shown below." : "Audio unavailable. Read the directions above.";
-        status.hidden = false;
       }
-    };
+      status.hidden = false;
+    }
   }
 
-  connectAudio(document.querySelector("#listen"), directions);
-  if (call) connectAudio(document.querySelector("[data-hear-call]"), call);
-  if (word) {
-    const button = document.querySelector("[data-hear-word]");
-    connectAudio(button, word);
+  for (const [button, audio] of [[listen, directions], [wordButton, word], [callButton, call]]) {
+    if (!button || !audio) continue;
+    button.hidden = false;
+    audio.controls = false;
+    button.onclick = () => playClip(audio, button, autoplay && audio === directions);
+    audio.addEventListener("pause", () => {
+      if ([directions, word, call].every(clip => !clip || clip.paused)) stopButton.hidden = true;
+    }, {signal});
   }
+  directions.addEventListener("ended", () => {
+    if (followDirections && !document.hidden && form.isConnected && (word || call)) {
+      playClip(word || call, wordButton || callButton);
+    }
+  }, {signal});
+  stopButton.onclick = stopPlayback;
   signal.addEventListener("abort", stopPlayback, {once: true});
   window.addEventListener("pagehide", stopPlayback, {signal});
+  form.addEventListener("submit", stopPlayback, {signal});
+  document.querySelector(".skip-step")?.addEventListener("submit", stopPlayback, {signal});
+  let waitingForVisibility = autoplay;
+  function startWhenVisible() {
+    if (document.hidden) stopPlayback();
+    else if (waitingForVisibility) {
+      waitingForVisibility = false;
+      playClip(directions, listen, true);
+    }
+  }
+  document.addEventListener("visibilitychange", startWhenVisible, {signal});
+  startWhenVisible();
   const route = form.querySelector(".route-game");
   if (route) startRoutePuzzle(route, form, signal);
   const harvest = form.querySelector(".harvest");

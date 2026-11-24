@@ -346,7 +346,7 @@ def preview(request, pk, key, step):
     if "shape" in item:
         item = art_item(item)
     context["item"] = item
-    context.update(lesson_clips(item))
+    context.update(lesson_clips(item, key))
     if request.method == "POST":
         if "board" in item and request.POST.get("action") in {"run", "hint", "parent"}:
             return puzzle_action(request, item)
@@ -402,6 +402,10 @@ def manage(request, pk):
         child.accent, child.font = accent.lower(), font
         child.save(update_fields=["accent", "font"])
         messages.success(request, f"Saved {child.nickname}’s lesson appearance.")
+    elif action == "lesson-audio":
+        child.autoplay_directions = request.POST.get("autoplay_directions") == "on"
+        child.save(update_fields=["autoplay_directions"])
+        messages.success(request, f"Saved {child.nickname}’s lesson audio setting.")
     elif action == "theme":
         theme = request.POST.get("theme")
         if theme not in THEMES:
@@ -545,4 +549,4 @@ def play(request, pk):
         if request.headers.get("Accept") == "application/json":
             return JsonResponse({"result": "retry"})
         error = "Take another look. You can try again."
-    return render(request, "play.html", {**lesson_clips(item), "appearance": row.learner.appearance, "assignment_id": row.pk, "puzzle_help": row.puzzle_help, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})
+    return render(request, "play.html", {**lesson_clips(item, row.lesson), "key": row.lesson, "autoplay_directions": row.learner.autoplay_directions and not error, "appearance": row.learner.appearance, "assignment_id": row.pk, "puzzle_help": row.puzzle_help, "time_keys": LESSONS[row.lesson]["strand"] == "Keyboard use", "step": row.step,"lesson": lesson,"item": item,"error": error})

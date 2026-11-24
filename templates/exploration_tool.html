@@ -4,7 +4,7 @@
 <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline data-dot-line /></svg>
 {% for dot in item.dots %}<button type="button" data-dot="{{ forloop.counter0 }}" data-x="{{ dot.x }}" data-y="{{ dot.y }}" style="left:{{ dot.x }}%;top:{{ dot.y }}%" aria-label="Dot {{ dot.label }}">{{ dot.label }}</button>{% endfor %}
 </div><p data-dot-status role="status" data-outline="{{ item.outline }}"></p>
-{% if not mirror %}<button type="submit" data-dot-finish disabled>Finish picture</button>{% endif %}
+{% if not mirror %}<button type="submit" data-dot-finish disabled><span aria-hidden="true">✓</span> Finish picture</button>{% endif %}
 {% elif lesson.tool == 'twins' %}
 {% if item.sample %}<p class="picture-sample" aria-label="Picture to match">{{ item.sample }}</p>{% endif %}
 <div class="explore-options">{% for face in item.faces %}<button class="picture-choice" name="answer" value="{{ forloop.counter0 }}">{{ face }}</button>{% endfor %}</div>
@@ -24,4 +24,4 @@
 {% elif lesson.tool == 'money-total' %}<div class="cash-tray" role="group" aria-label="Money to count">{% for piece in item.handful %}{% include "money_piece.html" %}{% endfor %}</div>
 {% elif lesson.tool == 'pretend' %}<p class="picture-sample" aria-hidden="true">{{ item.specimen }}</p>
 {% endif %}
-{% if item.choices %}<div class="explore-options">{% for option in item.choices %}<button name="answer" value="{{ option }}">{{ option }}</button>{% endfor %}</div>{% endif %}
+{% if item.choices %}<div class="explore-options">{% for option in item.choices %}<button name="answer" value="{{ option }}">{% if lesson.tool == "pretend" %}<span aria-hidden="true">{% if option == "Real life" %}🌎{% else %}💭{% endif %}</span> {% endif %}{{ option }}</button>{% endfor %}</div>{% endif %}

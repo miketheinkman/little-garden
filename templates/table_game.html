@@ -7,8 +7,8 @@
 </div>
 <p data-table-status role="status"></p>
 {% if not mirror %}
-{% if item.listening %}<audio data-card-audio preload="none"></audio><button type="button" data-repeat disabled>Hear again</button> <label><input type="checkbox" data-clues> Show sound clues</label><output data-audio-error></output>{% endif %}
-<button type="button" data-cover hidden>Turn these cards back</button><button type="submit" data-finish disabled>Continue</button>
+{% if item.listening %}<audio data-card-audio preload="none"></audio><button type="button" data-repeat disabled><span aria-hidden="true">🎧</span> Hear again</button> <label><input type="checkbox" data-clues> Show sound clues</label><output data-audio-error></output>{% endif %}
+<button type="button" data-cover hidden><span aria-hidden="true">🃏</span> Turn these cards back</button><button type="submit" data-finish disabled><span aria-hidden="true">▶</span> Continue</button>
 {% endif %}
 {% else %}
 <div class="seesaw" data-target="{{ item.target }}" aria-label="Equal-arm seesaw">
@@ -17,5 +17,5 @@
 <p data-table-status role="status"></p>
 <div class="weight-rack" aria-label="Weight blocks">
 {% for block in item.blocks %}<button type="button" data-weight="{{ block.weight }}" aria-pressed="false" aria-label="Weight {{ block.weight }}"><span aria-hidden="true">{{ block.icon }}</span>{{ block.weight }}</button>{% endfor %}</div>
-{% if not mirror %}<button type="submit" data-weigh disabled>Check balance</button>{% endif %}
+{% if not mirror %}<button type="submit" data-weigh disabled><span aria-hidden="true">⚖️</span> Check balance</button>{% endif %}
 {% endif %}
