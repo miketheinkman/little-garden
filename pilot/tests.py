@@ -270,6 +270,19 @@ class LibraryTests(TestCase):
         self.assertRedirects(self.client.post(url, {"lesson": "shadow-v1"}), url)
         self.assertEqual(self.child.assignment_set.get().lesson, "shadow-v1")
 
+    def test_catalog_return_without_scripts_and_from_direct_preview(self):
+        from urllib.parse import parse_qs, urlsplit
+
+        path = self.library + "my-letters-v1/preview/0/"
+        filters = {"category": "Keyboard & mouse", "fit": "On level", "tier": "2"}
+        page = self.client.get(path, {"catalog": "1", "letters": "abc", **filters})
+        back = urlsplit(page.context["library_url"])
+        self.assertEqual((back.path, back.fragment), (self.library, "lesson-my-letters-v1"))
+        self.assertEqual(parse_qs(back.query), {key: [value] for key, value in filters.items()})
+        for key, value in {"catalog": "1", **filters}.items():
+            self.assertContains(page, f'<input type="hidden" name="{key}" value="{value}">', html=True)
+        self.assertEqual(self.client.get(path).context["library_url"], self.library)
+
     def test_previews_can_be_completed_without_learner_records(self):
         for key, lesson in LESSONS.items():
             for step, item in enumerate(lesson["items"]):

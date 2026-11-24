@@ -50,8 +50,12 @@ def mission(request):
     return render(request, "mission.html", {"donation_links": links})
 
 
-def scheduling_query(request):
-    return urlencode({key: request.GET[key] for key in ("day", "calendar", "browse") if request.GET.get(key)})
+CATALOG_FILTERS = ("category", "participation", "tier", "fit")
+SCHEDULING_FIELDS = ("day", "calendar", "browse")
+
+
+def selected_fields(request, names):
+    return {name: request.GET[name] for name in names if request.GET.get(name)}
 
 
 def puzzle_action(request, item, row=None):
@@ -252,7 +256,8 @@ def library(request, pk):
         elif request.GET.get("browse") == "schedule":
             queued_matches[key] = summary(key, lesson, child.lesson_theme)["title"]
     return render(request, "library.html", {
-        "schedule_query": scheduling_query(request), "queued_matches": queued_matches,
+        "catalog_query": urlencode({"catalog": "1", **selected_fields(request, CATALOG_FILTERS)}),
+        "schedule_query": urlencode(selected_fields(request, SCHEDULING_FIELDS)), "queued_matches": queued_matches,
         "batch_keys": ",".join(key for key in matching if key not in active),
         "tier": tier, "tiers": ["1", "2", "3", "4", "5"], "fit_label": fit_label, "fits": FIT_LABELS,
         "child": child, "groups": groups, "category": category, "help_mode": help_mode,
@@ -330,11 +335,27 @@ def preview(request, pk, key, step):
     if purpose not in Purpose.values:
         raise Http404
     round_query = f"&letters={letters}" if letters else ""
-    schedule_query = scheduling_query(request)
+    return_fields = selected_fields(request, SCHEDULING_FIELDS)
+    schedule_query = urlencode(return_fields)
     if schedule_query:
         round_query += "&" + schedule_query
     if purpose != Purpose.PRACTICE:
         round_query += f"&purpose={purpose}"
+    schedule_round_query = round_query
+    library_url = reverse("library", args=[pk])
+    catalog = request.GET.get("catalog", "")
+    catalog_fields = {}
+    anchor = ""
+    if catalog == "1" or re.fullmatch(r"[0-9]{1,5}:-?[0-9]{1,7}:[01]", catalog):
+        filters = selected_fields(request, CATALOG_FILTERS)
+        catalog_fields = {"catalog": catalog, **filters}
+        round_query += "&" + urlencode(catalog_fields)
+        return_fields.update(filters)
+        if catalog != "1":
+            return_fields["catalog"] = catalog
+        anchor = f"#lesson-{key}"
+    library_url += ("?" + urlencode(return_fields) if return_fields else "") + anchor
+
     def preview_url(target):
         url = reverse("preview", args=[pk, key, target])
         return f"{url}?v={number}{round_query}" if number or round_query else url
@@ -343,6 +364,7 @@ def preview(request, pk, key, step):
     context = {
         "preview": True, "appearance": child.appearance, "child": child, "key": key, "step": step, "lesson": lesson,
         "round_query": round_query, "purpose": purpose, "schedule_query": schedule_query,
+        "library_url": library_url, "catalog_fields": catalog_fields, "schedule_round_query": schedule_round_query,
         "session_purpose": Purpose(purpose).label if purpose != Purpose.PRACTICE else "", "feedback_kinds": LessonFeedback.Kind.choices, "finished": finished, "variation": number,
         "next_variant": (number+1) % round_count(key),
         "already_queued": CURRENT_VERSION.get(key, key) in active_lesson_keys(child),

@@ -561,6 +561,58 @@ class VisualReview(StaticLiveServerTestCase):
                     self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"))
             browser.close()
 
+    def test_preview_returns_to_catalog_position(self):
+        parent = get_user_model().objects.get(username="reviewer")
+        family = Client()
+        family.force_login(parent)
+        cases = [(width, theme, Learner.objects.create(parent=parent, nickname="Fern"))
+                 for width in (375, 1200) for theme in ("light", "dark")]
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width, theme, learner in cases:
+                with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                    ctx.add_cookies([{"name": "sessionid", "value": family.cookies["sessionid"].value, "url": self.live_server_url}])
+                    page = ctx.new_page()
+                    url = self.live_server_url + reverse("library", args=[learner.pk])
+                    page.goto(url + "?category=Numbers+%26+patterns&participation=Independent&browse=schedule&day=2026-12-03")
+                    page.locator(".tier-key summary").click()
+                    cards = page.locator("#available-lessons [data-lesson]")
+                    index = cards.count() // 2
+                    card = cards.nth(index)
+                    key = card.get_attribute("id")
+                    neighbor = cards.nth(index + 1).get_attribute("id")
+                    card.evaluate("e => scrollBy(0, e.getBoundingClientRect().top - 100)")
+                    top = card.bounding_box()["y"]
+                    self.assertGreater(page.evaluate("scrollY"), 500)
+                    link = card.locator("[data-preview]")
+                    link.click()
+                    page.go_back()
+                    expect(link).to_be_focused()
+                    self.assertAlmostEqual(card.bounding_box()["y"], top, delta=2)
+                    link.press("Enter")
+                    page.get_by_role("link", name="Shuffle round").click()
+                    page.locator(".preview-steps a").last.click()
+                    page.get_by_role("button", name="Skip this question").click()
+                    expect(page.get_by_role("heading", name="Preview complete")).to_be_visible()
+                    page.get_by_role("link", name="Back to lesson library").click()
+                    expect(page.locator(f"#{key} [data-preview]")).to_be_focused()
+                    self.assertAlmostEqual(card.bounding_box()["y"], top, delta=2)
+                    expect(page.get_by_label("Subject")).to_have_value("Numbers & patterns")
+                    expect(page.get_by_label("Adult involvement")).to_have_value("Independent")
+                    self.assertIn("day=2026-12-03", page.url)
+                    self.assertTrue(page.locator(".tier-key").evaluate("e => e.open"))
+                    page.screenshot(path=self.out / f"catalog-return-{width}-{theme}.png")
+                    link.click()
+                    page.get_by_role("button", name="Add to Fern’s queue").click()
+                    expect(page.locator("[data-queue-status]")).to_contain_text("added")
+                    page.get_by_role("link", name="Back to lesson library").click()
+                    expect(page.locator(f"#{key}")).to_have_count(0)
+                    expect(page.locator(f"#{neighbor} [data-preview]")).to_be_focused()
+                    self.assertAlmostEqual(page.locator(f"#{neighbor}").bounding_box()["y"], top, delta=2)
+                    page.goto(url)
+                    self.assertEqual(page.evaluate("scrollY"), 0)
+            browser.close()
+
     def test_shuffle_preview_and_assign(self):
         family = Client()
         parent = get_user_model().objects.get(username="reviewer")
