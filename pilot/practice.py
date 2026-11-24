@@ -6,6 +6,7 @@ from django.conf import settings
 
 from .discovery import DISCOVERY, discovery_round
 from .explorations import EXPLORATIONS, exploration_round
+from . import remix
 from .paint import PAINT_LESSONS, paint_lesson
 from .puzzles import PUZZLES, route_lesson
 
@@ -34,7 +35,7 @@ for key, lesson in LESSONS.items():
 LESSONS.update(CURRENT_LESSONS)
 
 
-def round_count(key):
+def original_round_count(key):
     if key in GAMES or key in PAINT_LESSONS or key in DISCOVERY or key in EXPLORATIONS:
         return 32
     if key in PUZZLES:
@@ -42,6 +43,10 @@ def round_count(key):
     if key in {"scissors-v1", "sink-float-v1"}:
         return 4
     return 1 + len(AUTHORED[key]) if key in AUTHORED else 1000
+
+
+def round_count(key):
+    return original_round_count(key) * 10
 
 
 def options(rng, answer, pool):
@@ -84,6 +89,7 @@ def build_round(key, number):
     lesson = LESSONS[key]
     if number == 0:
         return lesson
+    expanded = number >= original_round_count(key)
     if key in EXPLORATIONS:
         return exploration_round(key, number)
     if key in DISCOVERY:
@@ -93,11 +99,15 @@ def build_round(key, number):
     if key in GAMES:
         return table_lesson(key, number)
     if key in PUZZLES:
-        return route_lesson(key, number % 4)
+        return route_lesson(key, number)
     rng = random.Random(f"{key}/{number}")
     if key in FIVE_PROMPT_ROUNDS:
         return five_prompt_round(key, number, rng)
     items = [item.copy() for item in lesson["items"]]
+    group = key.removesuffix("-v1")
+    if expanded and (key in AUTHORED or group in {"scissors","sink-float"}):
+        remix.guided(group, items, number-original_round_count(key), rng)
+        return dict(lesson, items=items)
     if key in AUTHORED:
         for item, changes in zip(items, AUTHORED[key][number-1], strict=True):
             item.update(changes)
@@ -111,10 +121,13 @@ def build_round(key, number):
             items = [dict(pair[(number >> i) & 1]) for i, pair in enumerate(pairs)]
         else:
             items = rng.sample(items + GARDEN_PRACTICE[key], len(items))
+        if expanded:
+            items = remix.garden_round(group, items, rng)
         return dict(lesson, items=items)
-    group = key.removesuffix("-v1")
     if group in ("middle-sound", "digraphs"):
         words = SHORT_VOWEL_WORDS if group == "middle-sound" else DIGRAPH_WORDS
+        if expanded:
+            words = remix.VOWELS if group == "middle-sound" else remix.DIGRAPHS
         for item, sound in zip(items, rng.sample(list(words), len(items))):
             item.update(word=rng.choice(words[sound]), answer=sound, choices=options(rng, sound, words))
     elif group == "case-match":
@@ -125,12 +138,12 @@ def build_round(key, number):
         for item, letter in zip(items, rng.sample("abcdefghijklmnopqrstuvwxyz", len(items))):
             item.update(prompt=f"Start at the gold dot and trace lowercase {letter}.", answer=letter)
     elif group == "ten":
-        for item, seeds in zip(items, rng.sample(range(1, 10), len(items))):
+        for item, seeds in zip(items, rng.sample(range(11) if expanded else range(1,10), len(items))):
             left = 10 - seeds
             item.update(prompt=rng.choice(["How many more seeds will fill this tray?",
                                            "Count the empty spaces. How many seeds will fit?",
                                            "How many more seeds will make ten?"]),
-                        seeds=seeds, answer=str(left), choices=options(rng, left, range(1, 10)))
+                        seeds=seeds, answer=str(left), choices=options(rng, left, range(11) if expanded else range(1,10)))
     elif group == "harvest":
         # Include both group sizes, with whole shares and at most twelve counters.
         groups = [2, 3, rng.choice([2, 3])]
@@ -150,6 +163,11 @@ def build_round(key, number):
             "letters": list("LVOWZN"), "digits": list("12347"),
         }
         word = rng.choice(["map", "sun", "fin", "red", "pot", "cup"])
+        if expanded:
+            pools.update(keys=list(remix.ascii_uppercase),letters=list(remix.ascii_uppercase),digits=list("0123456789"),
+                         sounds=remix.CVC,signs=sorted({a+" "+b for a in remix.BANK["sign_starts"].split()
+                                                       for b in remix.BANK["sign_ends"].split()}))
+            word = rng.choice([w for w in remix.CVC if len(set(w))==3 and "x" not in w])
         targets = list(word.upper()) if group == "blend" else rng.sample(pools[group], len(items))
         for index, (item, target) in enumerate(zip(items, targets)):
             if group in ("keys", "number-keys"):
@@ -157,6 +175,10 @@ def build_round(key, number):
                             display=target, answer=target, choices=options(rng,target,pools[group]))
             elif group == "sounds":
                 initial = target[0].upper()
+                if expanded:
+                    item.update(prompt="Listen to the word. Which letter makes its first sound?", word=target,
+                                answer=initial, choices=options(rng,initial,remix.ascii_uppercase))
+                    continue
                 item.update(prompt=f'Say “{target}” slowly. Which letter do you hear at the start?',
                             answer=initial, choices=options(rng,initial,list("MFDNLRPH")))
             elif group == "signs":
@@ -172,6 +194,10 @@ def build_round(key, number):
     elif group in ("count1", "count2", "five", "berry-basket", "market", "tens"):
         low, high = {"count1":(1,3),"count2":(3,5),"five":(1,4),"berry-basket":(1,5),
                      "market":(1,5),"tens":(2,8)}[group]
+        if expanded and group == "five":
+            low, high = 0,5
+        if expanded and group == "tens":
+            low, high = 1,9
         for index, (item, n) in enumerate(zip(items, rng.sample(range(low, high+1), len(items)))):
             if group.startswith("count"):
                 thing = rng.choice(["🌱","🌼","🍃"])
@@ -179,7 +205,7 @@ def build_round(key, number):
                             display=" ".join([thing]*n),answer=str(n),choices=options(rng,n,range(low,high+1)))
             elif group == "five":
                 item.update(prompt=rng.choice(["Five spots in the seed tray. How many are empty?", "How many more seeds would fill this tray?", "Count the open spaces. How many seeds fit there?"]),display="● "*n+"○ "*(5-n),
-                            answer=str(5-n),choices=options(rng,5-n,range(1,6)))
+                            answer=str(5-n),choices=options(rng,5-n,range(6) if expanded else range(1,6)))
             elif group == "berry-basket":
                 item.update(prompt=rng.choice(["Pick {} berries for the picnic.", "Can you fill an order for {} berries?"]).format(n), answer=str(n))
             elif group == "market":
@@ -189,7 +215,7 @@ def build_round(key, number):
                           f"Put {m} berries in the basket, then add {n} more for a friend."]
                 item.update(prompt=orders[index], answer=str(n+m))
             else:
-                ones=rng.randint(1,9)
+                ones=rng.randint(0 if expanded else 1,9)
                 if index == 0:
                     total = n*10 + ones
                     prompt = "Each bag holds ten seeds. How many seeds are in this order?"
@@ -213,12 +239,18 @@ def build_round(key, number):
             item.update(path=f"M20 85 Q60 {85-bend*1.4:.0f} 100 75 T180 {75+bend}",
                         prompt=rng.choice(["Follow the bend from the gold dot.", "Hold at the dot and steer along the trail."]))
     elif group == "pattern":
-        a,b=rng.sample(["🌿","🌻","🍎","🌷"],2)
+        pictures = ["🌿","🌻","🍎","🌷"]
+        if expanded:
+            pictures.extend("🪴 🪻 🌼 🍋 🍓 🍐 🍊 🦋 🐛 🐝 🐞 🥕 🌽".split())
+        a,b=rng.sample(pictures,2)
         for item,unit in zip(items,[[a,b],[a,a,b],[a,b,b]]):
             seq=(unit*3)[:rng.randint(4,7)]
             item.update(prompt="Follow the repeating group. Which picture comes next?",display=" ".join(seq)+" …",answer=unit[len(seq)%len(unit)],choices=rng.sample([a,b],2))
     elif group == "weather":
         days=["Monday","Tuesday","Wednesday"]
+        if expanded:
+            week = days + ["Thursday", "Friday", "Saturday", "Sunday"]
+            days = sorted(rng.sample(week, 3), key=week.index)
         nums=rng.sample(range(1,6),3)
         chart=" · ".join(f"{day} {'☁️'*n}" for day,n in zip(days,nums))
         for item,op,name in zip(items[:2],[max,min],["most","fewest"]):

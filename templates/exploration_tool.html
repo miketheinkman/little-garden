@@ -17,8 +17,8 @@
 {% else %}<span class="scene-object">{% if lesson.tool == 'compare' %}{{ lesson.world.cargo_icon|default:item.specimen }}{% else %}{{ item.specimen }}{% endif %}</span>{% endif %}
 </span></button>{% endfor %}</div>
 {% elif lesson.tool == 'arithmetic' %}
-<div class="object-equation" role="img" aria-label="{{ item.equation }}"><div>{% for i in item.left %}<span>{{ lesson.world.cargo_icon|default:'🍎' }}</span>{% endfor %}</div>
-{% if not item.subtract %}<b>+</b>{% endif %}<div>{% for i in item.right %}<span{% if item.subtract %} class="taken-away"{% endif %}>{{ lesson.world.cargo_icon|default:'🍎' }}</span>{% endfor %}</div></div>
+<div class="object-equation" role="img" aria-label="{{ item.equation }}"><div>{% for i in item.left %}<span>{{ lesson.world.cargo_icon|default:'🍎' }}</span>{% empty %}{% if not item.subtract %}0{% endif %}{% endfor %}</div>
+{% if not item.subtract %}<b>+</b>{% endif %}<div>{% for i in item.right %}<span{% if item.subtract %} class="taken-away"{% endif %}>{{ lesson.world.cargo_icon|default:'🍎' }}</span>{% empty %}{% if not item.subtract %}0{% endif %}{% endfor %}</div></div>
 <p class="number-equation">{{ item.equation }} = ?</p>
 {% elif lesson.tool == 'money-id' %}<div class="cash-options">{% for piece in item.money %}<button name="answer" value="{{ piece.mark }}" aria-label="{{ piece.mark }} {% if piece.material == 'bill' %}bill{% else %}coin{% endif %}">{% include "money_piece.html" %}</button>{% endfor %}</div>
 {% elif lesson.tool == 'money-total' %}<div class="cash-tray" role="group" aria-label="Money to count">{% for piece in item.handful %}{% include "money_piece.html" %}{% endfor %}</div>

@@ -24,14 +24,24 @@ def options(rng, correct, pool, count=3):
     return choices
 
 
-def discovery_round(key, variation, letters=DEFAULT_LETTERS):
+def discovery_round(key, variation, letters=None):
+    if letters is None:
+        letters = "".join(random.Random(f"patch/{variation}").sample(ascii_uppercase, 5)) if key == PATCH and variation >= 32 else DEFAULT_LETTERS
     title, skill, age, category, strand, level, tool = DISCOVERY[key]
     rng = random.Random(f"{key}/{variation}/{letters}")
     animals = CONTENT["animals"]
+    if variation >= 32 and tool in {"animal-id", "animal-word"}:
+        animals = dict(animals)
+        for icon, name in zip("🦁 🐯 🐻 🐺 🦊 🐼 🐨 🦌 🫎 🐑 🐐 🐄 🦇 🐜 🪱 🐌 🐋 🦭 🦢 🦀 🐙 🐢 🦦 🦓 🐎 🐍 🦫 🦬 🦎 🐪".split(),
+                              "lion tiger bear wolf fox panda koala deer moose sheep goat cow bat ant worm snail whale seal swan crab octopus turtle otter zebra horse snake beaver bison lizard camel".split(), strict=True):
+            animals[name] = [icon, ""]
     if tool == "sort":
         items = []
         for rule in rng.sample(CONTENT["sorts"], 5):
-            pieces = [dict(icon=icon, name=name, bin=i) for i, group in enumerate(rule["groups"], 1)
+            groups = rule["groups"]
+            if variation >= 32 and rule["bins"] == ["Letters","Numbers"]:
+                groups = [[(ch, ch) for ch in alphabet] for alphabet in (ascii_uppercase, "0123456789")]
+            pieces = [dict(icon=icon, name=name, bin=i) for i, group in enumerate(groups, 1)
                       for icon, name in rng.sample(group, 2)]
             rng.shuffle(pieces)
             items.append(dict(prompt=rule["prompt"], bins=rule["bins"], pieces=pieces, choices=[], answer=""))
@@ -48,7 +58,7 @@ def discovery_round(key, variation, letters=DEFAULT_LETTERS):
         items = []
         for start in rng.sample(range(23), 5):
             run = list(ascii_uppercase[start:start+4])
-            blank = rng.choice([1, 2, 3])
+            blank = rng.randrange(4) if variation >= 32 else rng.choice([1, 2, 3])
             letter = run[blank]
             run[blank] = "＿"
             items.append(dict(prompt="Say the letters in order. Which letter fills the empty stone?",

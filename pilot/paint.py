@@ -17,6 +17,8 @@ def paint_lesson(key, variation):
     tool = spec["tool"]
     items = []
     basics = ["red", "yellow", "blue", "orange", "green", "purple"]
+    if variation >= 32 and tool != "paint-mix":
+        basics = list(STUDIO["colors"])
     if tool == "paint-mix":
         blends, tints = STUDIO["recipes"][:3], STUDIO["recipes"][3:]
         targets = [recipe[2] for recipe in rng.sample(blends, 3) + rng.sample(tints, 2)]

@@ -1,7 +1,7 @@
 {% load static %}{% include 'activity_props.html' %}
 {% if item.keycap %}
 <p class="key-example"><kbd>{{ item.keycap }}</kbd></p>
-{% elif item.seeds %}
+{% elif item.seeds != None %}
 <div class="ten-frame" role="img" aria-label="Ten-frame with {{ item.seeds }} {{ lesson.world.many|default:"planted seeds" }} in two rows of five">
   {% for cell in '1234567890' %}<span{% if forloop.counter <= item.seeds %} class="planted{% if lesson.world %} themed-cell{% endif %}"{% endif %}>{% if lesson.world and forloop.counter <= item.seeds %}{{ lesson.world.cargo_icon }}{% endif %}</span>{% endfor %}
 </div>

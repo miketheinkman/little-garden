@@ -1,0 +1,37 @@
+{
+  "vowels": {
+    "a":"cat map bag bat cap fan fat gap ham hat jam lap mat nap pan pat rag ram ran rap rat sad sat tag tap van wax wag yam zap",
+    "e":"bed beg bet den fed fen get hem hen jet keg led leg let men met net peg pen pet red set ten vet wet web yes yet",
+    "i":"bib big bin bit dig dim dip fin fit hid him hip hit kid kit lid lip lit mix nib nip pig pin pit rib rid rim rip sit six tin tip wig win zip",
+    "o":"bog bop box cob cod cog cop cot dog dot fog fox got hog hop hot jog log lot mop nod not pod pop pot rod rot sob sod top",
+    "u":"bud bug bun bus but cub cup cut dug fun gum gut hub hug hum hut jug jut lug mud mug nut pug pun pup rub rug run rut sub sum sun tub tug"
+  },
+  "digraphs": {"sh":"shed shell shin ship shop shot shut sham shall shelf shift shine sheet sheep shore shout shake shape shark sharp short show shoe shawl",
+               "th":"thin thick thimble thorn thud thumb thump thank think thing three thread throat throne throw thaw thirst thirty thunder Thursday",
+               "ch":"chat chap chin chip chop chug chick check chest chill chime chain chalk chair cheek cheese cheetah cherry child chirp choose chunk chase charm"},
+  "names":"Ada Ben Cora Dex Ella Finn Gus Hana Iris Jade Kit Leo Maya Nell Otis Pip Quin Rose Sam Tess Uma Vera Wren Xavi Yara Zed",
+  "labels":"fern mint rose iris dill sage leek moss kale pea corn plum pear bean fig lime yam nut oat flax reed lily poppy aster daisy tulip",
+  "sign_starts":"red big wet new old sun hot mud bee bug",
+  "sign_ends":"bed pot hut box log den mat row bag tub",
+  "rhymes":[["cat","hat","🎩"],["dog","frog","🐸"],["log","dog","🐕"],["tree","bee","🐝"],["goat","boat","⛵"],["sock","rock","🪨"],["wall","ball","⚽"],["mice","ice","🧊"],["chair","bear","🐻"],["dish","fish","🐟"],["cake","snake","🐍"],["mouse","house","🏠"],["star","car","🚗"],["spoon","moon","🌙"],["king","ring","💍"],["fox","box","📦"],["bug","mug","☕"],["pail","snail","🐌"],["feet","seat","💺"],["bell","shell","🐚"]],
+  "beats":{"1":"cat sun frog leaf bean seed rain shell crab rock plum kite fox bear sheep boot tree cup nest wheel","2":"rabbit robin tulip carrot apple wagon beetle acorn spider lemon melon rocket otter panda tiger puppy kitten muffin button basket","3":"butterfly ladybug elephant animal daffodil pelican banana tomato potato cucumber astronaut dinosaur umbrella kangaroo octopus"},
+  "read_names":["Sam","Kit","Pip","Dot","Gus","Ben"],
+  "read_events":[["sat on a log","log"],["hid a red cap","cap"],["dug in the mud","mud"],["got a big box","box"],["ran to the bus","bus"],["set down a cup","cup"]],
+  "story_objects":["kite","bell","map","drum","hat","book"],
+  "story_pairs":[["Only one {object} was left. Two friends reached for it together.","The friends took turns with the {object}. Each waited while the other had a turn."],["A friend forgot a {object} at the gate. Kit saw it on the way home.","Kit brought the {object} back. The friend smiled and said thank you."],["The {object} was too high for Pip to reach. Kit heard Pip call.","Kit asked a grown-up for help. Together they handed the {object} to Pip."],["Kit wanted quiet time, but Pip wanted to play with the {object}.","Kit asked for a little space. Pip set the {object} aside until Kit was ready."],["A gust blew the {object} under a bench. Neither friend could see it.","Pip looked from one side and Kit looked from the other. Together they spotted the {object}."]],
+  "deliveries":[["Bee","hive","🐝"],["Frog","pond","🐸"],["Moth","lamp","🦋"],["Robin","nest","🐦"],["Mouse","log","🐭"],["Dot","pot","🪴"]],
+  "parcel_goods":["a ribbon","a map","a card","a drawing","a seed packet"],
+  "shadows":["a spoon","a paper leaf","a block","a toy car","a paper star","your hand"],
+  "shadow_changes":[["closer to the light","size"],["sideways","position"],["farther from the light","size"],["slowly around","shape"],["up and down","position"]],
+  "snips":["short straight lines","long straight lines","gentle curves","wide zigzags","sloping lines","lines with one corner"],
+  "cuts":["the edge of a paper strip","a wide scrap of paper","a folded and reopened sheet","a narrow paper strip","a square of scrap paper"],
+  "water_items":["a leaf","a small twig","a pebble","a cork","a metal spoon","a plastic lid","a wooden block","a small apple"],
+  "rhythm":["clap","tap your knees","pat your shoulders","tap the table","stamp one foot","tap your toes"],
+  "scene_animals":[["Cats","🐈"],["Dogs","🐕"],["Rabbits","🐇"],["Horses","🐎"],["Goats","🐐"],["Ducks","🦆"],["Foxes","🦊"],["Sheep","🐑"],["Cows","🐄"],["Squirrels","🐿️"]],
+  "scene_actions":[["visit","gardens","🌼"],["cross","bridges","🌉"],["explore","fields","🌾"],["pass","trees","🌳"],["find","water","💧"],["climb","hills","⛰️"]],
+  "silent_e":{"cape":"🦸","kite":"🪁","cube":"🧊","cane":"🦯","tube":"🧪","pane":"🪟","tape":"📼","note":"📝","ride":"🚲","pine":"🌲","robe":"🥋","plane":"✈️","slide":"🛝","dime":"🪙","bite":"🦷","mane":"🐴"},
+  "specimens":{
+    "Living":[["snail","🐌"],["frog","🐸"],["oak tree","🌳"],["cactus","🌵"],["sunflower","🌻"],["fern","🌿"],["bee","🐝"],["worm","🪱"],["ant","🐜"],["crab","🦀"],["fish","🐟"],["turtle","🐢"],["rabbit","🐇"],["mushroom","🍄"],["owl","🦉"],["elephant","🐘"],["butterfly","🦋"],["spider","🕷️"],["penguin","🐧"],["dolphin","🐬"]],
+    "Non-living":[["rock","🪨"],["ball","⚽"],["chair","🪑"],["boot","🥾"],["bucket","🪣"],["spoon","🥄"],["bicycle","🚲"],["bell","🔔"],["key","🔑"],["lamp","💡"],["tent","⛺"],["drum","🥁"],["hammer","🔨"],["clock","🕰️"],["crown","👑"],["pencil","✏️"],["brick","🧱"],["cup","☕"],["ladder","🪜"],["car","🚗"]]
+  }
+}

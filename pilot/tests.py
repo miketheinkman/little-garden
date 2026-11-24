@@ -372,11 +372,12 @@ class FeedbackWorkflowTests(TestCase):
 class PracticeRoundTests(TestCase):
     def test_rounds_repeat_the_skill_and_keep_catalog_intact(self):
         from copy import deepcopy
-        from .practice import build_round, round_count
+        from .practice import build_round, original_round_count, round_count
         original = deepcopy(LESSONS)
         for key, base in LESSONS.items():
             examples = []
-            for n in range(min(round_count(key), 24)):
+            sample = [*range(min(round_count(key), 24)), original_round_count(key), round_count(key)-1]
+            for n in sample:
                 lesson = build_round(key, n)
                 self.assertEqual(lesson["skill"], base["skill"])
                 self.assertEqual(len(lesson["items"]), len(base["items"]))
@@ -390,6 +391,48 @@ class PracticeRoundTests(TestCase):
             self.assertNotEqual(examples[0], examples[1], key)
             self.assertNotEqual(examples[1], examples[2], key)
         self.assertEqual(LESSONS, original)
+
+    def test_full_target_sets_are_playable(self):
+        from string import ascii_lowercase, ascii_uppercase, digits
+        from .practice import build_round, original_round_count, round_count
+        from .themes import themed_round
+
+        expected = {"keys-v2": ascii_uppercase, "letters-v1": ascii_uppercase, "shift-v1": ascii_uppercase,
+                    "alphabet-gap-v1": ascii_uppercase, "my-letters-v1": ascii_uppercase, "key-check-v1": ascii_uppercase,
+                    "case-match-v1": ascii_lowercase, "lowercase-v1": ascii_lowercase,
+                    "number-keys-v2": digits, "digits-v1": digits, "five-v1": list(map(str, range(6))),
+                    "ten-v1": list(map(str, range(11))), "hear-number-v1": list(map(str, range(13))),
+                    "clock-v1": [f"{h}:{m:02d}" for h in range(1,13) for m in (0,30)]}
+        for key, targets in expected.items():
+            found = set()
+            first = original_round_count(key)
+            for n in range(first, min(round_count(key), first+320)):
+                rows = themed_round(key, build_round(key, n), "space", n)["items"]
+                found.update(item["answer"] for item in (rows[:1] if key == "key-check-v1" else rows))
+            self.assertEqual(found, set(targets), key)
+        for key, op in (("add-groups-v1", "+"), ("take-away-v1", "−")):
+            equations = set()
+            for n in range(32, 320):
+                items = build_round(key, n)["items"]
+                current = {item["equation"] for item in items}
+                self.assertEqual(len(current), 5)
+                equations.update(current)
+            self.assertEqual(equations, {f"{a} {op} {b}" for a in range(11)
+                                         for b in range(1 + (a if op == "−" else 10-a))})
+
+    def test_allocator_uses_whole_pool_then_recycles_older_rounds(self):
+        from .views import question_set, suggested_round
+        from .practice import round_count
+        child = Learner.objects.create(parent=get_user_model().objects.create_user("shuffle-parent"), nickname="Fern")
+        key = "story-v1"
+        history = []
+        for _ in range(round_count(key)):
+            n = suggested_round(child, key, history)
+            self.assertNotIn(n, history)
+            if history:
+                self.assertNotEqual(question_set(child, key, n), question_set(child, key, history[-1]))
+            history.append(n)
+        self.assertIn(suggested_round(child, key, history), history[:len(history)//2])
 
     def test_five_prompt_rounds_preserve_level_and_spaced_recall(self):
         from .practice import CURRENT_VERSION, build_round
@@ -434,7 +477,10 @@ class PracticeRoundTests(TestCase):
             self.client.post(play_url, {"step": step, "answer": item["answer"]})
         self.client.force_login(parent)
         self.client.post(library, {"lesson": key})
-        self.assertEqual(child.assignment_set.last().round_snapshot, build_round(key, 18))
+        repeat = child.assignment_set.last()
+        self.assertNotEqual(repeat.variation, 17)
+        self.assertNotEqual(repeat.round_snapshot["items"], seen["items"])
+        self.assertEqual(repeat.round_snapshot, build_round(key, repeat.variation))
 
 
 class DrawingTests(TestCase):

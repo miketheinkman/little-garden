@@ -1,4 +1,7 @@
 import re
+import random
+import json
+from collections import defaultdict
 from datetime import timedelta
 
 from django.urls import reverse
@@ -19,7 +22,7 @@ from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
 
 from .themes import THEMES, THEME_CHOICES, assignment_lesson, summary, themed_round
 from .puzzles import parse_moves, simulate, hint
-from .discovery import PATCH, DEFAULT_LETTERS, discovery_round, letter_selection
+from .discovery import PATCH, discovery_round, letter_selection
 from .paint import mixture_matches
 from .table_games import table_answer
 from .audio import lesson_clips
@@ -164,17 +167,51 @@ def requested_round(key, value):
     return number
 
 
+def question_set(child, key, variation):
+    round_data = themed_round(key, build_round(key, variation), child.lesson_theme, variation)
+    signatures = set()
+    for item in round_data["items"]:
+        if item.get("deck"):
+            # Rotating the locations of the cards still practices the same pairs.
+            core = sorted((c["label"], c.get("symbol", ""), c.get("clip", "")) for c in item["deck"])
+        elif round_data["kind"] in {"key", "type"} or item.get("word"):
+            core = (item.get("word", ""), item["answer"])
+        else:
+            ignored = {"choices", "letters", "tiles", "pictures", "animals", "bank_context"}
+            core = {k: v for k, v in item.items() if k not in ignored}
+        signatures.add(json.dumps(core, sort_keys=True, ensure_ascii=False))
+    return signatures
+
+
+def suggested_round(child, key, history):
+    if not history:
+        return 0
+    count = round_count(key)
+    # Consider all previous IDs until the pool is exhausted, then recycle oldest IDs first.
+    last_used = {number: index for index, number in enumerate(history)}
+    candidates = [number for number in range(count) if number not in last_used]
+    if not candidates:
+        candidates = sorted(last_used, key=last_used.get)[:max(1, count//2)]
+    rng = random.Random(f"{child.pk}/{key}/{len(history)}/{history[-1]}")
+    candidates = rng.sample(candidates, min(12, len(candidates)))
+    previous = [question_set(child, key, n) for n in history[-3:]]
+    def overlap(number):
+        questions = question_set(child, key, number)
+        return (questions == previous[-1], sum(len(questions & recent) for recent in previous))
+    return min(candidates, key=overlap)
+
+
 def next_round(child, key):
     versions = [key, key.replace("-v2", "-v1")] if key in FIVE_PROMPT_ROUNDS else [key]
-    last = child.assignment_set.filter(lesson__in=versions).order_by("-pk").values_list("variation", flat=True).first()
-    return 0 if last is None else (last+1) % round_count(key)
+    history = list(child.assignment_set.filter(lesson__in=versions).order_by("pk").values_list("variation", flat=True))
+    return suggested_round(child, key, history)
 
 
 @transaction.atomic
 def assign_lesson(child, key, variation=None, letters=None):
+    Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))
     if variation is None:
         variation = next_round(child, key)
-    Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))
     last = child.assignment_set.aggregate(last=Max("position"))["last"] or 0
     return child.assignment_set.create(lesson=key, position=last+1, variation=variation,
                                 round_snapshot=discovery_round(key, variation, letters) if key == PATCH and letters else build_round(key, variation))
@@ -224,7 +261,7 @@ def library(request, pk):
                 return HttpResponseBadRequest("Choose a lesson from the library.")
             variation = requested_round(key, request.POST["variation"]) if "variation" in request.POST else None
             try:
-                letters = letter_selection(request.POST.get("letters", DEFAULT_LETTERS)) if key == PATCH else None
+                letters = letter_selection(request.POST["letters"]) if key == PATCH and "letters" in request.POST else None
             except ValueError as error:
                 return HttpResponseBadRequest(str(error))
             added, active = queue_available(child, [key], variation, letters)
@@ -237,10 +274,10 @@ def library(request, pk):
         return redirect(request.get_full_path())
 
     active = active_lesson_keys(child)
-    upcoming = {}
+    histories = defaultdict(list)
     for key, number in child.assignment_set.order_by("pk").values_list("lesson", "variation"):
         key = CURRENT_VERSION.get(key, key)
-        upcoming[key] = (number+1) % round_count(key)
+        histories[key].append(number)
     today = timezone.localdate()
     groups = {}
     for key, lesson in matching.items():
@@ -251,7 +288,7 @@ def library(request, pk):
                 info["last_completed"] = completions[0]
                 days = (today - timezone.localdate(completions[0])).days
                 info["last_completed_label"] = {0: "today", 1: "yesterday"}.get(days, f"{days} days ago")
-            groups.setdefault(lesson["category"], []).append((key, info, upcoming.get(key, 0), progress.label(lesson)))
+            groups.setdefault(lesson["category"], []).append((key, info, suggested_round(child, key, histories[key]), progress.label(lesson)))
     return render(request, "library.html", {
         "tier": tier, "tiers": ["1", "2", "3", "4", "5"], "fit_label": fit_label, "fits": FIT_LABELS,
         "child": child, "groups": groups, "category": category, "help_mode": help_mode,
@@ -309,8 +346,14 @@ def preview(request, pk, key, step):
     if not lesson:
         raise Http404
     number = requested_round(key, request.GET.get("v", 0))
+    if request.GET.get("shuffle") == "1":
+        selected = random.SystemRandom().randrange(round_count(key)-1)
+        query = request.GET.copy()
+        query.pop("shuffle")
+        query["v"] = str(selected + (selected >= number))
+        return redirect(reverse("preview", args=[pk, key, 0]) + "?" + query.urlencode())
     try:
-        letters = letter_selection(request.GET.get("letters", DEFAULT_LETTERS)) if key == PATCH else None
+        letters = letter_selection(request.GET["letters"]) if key == PATCH and "letters" in request.GET else None
     except ValueError as error:
         return HttpResponseBadRequest(str(error))
     raw = discovery_round(key, number, letters) if letters else build_round(key, number)

@@ -1,6 +1,8 @@
 """Route board authoring and deterministic simulation, shared by Go, hints and scoring."""
 import json
+import random
 from collections import deque
+from functools import lru_cache
 from itertools import product
 from pathlib import Path
 
@@ -18,17 +20,77 @@ STATES = {"turnLine": 2, "turnBend": 4, "valve": 2, "openValve": 2, "switch": 2,
 OFFSETS = ((0, -1), (1, 0), (0, 1), (-1, 0))
 
 
+# Alternate footprints keep each stage's goal and introduce different turns
+# and positions for the child's decisions.
+ALTERNATE_MAPS = {
+    "water": [
+        ["..G.", "..|.", "SVq."], ["....", "S-c.", "..|.", "..G."],
+        ["....", "So..", ".|..", ".G.."], ["......", "S--TVG", "...|..", "...v.."],
+        ["......", "S-TV-G", "..|...", "..c--G"],
+    ],
+    "train": [
+        ["..G.", "..|.", "Siq."], ["....", "S-o.", "..|.", "..G."],
+        [".....", "SJ---", ".|...", ".b--G"],
+        ["......", "SJ---G", ".|...|", ".c-P-q"],
+        ["......", "S-J---", "..|...", "..cPJG", "....G."],
+    ],
+}
+
+
+def stretch_route(grid, rng):
+    """Insert a column of connecting rail/pipe wherever the old route crossed the cut."""
+    cut = rng.randrange(1, len(grid[0]))
+    for row in grid:
+        crossing = row[cut - 1][0] != "grass" and row[cut][0] != "grass"
+        row.insert(cut, ("line", 0) if crossing else ("grass", 0))
+
+
+def layout(key, index, seed):
+    spec = PUZZLES[key]
+    rows = spec["levels"][index][2]
+    rotation = seed % 4
+    if seed >= 4:
+        rng = random.Random(f"{key}/{seed}/{index}")
+        if rng.randrange(2):
+            rows = ALTERNATE_MAPS[spec["mode"]][index]
+    grid = [[TILES[token] for token in row] for row in rows]
+    if seed >= 4:
+        stretch_route(grid, rng)
+        if rng.randrange(2) and len(grid[0]) < 7:
+            stretch_route(grid, rng)
+        grid = [[(kind, (angle + 1) % 4) for kind, angle in row] for row in zip(*reversed(grid), strict=True)]
+        if rng.randrange(2):
+            stretch_route(grid, rng)
+        rotation = rng.randrange(4)
+    for _ in range(rotation):
+        grid = list(zip(*reversed(grid), strict=True))
+    return tuple(tuple((kind, (angle + rotation) % 4) for kind, angle in row) for row in grid)
+
+
+@lru_cache(maxsize=None)
+def round_layouts(key, index):
+    layouts = []
+    seen = set()
+    for seed in range(2048):
+        board = layout(key, index, seed)
+        # Ignore decorative orientation when deciding whether a board is new.
+        signature = tuple(tuple((kind, 0 if kind in {"grass", "goal"} else
+                          angle % 2 if kind in {"line", "valve", "openValve", "passenger", "turnLine"} else angle)
+                          for kind, angle in row) for row in board)
+        if signature not in seen:
+            layouts.append(board)
+            seen.add(signature)
+            if len(layouts) == 40:
+                return tuple(layouts)
+    raise ValueError(f"Insufficient different layouts for {key} stage {index + 1}")
+
+
 def route_lesson(key, turns=0):
     spec = PUZZLES[key]
     items = []
-    for index, (name, prompt, rows) in enumerate(spec["levels"]):
-        grid = [[TILES[token] for token in row] for row in rows]
-        for _ in range(turns % 4):
-            grid = [list(row) for row in zip(*reversed(grid), strict=True)]
-        cells = []
-        for row in grid:
-            for kind, base in row:
-                cells.append({"kind": kind, "angle": (base + turns) % 4, "states": STATES.get(kind, 1)})
+    for index, (name, prompt, _) in enumerate(spec["levels"]):
+        grid = round_layouts(key, index)[turns]
+        cells = [dict(kind=kind, angle=angle, states=STATES.get(kind, 1)) for row in grid for kind, angle in row]
         board = dict(mode=spec["mode"], name=name, width=len(grid[0]), cells=cells)
         items.append(dict(prompt=prompt, board=board, answer="", choices=[], level=(1, 1, 2, 3, 3)[index]))
     return dict(title=spec["title"], skill=spec["skill"], kind="puzzle", age="4–8", items=items,

@@ -75,6 +75,10 @@ def style_item(group, it, w, variation, i, rng):
     site, one, many, icon = w["site"], w["one"], w["many"], w["cargo_icon"]
     label = w["labels"][(i + variation) % len(w["labels"])]
     a = it["answer"]
+    # These new sequences were authored as units. Replacing individual steps can
+    # change the characters, target word, or materials midway through the task.
+    if it.get("bank_context") and group not in {"color","mirror","draw","number-check","key-check"}:
+        return
     if group in {"keys", "number-keys"}:
         it["prompt"] = f"Find the {a} key on the {site} keyboard."
     elif group == "case-match":
@@ -117,13 +121,17 @@ def style_item(group, it, w, variation, i, rng):
                   choices=[mapped[x] for x in it["choices"]], answer=mapped[a])
     elif group in {"signs","key-check"}:
         if group == "signs" or i == 2:
+            if variation >= 1000 or it.get("bank_context"):
+                label = a
             it.update(prompt=f"Copy the sign for the {site}. Include the space.", display=label, answer=label)
         else:
             it["prompt"] = f"Type this {'letter' if i == 0 else 'word'} on the {site} keyboard."
     elif group == "middle-sound":
-        it.update(word=w["vowels"][a], prompt=f"Listen to the {friend}’s word. Which letter makes the middle sound?")
+        it.update(word=it["word"] if variation >= 1000 else w["vowels"][a], prompt=f"Listen to the {friend}’s word. Which letter makes the middle sound?")
     elif group == "digraphs":
-        it.update(word=w["digraphs"][a], prompt=f"Listen to the {friend}’s word. Which letter pair makes its first sound?")
+        it.update(word=it["word"] if variation >= 1000 else w["digraphs"][a], prompt=f"Listen to the {friend}’s word. Which letter pair makes its first sound?")
+    elif group == "sounds" and variation >= 1000:
+        it["prompt"] = f"Listen with the {friend}. Which letter makes the first sound?"
     elif group == "sounds" or (group == "sound-check" and i == 0):
         word = list(w["vowels"].values())[(variation+i)%5]
         initial = word[0].upper()
@@ -133,6 +141,8 @@ def style_item(group, it, w, variation, i, rng):
     elif group == "sound-check":
         word = w["vowels"][a.lower()] if i == 1 else w["digraphs"][a.lower()]
         it.update(word=word, prompt="Which letter makes the middle sound?" if i == 1 else "Which pair makes the first sound?")
+    elif group == "blend" and variation >= 1000:
+        return
     elif group == "blend":
         word = list(w["vowels"].values())[variation%5]
         answer = word[i].upper()
@@ -148,6 +158,8 @@ def style_item(group, it, w, variation, i, rng):
         it.update(stem=word[:-1], answer=word, choices=choices,
                   pictures=[{"label":x,"icon":MAGIC_PICTURES[x]} for x in choices],
                   prompt=f"Add a silent e to the {site} label. Which picture matches the new word?")
+    elif group in {"shift","backspace","syllables","rhymes"} and variation >= 1000:
+        return
     elif group == "rhymes":
         if i == variation % 4:
             word, answer, picture = w["rhyme"]

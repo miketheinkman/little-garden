@@ -1,5 +1,6 @@
 """Repeatable tabletop activities for the family lesson shelf."""
 import json
+from itertools import product
 from pathlib import Path
 import random
 
@@ -10,23 +11,50 @@ CONTENT = json.loads((Path(__file__).resolve().parents[1] / "content/table_games
 GAMES = CONTENT["lessons"]
 
 
+# Four-note phrases with at least two pitches, using a child-friendly major triad.
+MELODY_PATTERNS = [notes for notes in product(range(3), repeat=4) if len(set(notes)) == 3]
+
+
 def face(label, **details):
     return {"label": str(label), **details}
 
 
-def pairs(topic):
+def pairs(topic, expanded=False, rng=None):
     if topic in {"letters", "case", "teams", "words"}:
         pool = CONTENT["letters" if topic == "case" else topic]
+        if expanded and topic in {"case","letters"}:
+            pool = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        elif expanded and topic == "teams":
+            pool = [*pool, "wh", "ph", "ng", "ai", "ay", "ea", "oa", "oo", "ow", "oi", "oy"]
+        elif expanded and topic == "words":
+            from .remix import CVC
+            pool = CVC
         return [(face(s), face(s.lower() if topic == "case" else s)) for s in pool]
     if topic in {"colors", "shapes"}:
         return [(face(name, symbol=symbol),) * 2 for symbol, name in CONTENT[topic]]
     if topic == "count":
-        return [(face(text, clip=clip_path("directions", text), spoken=text),) * 2 for text in CONTENT["counts"]]
+        counts = CONTENT["counts"]
+        if expanded:
+            numbers = "one two three four five six seven eight nine ten".split()
+            counts = [", ".join(numbers[start:start+length]).capitalize() + "."
+                      for length in (2, 3, 4) for start in range(len(numbers)-length+1)]
+        return [(face(text, clip=clip_path("directions", text), spoken=text),) * 2 for text in counts]
     if topic == "melody":
-        return [(face(label, clip=f"sounds/melody-{i}.ogg"),) * 2 for i, (label, _) in enumerate(CONTENT["melodies"])]
+        cards = [(face(label, clip=f"sounds/melody-{i}.ogg"),) * 2 for i, (label, _) in enumerate(CONTENT["melodies"])]
+        if expanded:
+            for i, notes in enumerate(MELODY_PATTERNS):
+                clue = " · ".join(("low", "middle", "high")[note] for note in notes)
+                cards.append((face(clue, clip=f"sounds/melody-phrase-{i}.ogg"),) * 2)
+        return cards
     if topic == "sums":
+        if expanded:
+            equations = []
+            for total in range(2, 11):
+                first = rng.randrange(1, total)
+                equations.append((face(f"{first} + {total-first}"), face(total)))
+            return equations
         return [(face(f"{a} + {b}"), face(a + b)) for a, b in [(1, 1), (1, 2), (2, 2), (2, 3), (3, 3)]]
-    return [(face(i), face(i, symbol="●" * i, dots=True) if topic == "dots" else face(i)) for i in range(1, 6)]
+    return [(face(i), face(i, symbol="●" * i, dots=True) if topic == "dots" else face(i)) for i in range(1, 11 if expanded else 6)]
 
 
 def table_lesson(key, variation):
@@ -37,17 +65,19 @@ def table_lesson(key, variation):
     if tool == "balance":
         for index in range(5):
             weights = [1, 2, 3, 4][:3 + int(index >= 2)]
+            if variation >= 32:
+                weights = rng.sample(range(1, 9), len(weights))
             rng.shuffle(weights)
             target = weights[0] if index < 2 else sum(weights[:2])
             rng.shuffle(weights)
             animals = index in {1, 3, 4}
-            blocks = [dict(weight=w, icon=CONTENT["animals"][w-1] if animals else "") for w in weights]
+            blocks = [dict(weight=w, icon=(CONTENT["animals"] + ["🐺","🦁","🦛","🐘"])[w-1] if animals else "") for w in weights]
             items.append(dict(target=target, blocks=blocks, answer=str(target), choices=[], level=1 + int(index >= 2),
                               prompt=CONTENT["prompts"]["animals" if animals else "blocks"]))
     else:
         for i, topic in enumerate(spec["topics"]):
             deck = []
-            for pair, cards in enumerate(rng.sample(pairs(topic), [2, 2, 3, 3, 4][i])):
+            for pair, cards in enumerate(rng.sample(pairs(topic, variation >= 32, rng), [2, 2, 3, 3, 4][i])):
                 deck.extend(dict(card, pair=pair) for card in cards)
             rng.shuffle(deck)
             items.append(dict(deck=deck, listening=topic in {"count", "melody"}, prompt=CONTENT["prompts"][topic],

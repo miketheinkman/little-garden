@@ -33,8 +33,20 @@ def inside(shape, x, y):
 
 
 def art_item(item):
-    return dict(item, palette=["Red","Gold","Green","Blue","Plum","Eraser"], mask="".join("1" if inside(item["shape"], x, y) and (not item.get("starter") or 12 <= y <= 14) else "0"
-                for y in range(HEIGHT) for x in range(WIDTH)))
+    pixels = [(x, y) for y in range(HEIGHT) for x in range(WIDTH)
+              if inside(item["shape"], x-item.get("art_shift_x", 0), y-item.get("art_shift", 0))]
+    if item.get("starter"):
+        if "starter_window" in item:
+            # Keep a contiguous fragment on a different edge of the silhouette.
+            side = item["starter_window"]
+            pixels.sort(key=lambda p: p[side % 2], reverse=side >= 2)
+            pixels = pixels[:max(1, len(pixels)//4)]
+        else:
+            pixels = [(x, y) for x, y in pixels if 12 <= y <= 14]
+    mask = ["0"] * (WIDTH * HEIGHT)
+    for x, y in pixels:
+        mask[y * WIDTH + x] = "1"
+    return dict(item, palette=["Red","Gold","Green","Blue","Plum","Eraser"], mask="".join(mask))
 
 
 def evaluate(kind, mask, pixels):

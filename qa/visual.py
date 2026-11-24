@@ -115,6 +115,47 @@ class VisualReview(StaticLiveServerTestCase):
                     self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"))
             browser.close()
 
+    def test_shuffle_preview_and_assign(self):
+        family = Client()
+        parent = get_user_model().objects.get(username="reviewer")
+        family.force_login(parent)
+        cases = [(device, width, theme, Learner.objects.create(parent=parent, nickname="Fern"))
+                 for device, width in (("phone", 375), ("desktop", 1200)) for theme in ("light", "dark")]
+        assigned = []
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for device, width, theme, child in cases:
+                self.variant = f"{device}-{theme}"
+                with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                    ctx.add_cookies([{"name":"sessionid", "value":family.cookies["sessionid"].value,
+                                     "url":self.live_server_url}])
+                    page = ctx.new_page()
+                    page.goto(self.live_server_url + reverse("preview", args=[child.pk, "water-works-v1", 0]) + "?v=0")
+                    page.get_by_role("link", name="Shuffle round").click()
+                    variation = int(page.locator('input[name="variation"]').input_value())
+                    self.assertGreater(variation, 0)
+                    game = page.locator(".route-game")
+                    game.locator("[data-hint]").click()
+                    expect(game.locator(".is-hint")).to_be_visible()
+                    self.capture(page, "shuffled-route")
+                    page.get_by_role("button", name="Add to Fern’s queue").click()
+                    expect(page.locator("[data-queue-status]")).not_to_be_empty()
+                    assigned.append((child, variation))
+                    page.goto(self.live_server_url + reverse("preview", args=[child.pk, "letters-v1", 0]) + "?v=1073")
+                    lengths = page.locator("#trail").evaluate("""svg => {
+                        const path = document.createElementNS(svg.namespaceURI, 'path');
+                        return [...'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'].map(ch => {
+                            const shape = traceShapes[ch];
+                            path.setAttribute('d', Array.isArray(shape) ? shape.join(' ') : shape);
+                            return path.getTotalLength();
+                        });
+                    }""")
+                    self.assertTrue(all(length > 0 for length in lengths))
+                    self.capture(page, "expanded-tracing")
+            browser.close()
+        for child, variation in assigned:
+            self.assertEqual(child.assignment_set.get().variation, variation)
+
     def test_exploration_lessons(self):
         from pilot.explorations import EXPLORATIONS
         from pilot.practice import build_round

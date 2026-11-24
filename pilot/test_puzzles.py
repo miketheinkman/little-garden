@@ -10,10 +10,16 @@ def winning_moves(board):
 
 class RouteRulesTests(TestCase):
     def test_every_authored_map_and_orientation(self):
+        import json
         for key in PUZZLES:
-            for rotation in range(4):
-                for item in route_lesson(key, rotation)["items"]:
+            rounds = set()
+            boards = set()
+            for rotation in range(40):
+                items = route_lesson(key, rotation)["items"]
+                rounds.add(json.dumps([item["board"] for item in items], sort_keys=True))
+                for item in items:
                     board = item["board"]
+                    boards.add(json.dumps(board, sort_keys=True))
                     with self.subTest(key=key, level=board["name"], rotation=rotation):
                         wins = winning_moves(board)
                         self.assertTrue(wins)
@@ -22,6 +28,9 @@ class RouteRulesTests(TestCase):
                         self.assertIsNotNone(hint(board, initial))
                         self.assertIsNone(hint(board, wins[0]))
                         self.assertEqual(simulate(board, wins[0]), simulate(board, wins[0]))
+
+            self.assertEqual(len(rounds), 40)
+            self.assertEqual(len(boards), 200)
 
     def test_branch_rules_and_switch_rules(self):
         water = route_lesson("water-works-v1")["items"]
