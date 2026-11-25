@@ -45,6 +45,7 @@ function routeRenderer(root) {
   const board = JSON.parse(root.querySelector('script[type="application/json"]').textContent);
   const grid = root.querySelector(".route-grid");
   grid.style.setProperty("--cols", board.width);
+  grid.style.setProperty("--rows", board.cells.length / board.width);
   const train = board.mode === "train", mirror = root.hasAttribute("data-mirror");
   const nodes = board.cells.map((cell, index) => {
     const node = document.createElement(cell.states > 1 && !mirror ? "button" : "span");

@@ -72,3 +72,8 @@ button.route-cell:focus-visible{outline:4px solid var(--focus);z-index:3;outline
 @media (prefers-reduced-motion:reduce) {
   .route-game .throw-arm {transition:none}
 }
+
+/* Reserve space for directions on short screens while keeping each piece easy to tap. */
+#activity .route-grid {
+  max-width:calc(var(--cols) * clamp(44px, (100svh - var(--route-overhead, 18rem)) / var(--rows), 5rem));
+}

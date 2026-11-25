@@ -33,12 +33,16 @@ async function openLearnerPage(url, options = {}) {
   const board = main.querySelector("#board");
   if (board) startDrawing(board);
   document.dispatchEvent(new Event("garden-screen"));
-  const heading = main.querySelector("#prompt") || main.querySelector("h1");
-  if (heading) {
-    heading.tabIndex = -1;
-    heading.focus({preventScroll: true});
+  if (main.querySelector("#activity")) {
+    positionQuestion();
+  } else {
+    const heading = main.querySelector("h1");
+    if (heading) {
+      heading.tabIndex = -1;
+      heading.focus({preventScroll: true});
+    }
+    window.scrollTo({top: 0, behavior: "instant"});
   }
-  positionQuestion();
 }
 
 document.addEventListener("click", event => {

@@ -189,6 +189,7 @@ class VisualReview(StaticLiveServerTestCase):
                     page.get_by_role("link", name="Choose a lesson to schedule").click()
                     page.get_by_label("Subject").select_option(LESSONS["ten-v1"]["category"])
                     page.get_by_role("button", name="Filter lessons").click()
+                    page.wait_for_load_state("load")
                     trigger = page.locator('[data-lesson="ten-v1"] [data-schedule]')
                     trigger.focus()
                     trigger.press("Enter")
@@ -228,7 +229,8 @@ class VisualReview(StaticLiveServerTestCase):
                 page = ctx.new_page()
                 page.goto(self.live_server_url + reverse("play", args=[scheduled.pk]))
                 def on_question():
-                    page.wait_for_function("Math.abs(document.querySelector('[data-question-start]').getBoundingClientRect().top-16) < 3 || (window.scrollY + innerHeight >= document.documentElement.scrollHeight-2 && document.querySelector('#prompt').getBoundingClientRect().bottom < innerHeight)")
+                    expect(page.locator("#prompt")).to_be_focused()
+                    expect(page.locator("#prompt")).to_be_in_viewport(ratio=1)
                     self.assertLess(page.locator("#activity button[name=answer]").first.bounding_box()["y"], 640)
                 on_question()
                 self.variant = "landscape-tablet"
@@ -249,10 +251,70 @@ class VisualReview(StaticLiveServerTestCase):
                 page.screenshot(path=self.out / "landscape-tablet-puzzle.png")
                 ctx.add_cookies([{"name":"sessionid","value":family.cookies["sessionid"].value,"url":self.live_server_url}])
                 page.goto(self.live_server_url + reverse("preview", args=[child.pk, "keys-v2", 0]))
-                expect(page.get_by_role("link", name="Schedule this round")).to_be_in_viewport()
+                expect(page.locator("#prompt")).to_be_focused()
                 page.locator(".preview-steps").get_by_role("link", name="2", exact=True).click()
-                page.wait_for_function("Math.abs(document.querySelector('.question-heading').getBoundingClientRect().top-16) < 3")
+                expect(page.locator("#prompt")).to_be_focused()
                 expect(page.locator("#activity button[name=answer]").first).to_be_in_viewport()
+            browser.close()
+
+    def test_question_work_area(self):
+        parent = get_user_model().objects.get(username="reviewer")
+        family = Client()
+        family.force_login(parent)
+        cases = []
+        for width, height in ((375, 667), (812, 375), (1024, 640), (1200, 820)):
+            for theme in ("light", "dark"):
+                child = Learner.objects.create(parent=parent, nickname="Fern", lesson_theme="space")
+                row = assign_lesson(child, "keys-v2", 0)
+                device = Client()
+                device.force_login(parent)
+                device.post(reverse("manage", args=[child.pk]), {"action": "play"})
+                cases.append((width, height, theme, child, row, device))
+
+        def check_position(page, start=".question-heading"):
+            expect(page.locator("#prompt")).to_be_focused()
+            expect(page.locator("#prompt")).to_be_in_viewport(ratio=1)
+            page.wait_for_function("""selector => {
+                const top = document.querySelector(selector).getBoundingClientRect().top;
+                const bottom = document.querySelector('.question-work-area').getBoundingClientRect().bottom;
+                const inset = Math.max(16, (innerHeight - (bottom - top)) / 2);
+                return Math.abs(top - inset) < 3 ||
+                    (top > inset && scrollY + innerHeight >= document.documentElement.scrollHeight - 2) ||
+                    (top < inset && scrollY === 0);
+            }""", arg=start)
+
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width, height, theme, child, row, device in cases:
+                with browser.new_context(viewport={"width": width, "height": height}, has_touch=width < 1200,
+                                         color_scheme=theme) as ctx:
+                    def login(client):
+                        ctx.add_cookies([{"name": "sessionid", "value": client.cookies["sessionid"].value, "url": self.live_server_url}])
+                    login(device)
+                    page = ctx.new_page()
+                    page.goto(self.live_server_url + reverse("play", args=[row.pk]))
+                    check_position(page)
+                    expect(page.locator("#activity button[name=answer]").first).to_be_in_viewport(ratio=1)
+                    page.screenshot(path=self.out / f"work-area-{width}-{theme}-learner.png")
+                    page.get_by_role("button", name="Skip this question").click()
+                    expect(page.locator("[data-question-start]")).to_have_text("Step 2 of 5")
+                    check_position(page)
+                    login(family)
+                    url = self.live_server_url + reverse("preview", args=[child.pk, "gates-switches-v1", 1]) + "?v=23"
+                    page.goto(url)
+                    check_position(page)
+                    page.screenshot(path=self.out / f"work-area-{width}-{theme}-preview.png")
+                    expect(page.locator("[data-kind=leverA]")).to_be_in_viewport(ratio=1)
+                    self.assertGreaterEqual(page.locator("[data-kind=leverA]").bounding_box()["width"], 44)
+                    page.get_by_role("button", name="Skip this question").click()
+                    expect(page.locator(".preview-steps [aria-current]")).to_have_text("3")
+                    check_position(page)
+                    page.goto(url + "#feedback")
+                    expect(page.locator("#feedback-note")).to_be_in_viewport()
+                    expect(page.locator("#prompt")).not_to_be_focused()
+                    page.goto(self.live_server_url + reverse("preview", args=[child.pk, "scissors-v1", 0]))
+                    check_position(page, "[data-parent-prep]")
+                    expect(page.locator("[data-parent-prep]")).to_be_in_viewport(ratio=1)
             browser.close()
 
     def test_gate_throw_switch(self):
