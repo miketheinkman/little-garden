@@ -1,0 +1,59 @@
+name: little-garden-alpha
+x-logging: &logging
+  driver: local
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_DB: little_garden
+      POSTGRES_PASSWORD: ${GARDEN_DB_ADMIN_PASSWORD:?set the separate database administrator password}
+      GARDEN_DB_PASSWORD: ${GARDEN_DB_PASSWORD:?set the application database password}
+    volumes:
+      - family-data:/var/lib/postgresql/data
+      - ./init-app-role.sql:/docker-entrypoint-initdb.d/10-app-role.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d little_garden"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  web:
+    build:
+      context: ../..
+    image: ${GARDEN_APP_IMAGE:?set a release-specific application image tag}
+    restart: unless-stopped
+    logging: *logging
+    read_only: true
+    tmpfs:
+      - /tmp:size=96m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    ports:
+      - "127.0.0.1:${GARDEN_WEB_PORT:-8138}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      GARDEN_PUBLIC_HOST: ${GARDEN_PUBLIC_HOST:?set the public hostname}
+      GARDEN_SECRET_KEY: ${GARDEN_SECRET_KEY:?set the application signing key}
+      GARDEN_DB_HOST: db
+      GARDEN_DB_NAME: little_garden
+      GARDEN_DB_USER: garden_app
+      GARDEN_DB_PASSWORD: ${GARDEN_DB_PASSWORD:?set the application database password}
+      GARDEN_SMTP_HOST: ${GARDEN_SMTP_HOST:?set the transactional SMTP host}
+      GARDEN_SMTP_PORT: ${GARDEN_SMTP_PORT:-587}
+      GARDEN_SMTP_USER: ${GARDEN_SMTP_USER:?set the transactional SMTP username}
+      GARDEN_SMTP_PASSWORD: ${GARDEN_SMTP_PASSWORD:?set the transactional SMTP password}
+      GARDEN_FROM_EMAIL: ${GARDEN_FROM_EMAIL:?set the verified sender address}
+
+volumes:
+  family-data:
+    external: true
+    name: ${GARDEN_DATA_VOLUME:?set the durable PostgreSQL volume name}

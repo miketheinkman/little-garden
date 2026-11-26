@@ -475,7 +475,7 @@ def main():
             (lab / name).symlink_to(REPO / name)
         shutil.copy(REPO / "qa" / "capacity_fixture.py", lab / "fixture.py")
         (lab / "capacity_settings.py").write_text(
-            'from garden.settings import *\n'
+            'from garden.local_settings import *\n'
             'LOGGING = {"version": 1, "disable_existing_loggers": False, '
             '"handlers": {"trial": {"class":"logging.FileHandler","filename":BASE_DIR / "errors.log"}}, '
             '"loggers":{"django.request":{"handlers":["trial"],"level":"ERROR","propagate":False}}}\n')

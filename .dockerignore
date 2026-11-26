@@ -1,0 +1,22 @@
+# Allow only the files needed by the release. Keep local accounts, mail and keys out of the build context.
+**
+!Dockerfile
+!requirements.txt
+!requirements-production.txt
+!manage.py
+!garden/
+!garden/*.py
+!pilot/
+!pilot/**/*.py
+pilot/test*.py
+!content/
+!content/*.json
+!templates/
+!templates/**/*.html
+!templates/**/*.txt
+!static/
+!static/**
+static/phonics/first-sound-sun*.ogg
+!LICENSE
+!LICENSES/
+!LICENSES/**

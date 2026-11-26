@@ -21,3 +21,9 @@ jobs:
           name: feature-screenshots
           path: visual-results/
           retention-days: 7
+
+  alpha-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 qa/alpha_smoke.py

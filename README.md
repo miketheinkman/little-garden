@@ -2,6 +2,8 @@
 
 A free, donation-supported homeschool web app. Every lesson, learner profile, planning tool, and progress report on the official service is free. Donations are optional and unlock no features.
 
+For the hosted alpha, see the [deployment punchlist](deploy/ALPHA-PUNCHLIST.md) and [first-host setup](deploy/alpha/README.md).
+
 ## Try the family pilot on Linux
 
 With Python 3.10+ and its venv module installed, run these commands from the checkout.
@@ -47,7 +49,7 @@ The picture and listening activities include holiday clues and traditions, color
 ## Next milestones
 
 1. Observe families using the full queue and collect educator feedback on lessons, accessibility, and learning evidence.
-2. Before hosted enrollment, implement retention, export and deletion workflows, parental consent as applicable, production settings, PostgreSQL backups and verified restoration. Expand reviewed sequences toward ages 7–8 after the family workflow is tested.
+2. Before hosted enrollment, implement retention, export and deletion workflows, parental consent as applicable, and offsite PostgreSQL backups. Verify restoration and the hosted deployment on the VPS. Expand reviewed sequences toward ages 7–8 after the family workflow is tested.
 ## Sandbox donations
 
 The mission page supports two Stripe-hosted Payment Links. In the same Stripe sandbox, create a one-time price and a monthly recurring price, then create a separate Payment Link for each. Stripe hosts the checkout and confirmation and records the payment or subscription. Little Garden sends no family profile or lesson data.

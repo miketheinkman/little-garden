@@ -26,7 +26,7 @@ if __name__ == "__main__":
     from django.core.management import execute_from_command_line
 
     address = address_for(sys.argv[1])
-    os.environ["DJANGO_SETTINGS_MODULE"] = "garden.settings"
+    os.environ["DJANGO_SETTINGS_MODULE"] = "garden.local_settings"
     os.environ["GARDEN_LOCAL_PILOT"] = "1"
     os.environ["GARDEN_HOSTS"] = f"localhost,127.0.0.1,{address}"
     execute_from_command_line(["manage.py", "runserver", f"{address}:8137", "--insecure", "--noreload"])
