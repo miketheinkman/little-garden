@@ -375,12 +375,69 @@ def preview(request, pk, key, step):
         if kind not in LessonFeedback.Kind.values or len(note) > 1500:
             return HttpResponseBadRequest("Choose a feedback type and use at most 1500 characters.")
         LessonFeedback.objects.create(parent=request.user, lesson=key, step=None if finished else step,
-                                      kind=kind, note=note, variation=number)
+                                      kind=kind, note=note, variation=number,
+                                      preview_settings={"theme": child.lesson_theme, "letters": letters, "purpose": purpose})
         if request.headers.get("Accept") == "application/json":
             return JsonResponse({"saved": True})
         messages.success(request, "Feedback saved. Thank you for helping shape this lesson.")
         return redirect(preview_url(step))
-    if finished:
+    return render_preview(request, context, preview_url)
+
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def feedback_round(request, pk):
+    notes = LessonFeedback.objects.all()
+    reviewer = request.user.is_staff or request.user.has_perm("pilot.review_lessons")
+    if not reviewer:
+        notes = notes.filter(parent=request.user)
+    note = get_object_or_404(notes, pk=pk)
+    key, number = note.lesson, note.variation
+    if key not in LESSONS:
+        raise Http404
+    saved = note.preview_settings
+    letters = saved.get("letters")
+    raw = discovery_round(key, number, letters) if letters and key == PATCH else build_round(key, number)
+    lesson = themed_round(key, raw, saved.get("theme", "garden"), number)
+    try:
+        step = int(request.GET.get("step", note.step or 0))
+    except ValueError:
+        raise Http404
+    if not 0 <= step <= len(lesson["items"]):
+        raise Http404
+
+    # Carry the reviewer's filters through the round trip without accepting a return URL.
+    dashboard = reviewer and ("dashboard" in request.GET or
+                              (note.parent_id != request.user.pk and not request.user.is_staff))
+    params = {k: v for k, v in request.GET.items() if k in ("lesson", "flag", "state", "resolution", "page")} if dashboard else {}
+    back = reverse("dashboard" if dashboard else "feedback_history")
+    if params:
+        back += "?" + urlencode(params)
+    if dashboard:
+        reopen_url = back
+    elif note.parent_id == request.user.pk:
+        reopen_url = reverse("reopen_feedback", args=[note.pk])
+    else:
+        reopen_url = reverse("dashboard")
+    if dashboard:
+        params["dashboard"] = "1"
+
+    def preview_url(target):
+        return reverse("feedback_round", args=[pk]) + "?" + urlencode({**params, "step": target})
+
+    context = {
+        "preview": True, "feedback_entry": note, "key": key, "lesson": lesson, "step": step, "variation": number,
+        "finished": step == len(lesson["items"]), "purpose": saved.get("purpose", Purpose.PRACTICE),
+        "feedback_back": f"{back}#note-{pk}", "reopen_url": reopen_url,
+        "session_purpose": Purpose(saved["purpose"]).label if saved.get("purpose", Purpose.PRACTICE) != Purpose.PRACTICE else "",
+    }
+    return render_preview(request, context, preview_url)
+
+
+def render_preview(request, context, preview_url):
+    key, lesson, step = context["key"], context["lesson"], context["step"]
+    context["preview_steps"] = [preview_url(i) for i in range(len(lesson["items"]))]
+    if context["finished"]:
         return render(request, "preview_done.html", context)
     item = lesson["items"][step]
     if "shape" in item:
@@ -393,7 +450,7 @@ def preview(request, pk, key, step):
         if request.POST.get("action") == "skip":
             return redirect(preview_url(step+1))
         accepted, artwork = lesson_response(request, lesson, item)
-        checkin = (purpose != Purpose.PRACTICE or lesson.get("checkin")) and evidence_method(lesson) == "answer"
+        checkin = (context["purpose"] != Purpose.PRACTICE or lesson.get("checkin")) and evidence_method(lesson) == "answer"
         if accepted or checkin and submitted_response(request.POST, lesson, item):
             if artwork:
                 messages.success(request, artwork["feedback"])

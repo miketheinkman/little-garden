@@ -1,4 +1,7 @@
-<div class="preview-nav"><a href="{{ library_url }}">Back to lesson library</a>{% if session_purpose %} · <a href="{% url 'placement_reviews' child.pk %}">Placement &amp; reviews</a>{% endif %}
+{% if feedback_entry %}
+<nav class="preview-nav"><a href="{{ feedback_back }}">Back to feedback entry</a> · <a href="#original-feedback">View original feedback</a></nav>
+<p class="meta">Feedback preview · Round {{ variation|add:1 }}</p>
+{% else %}<div class="preview-nav"><a href="{{ library_url }}">Back to lesson library</a>{% if session_purpose %} · <a href="{% url 'placement_reviews' child.pk %}">Placement &amp; reviews</a>{% endif %}
 <a class="link" href="#feedback">Give feedback</a></div>
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
 <div class="preview-tools"><p><strong>Parent preview</strong>{% if session_purpose %} · {{ session_purpose }}{% endif %} · {{ lesson.participation }} · Ages {{ lesson.age }}</p>
@@ -14,3 +17,4 @@
 
 {% load static %}{% include "schedule_dialog.html" %}<p data-queue-status role="status" class="queue-notice"></p>
 <script defer src="{% static 'lesson-queue.js' %}?v=schedule"></script>
+{% endif %}

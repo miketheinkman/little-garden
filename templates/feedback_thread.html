@@ -1,3 +1,4 @@
+<p><a href="{% url 'feedback_round' feedback.pk %}{% if dashboard_replay %}{% querystring dashboard='1' %}{% endif %}">Try this round again</a></p>
 <p class="meta"><strong>{% if feedback.resolved %}Resolved{% else %}Open{% endif %}</strong> · {% if feedback.read_at %}Read by the team · {{ feedback.read_at|date:"M j, Y" }}{% else %}Awaiting review{% endif %}</p>
 {% for reply in feedback.replies.all %}
 <section class="team-reply"><strong>{% if reply.kind == "reply" %}Little Garden team{% else %}{{ reply.get_kind_display }}{% endif %}</strong> · {{ reply.created|date:"M j, Y" }}

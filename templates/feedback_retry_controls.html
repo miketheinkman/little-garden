@@ -1,0 +1,7 @@
+<article id="original-feedback">
+  <h2>Original feedback</h2>
+  <p class="meta">{{ feedback_entry.get_kind_display }} · {% if feedback_entry.step == None %}Whole lesson{% else %}Step {{ feedback_entry.step|add:1 }}{% endif %} · {% if feedback_entry.resolved %}Resolved{% else %}Open{% endif %}</p>
+  {% if feedback_entry.note %}<p>{{ feedback_entry.note|linebreaksbr }}</p>{% endif %}
+  {% if feedback_entry.resolved %}{% include "feedback_reopen.html" with feedback=feedback_entry post_url=reopen_url %}{% endif %}
+  <p><a href="{{ feedback_back }}">Back to feedback entry</a></p>
+</article>

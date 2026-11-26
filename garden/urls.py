@@ -21,6 +21,7 @@ urlpatterns = [
     path("co-view/share/<int:pk>/", coview.broadcast, name="coview_broadcast"),
     path("dashboard/", dashboard, name="dashboard"),
     path("dashboard/technical/", technical_dashboard, name="technical_dashboard"),
+    path("feedback/<int:pk>/round/", views.feedback_round, name="feedback_round"),
     path("feedback/<int:pk>/reopen/", reopen_feedback, name="reopen_feedback"),
     path("feedback/preferences/", views.feedback_preferences, name="feedback_preferences"),
     path("feedback/", views.feedback_history, name="feedback_history"),

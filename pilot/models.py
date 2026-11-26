@@ -100,6 +100,7 @@ class LessonFeedback(models.Model):
     note = models.CharField(max_length=1500, blank=True)
     resolved = models.BooleanField(default=False)
     status_version = models.PositiveIntegerField(default=0)
+    preview_settings = models.JSONField(default=dict, blank=True)
     read_at = models.DateTimeField(null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
 

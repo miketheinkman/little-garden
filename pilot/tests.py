@@ -293,6 +293,44 @@ class LibraryTests(TestCase):
             self.assertContains(response, "Preview complete")
         self.assertFalse(Assignment.objects.exists())
 
+    def test_feedback_replay_keeps_the_original_preview_settings(self):
+        from .models import LessonFeedback
+        self.child.lesson_theme = "space"
+        self.child.save()
+        url = self.library + "my-letters-v1/preview/2/?v=7&letters=QXZR&purpose=review"
+        original = self.client.get(url).context
+        self.client.post(url, {"action": "feedback", "kind": "change"})
+        note = LessonFeedback.objects.get()
+        replay = f"/feedback/{note.pk}/round/"
+        self.child.delete()
+        page = self.client.get(replay)
+        self.assertEqual(page.context["step"], 2)
+        self.assertEqual(page.context["item"], original["item"])
+        self.assertEqual(page.context["lesson"]["world_key"], "space")
+        self.assertEqual(page.context["purpose"], "review")
+        self.assertContains(page, "Skill review")
+        self.assertNotContains(page, "Add to")
+        self.assertRedirects(self.client.post(replay, correct_submission(original["item"])), replay+"?step=3")
+        self.assertContains(self.client.get(replay+"?step=4"), "Preview complete")
+        self.assertFalse(Assignment.objects.exists())
+        self.assertEqual(self.client.get(replay+"?step=-1").status_code, 404)
+        self.client.force_login(get_user_model().objects.create_user("other-family"))
+        self.assertEqual(self.client.get(replay).status_code, 404)
+        self.assertEqual(self.client.post(replay, {"action": "skip"}).status_code, 404)
+        self.client.logout()
+        self.assertEqual(self.client.get(replay).status_code, 302)
+
+    def test_whole_lesson_feedback_replays_from_the_start(self):
+        from .models import LessonFeedback
+        end = self.library+"keys-v1/preview/3/?v=7"
+        self.client.post(end, {"action": "feedback", "kind": "worked"})
+        note = LessonFeedback.objects.get()
+        self.assertIsNone(note.step)
+        page = self.client.get(f"/feedback/{note.pk}/round/")
+        self.assertEqual(page.context["step"], 0)
+        self.assertEqual(page.context["variation"], 7)
+        self.assertContains(page, "Whole lesson")
+
     def test_preview_is_household_scoped(self):
         outsider = get_user_model().objects.create_user("outside")
         self.client.force_login(outsider)

@@ -15,7 +15,7 @@
 <h2 id="family-feedback">Family feedback ({{ notes.paginator.count }})</h2>
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
 {% for note in notes %}<article id="note-{{ note.pk }}"><p class="meta">{{ note.get_kind_display }} · Round {{ note.variation|add:1 }} · {% if note.step == None %}Whole lesson{% else %}Step {{ note.step|add:1 }}{% endif %} · {{ note.created|date:"M j, Y" }}</p><h3>{{ note.title }}</h3>{% if note.note %}<p>{{ note.note|linebreaksbr }}</p>{% endif %}
-{% include "feedback_thread.html" with feedback=note %}
+{% include "feedback_thread.html" with feedback=note dashboard_replay=True %}
 {% if note.resolved %}{% include "feedback_reopen.html" with feedback=note %}{% else %}
 <form method="post">{% csrf_token %}<input type="hidden" name="feedback" value="{{ note.pk }}"><input type="hidden" name="version" value="{{ note.status_version }}"><button name="action" value="resolve">Mark resolved</button></form>{% endif %}
 {% if not note.read_at %}<form method="post">{% csrf_token %}<input type="hidden" name="feedback" value="{{ note.pk }}"><button name="action" value="read">Mark as read</button></form>{% endif %}
