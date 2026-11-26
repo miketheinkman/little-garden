@@ -11,6 +11,6 @@
 <div class="sort-loose" data-area="0" aria-label="Items to sort">{% for piece in item.pieces %}
 <button class="sort-piece" type="button" data-piece="{{ forloop.counter0 }}" aria-pressed="false"{% if piece.color %} aria-label="{{ piece.color }} {{ piece.name }}"{% endif %}><b aria-hidden="true"{% if piece.ink %} class="sort-color" style="color:{{ piece.ink }}"{% endif %}>{{ piece.icon }}</b>{{ piece.name }}</button>{% endfor %}</div>
 <div class="sort-bins">{% for bin in item|basket_labels %}<div class="sort-bin"><button type="button" data-bin="{{ forloop.counter }}" aria-label="Place in {{ bin.label|default:bin }}">{% if bin.ink %}<span class="basket-swatch" style="background:{{ bin.ink }}" aria-hidden="true"></span>{% else %}<span aria-hidden="true">{{ bin.example }}</span>{% endif %} {{ bin.label }}</button><div data-area="{{ forloop.counter }}"></div></div>{% endfor %}</div>
-{% if not mirror %}<div class="sort-edits"><button type="button" data-unplace disabled>↩ Take item out</button> <button type="button" data-sort-reset disabled>↺ Start over</button></div>{% endif %}
-<p role="status" data-sort-status>Choose an item, then a basket.</p>{% if not mirror %}<button data-sort-check disabled><span aria-hidden="true">✓</span> Check baskets</button>{% endif %}
+{% if not mirror %}<div class="sort-edits"><button type="button" data-unplace disabled><span aria-hidden="true">−</span> Take item out</button> <button type="button" data-sort-reset disabled>↺ Start over</button></div>{% endif %}
+<p role="status" data-sort-status>Drag an item to a basket, or tap the item and then its basket.</p>{% if not mirror %}<button data-sort-check disabled><span aria-hidden="true">✓</span> Check baskets</button>{% endif %}
 </section>{% endif %}

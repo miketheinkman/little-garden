@@ -16,7 +16,15 @@ function paintWorkshop(root, board, nodes, mutable, token, moves, trace, spot, h
   const arrows = workshopArrows;
   const actor = root.dataset.actor || "🐞";
   token.hidden = mode === "gears" || mode === "light";
-  token.textContent = actor;
+  const rover = mode === "bridge" && root.classList.contains("setting-space");
+  if (rover) {
+    if (!token.firstElementChild) token.replaceChildren(root.querySelector("[data-rover]").content.cloneNode(true));
+    const last = trace.at(-1), previous = trace.at(-2);
+    const dx = last % width - previous % width;
+    const dy = Math.floor(last / width) - Math.floor(previous / width);
+    const facing = dx > 0 ? 1 : dx < 0 ? 3 : dy > 0 ? 2 : dy < 0 ? 0 : cells[start].angle;
+    token.firstElementChild.style.transform = "rotate(" + facing * 90 + "deg)";
+  } else token.textContent = actor;
   const at = trace.at(-1) ?? start;
   token.style.transform = 'translate(' + (at % width * 100) + '%, ' + (Math.floor(at / width) * 100) + '%)';
   let ray = root.querySelector(".workshop-ray");
@@ -49,7 +57,8 @@ function paintWorkshop(root, board, nodes, mutable, token, moves, trace, spot, h
       case "mirror": case "mirrorMount": {
         const empty = cell.kind === "mirrorMount" && !state;
         const back = (cell.angle + state - Number(cell.kind === "mirrorMount")) % 2;
-        icon = empty ? "＋" : back ? "╲" : "╱";
+        icon = empty ? "＋" : "";
+        node.style.setProperty("--mirror-turn", back ? "45deg" : "-45deg");
         label = empty ? "empty mirror mount" : back ? "mirror sloping down to the right" : "mirror sloping up to the right";
         break;
       }
@@ -59,9 +68,21 @@ function paintWorkshop(root, board, nodes, mutable, token, moves, trace, spot, h
         icon = state ? "" : "＋";
         label = state ? length + " space plank " + routeDirections[direction] : "empty bridge landing";
         badge = state ? length + arrows[direction] : "";
-        if (state) {
-          node.style.setProperty("--plank-length", length);
-          node.style.setProperty("--plank-turn", (direction-1)*90+"deg");
+        let plank = node.plank;
+        if (state && !plank) {
+          plank = document.createElement("span");
+          plank.className = "bridge-plank";
+          plank.append(document.createElement("i"));
+          plank.setAttribute("aria-hidden", "true");
+          plank.style.left = (i % width * 100 / width) + "%";
+          plank.style.top = (Math.floor(i / width) * 100 / (cells.length / width)) + "%";
+          root.querySelector(".route-grid").append(plank);
+          node.plank = plank;
+        }
+        if (plank) {
+          plank.hidden = !state;
+          plank.style.setProperty("--plank-length", length);
+          plank.style.transform = "rotate(" + (direction - 1) * 90 + "deg)";
         }
         break;
       }
@@ -101,6 +122,13 @@ function paintWorkshop(root, board, nodes, mutable, token, moves, trace, spot, h
     if (cell.kind === "leverA" || cell.kind === "leverB") {
       // Keep the arm mounted so a repaint or a new mirror frame can move it between stops.
       if (!face.firstElementChild) face.append(root.querySelector("[data-throw-switch]").content.cloneNode(true));
+    } else if (cell.kind === "mirror" || cell.kind === "mirrorMount") {
+      if (icon) face.textContent = icon;
+      else if (!face.firstElementChild) {
+        const glass = document.createElement("span");
+        glass.className = "puzzle-mirror";
+        face.replaceChildren(glass);
+      }
     } else {
       face.textContent = icon;
     }

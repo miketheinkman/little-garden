@@ -89,6 +89,7 @@ function traceStrokes(svg) {
 function setTraceStroke(svg, strokes, index) {
   if (svg.dataset.stroke === String(index)) return;
   svg.dataset.stroke = index;
+  svg.querySelectorAll(".river-channel path").forEach(path => path.setAttribute("d", strokes[index]));
   const guide = svg.querySelector("#guide, .live-guide");
   const ink = svg.querySelector("#ink, .live-ink");
   if (strokes.length > 1) {

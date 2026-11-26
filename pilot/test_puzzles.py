@@ -42,7 +42,9 @@ class RouteRulesTests(TestCase):
         train = route_lesson("train-tracks-v1")["items"]
         self.assertEqual(simulate(train[3]["board"], (0, 0))["reason"], "passenger")
         self.assertGreater(len(winning_moves(train[4]["board"])), 1)
-        self.assertEqual(simulate(train[0]["board"], (0,))["trace"], [4, 5])
+        stalled = simulate(train[0]["board"], (0,))
+        self.assertEqual(stalled["trace"], [4])
+        self.assertEqual(stalled["spot"], 5)
 
     def test_workshop_rules(self):
         cases = [

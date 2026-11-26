@@ -231,11 +231,12 @@ class VisualReview(StaticLiveServerTestCase):
                 def on_question():
                     expect(page.locator("#prompt")).to_be_focused()
                     expect(page.locator("#prompt")).to_be_in_viewport(ratio=1)
-                    self.assertLess(page.locator("#activity button[name=answer]").first.bounding_box()["y"], 640)
+                    self.assertLess(page.locator("[data-screen-keyboard] summary").bounding_box()["y"], 640)
                 on_question()
                 self.variant = "landscape-tablet"
                 page.screenshot(path=self.out / "landscape-tablet-question.png")
                 first = scheduled.round_snapshot["items"][0]
+                page.locator("[data-screen-keyboard] summary").click()
                 buttons = page.locator("#activity button[name=answer]")
                 buttons.filter(has_text=next(c for c in first["choices"] if c != first["answer"])).click()
                 expect(page.locator(".retry-note")).to_be_visible()
@@ -254,7 +255,7 @@ class VisualReview(StaticLiveServerTestCase):
                 expect(page.locator("#prompt")).to_be_focused()
                 page.locator(".preview-steps").get_by_role("link", name="2", exact=True).click()
                 expect(page.locator("#prompt")).to_be_focused()
-                expect(page.locator("#activity button[name=answer]").first).to_be_in_viewport()
+                expect(page.locator("[data-screen-keyboard] summary")).to_be_in_viewport()
             browser.close()
 
     def test_question_work_area(self):
@@ -294,7 +295,7 @@ class VisualReview(StaticLiveServerTestCase):
                     page = ctx.new_page()
                     page.goto(self.live_server_url + reverse("play", args=[row.pk]))
                     check_position(page)
-                    expect(page.locator("#activity button[name=answer]").first).to_be_in_viewport(ratio=1)
+                    expect(page.locator("[data-screen-keyboard] summary")).to_be_in_viewport(ratio=1)
                     page.screenshot(path=self.out / f"work-area-{width}-{theme}-learner.png")
                     page.get_by_role("button", name="Skip this question").click()
                     expect(page.locator("[data-question-start]")).to_have_text("Step 2 of 5")
@@ -481,7 +482,7 @@ class VisualReview(StaticLiveServerTestCase):
             expect(page.get_by_text("Step 2 of 5",exact=True)).to_be_visible()
             toggle.uncheck()
             # Move focus back to the activity after changing the audio control.
-            page.locator('#activity button[name=answer]').first.focus()
+            page.locator('[data-screen-keyboard] summary').focus()
             page.keyboard.press("x")
             expect(page.locator(".retry-note")).to_be_visible()
             self.assertEqual(page.evaluate("cuePeaks.length"), 2)
@@ -492,6 +493,244 @@ class VisualReview(StaticLiveServerTestCase):
             expect(page.get_by_text("Step 3 of 5",exact=True)).to_be_visible()
             self.assertEqual(page.evaluate("cuePeaks.length"), 0)
             browser.close()
+
+    def test_family_round_interactions(self):
+        child = Learner.objects.get(pk=self.child_id)
+        child.lesson_theme = "space"
+        child.save(update_fields=["lesson_theme"])
+        family = Client()
+        family.force_login(child.parent)
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375, 1200):
+                for theme in ("light", "dark"):
+                    with browser.new_context(viewport={"width":width, "height":820}, has_touch=width == 375,
+                                             color_scheme=theme) as ctx:
+                        ctx.add_cookies([{"name":"sessionid", "value":family.cookies["sessionid"].value,
+                                          "url":self.live_server_url}])
+                        self.exercise_family_rounds(ctx.new_page(), self.live_server_url, child.pk, width, theme)
+            browser.close()
+
+    def test_sentence_retry_history(self):
+        child = Learner.objects.get(pk=self.child_id)
+        row = assign_lesson(child, "sentence-v1", variation=4253)
+        device = Client()
+        device.force_login(child.parent)
+        device.post(reverse("manage", args=[child.pk]), {"action":"play"})
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            page = browser.new_page()
+            page.context.add_cookies([{"name":"sessionid", "value":device.cookies["sessionid"].value, "url":self.live_server_url}])
+            page.goto(self.live_server_url + reverse("play", args=[row.pk]))
+            self.exercise_sentence_retry(page,row.round_snapshot["items"][0])
+            browser.close()
+        row.refresh_from_db()
+        self.assertEqual(row.step,1)
+        self.assertEqual(row.retries,1)
+        self.assertEqual(row.question_attempts.filter(step=0).count(),2)
+
+    def exercise_family_rounds(self, page, base, child_id, width, theme):
+        from pilot.practice import build_round
+        from pilot.test_puzzles import winning_moves
+        from pilot.themes import themed_round
+
+        errors = []
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        def preview(key, variation, step=0):
+            page.goto(base + reverse("preview", args=(child_id,key,step)) + f"?v={variation}")
+            return themed_round(key, build_round(key,variation), "space", variation)["items"][step]
+        def screen(label, selector):
+            page.locator(selector).screenshot(path=self.out / f"round-{width}-{theme}-{label}.png")
+            self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"))
+        def center(locator):
+            rect = locator.bounding_box()
+            return {"x":rect["x"] + rect["width"]/2, "y":rect["y"] + rect["height"]/2}
+        def drag(start, end):
+            a, b = center(start), center(end)
+            if width == 375:
+                touch = page.context.new_cdp_session(page)
+                for event, points in [("touchStart",[a]),("touchMove",[b]),("touchEnd",[])]:
+                    touch.send("Input.dispatchTouchEvent", {"type":event,"touchPoints":points})
+                touch.detach()
+            else:
+                page.mouse.move(**a)
+                page.mouse.down()
+                page.mouse.move(**b, steps=8)
+                page.mouse.up()
+
+        for key, variation in [("keys-v2",9385), ("number-keys-v2",8382)]:
+            item = preview(key, variation)
+            keys = page.locator("[data-screen-keyboard]")
+            expect(keys.locator("button").first).to_be_hidden()
+            keys.locator("summary").click()
+            screen(key, "[data-screen-keyboard]")
+            if key == "keys-v2":
+                keys.locator("summary").click()
+                page.keyboard.press(item["answer"].lower())
+            else:
+                keys.get_by_role("button",name=item["answer"],exact=True).click()
+            expect(page.locator(".answer-party")).to_be_visible()
+            if key == "number-keys-v2":
+                expect(page.locator("[data-question-start]")).to_contain_text("Step 2")
+                expect(page.locator("[data-screen-keyboard] button").first).to_be_visible()
+
+        item = preview("shift-v1",2735,3)
+        page.locator("[data-screen-keyboard] summary").click()
+        shift = page.locator('[data-action="shift"]')
+        shift.click()
+        expect(shift).to_have_attribute("aria-pressed","false")
+        page.keyboard.down("Shift")
+        expect(shift).to_have_attribute("aria-pressed","true")
+        page.keyboard.up("Shift")
+        letter = page.locator(f'[data-letter="{item["answer"].lower()}"]')
+        drag(shift, letter)
+        expect(page.locator(".answer-party")).to_be_visible()
+
+        if width == 375:
+            preview("shift-v1",2735,3)
+            page.locator("[data-screen-keyboard] summary").click()
+            shift.scroll_into_view_if_needed()
+            finger = {**center(shift), "id":1}
+            other = {**center(letter), "id":2}
+            touch = page.context.new_cdp_session(page)
+            touch.send("Input.dispatchTouchEvent", {"type":"touchStart","touchPoints":[finger]})
+            expect(shift).to_have_attribute("aria-pressed","true")
+            touch.send("Input.dispatchTouchEvent", {"type":"touchStart","touchPoints":[finger,other]})
+            touch.send("Input.dispatchTouchEvent", {"type":"touchEnd","touchPoints":[]})
+            touch.detach()
+            expect(page.locator(".answer-party")).to_be_visible()
+
+        page.add_init_script("""window.tones = [];
+            const ramp = AudioParam.prototype.exponentialRampToValueAtTime;
+            AudioParam.prototype.exponentialRampToValueAtTime = function(value, when) {
+                if (value > 1) tones.push(value);
+                return ramp.call(this, value, when);
+            };""")
+        preview("arrow-maze-v1",9312)
+        maze = page.locator("[data-maze]").get_attribute("data-maze")
+        here = maze.index("B")
+        for delta, arrow in [(1,"→"),(-1,"←"),(5,"↓"),(-5,"↑")]:
+            there = here + delta
+            if not (0 <= there < 25 and abs(there%5-here%5)<=1 and maze[there] != "#"):
+                page.locator(f'[data-direction="{arrow}"]').click()
+                expect(page.locator("[data-blocked]")).to_be_visible()
+                break
+        for delta, arrow in [(1,"→"),(-1,"←"),(5,"↓"),(-5,"↑")]:
+            there = here + delta
+            if 0 <= there < 25 and abs(there%5-here%5)<=1 and maze[there] != "#":
+                page.locator(f'[data-direction="{arrow}"]').click()
+                expect(page.locator('[name=tool_state]')).to_have_value(str(there))
+                break
+
+        self.assertEqual(len(page.evaluate("tones")),2)
+        self.assertNotEqual(*page.evaluate("tones"))
+        preview("river-v1",3290)
+        expect(page.locator(".river-water")).to_have_attribute("d",page.locator("#ink").get_attribute("d"))
+        screen("river","#trail")
+        preview("harvest-v1",4961)
+        pens = page.locator(".rabbit-pen")
+        for pen in pens.all(): pen.locator("[data-feed]").click()
+        pens.first.locator("[data-take]").click()
+        expect(pens.first.locator("[data-take]")).to_be_disabled()
+        expect(pens.nth(1).locator("output")).to_have_text("1")
+        screen("harvest",".harvest")
+        for key, variation, control in [("measure-v1",6181,"[data-action=count]"),("coins-v1",7328,"[data-coin]")]:
+            preview(key,variation)
+            page.locator(control).first.click()
+            undo = page.get_by_role("button",name="Take one back")
+            expect(undo).to_contain_text("−")
+            undo.click()
+            expect(undo).to_be_disabled()
+
+        preview("sort-baskets-v1",80,1)
+        piece = page.locator('[data-piece="0"]')
+        bins = page.locator("[data-bin]")
+        page.locator(".sort-board").scroll_into_view_if_needed()
+        drag(piece, bins.first)
+        expect(page.locator('[data-area="1"] [data-piece="0"]')).to_be_visible()
+        drag(piece, bins.nth(1))
+        expect(page.locator('[data-area="2"] [data-piece="0"]')).to_be_visible()
+        screen("sort",".sort-board")
+        piece.click()
+        page.get_by_role("button",name="Take item out").click()
+        expect(page.locator('[data-area="0"] [data-piece="0"]')).to_be_visible()
+
+        for key, variation in [("digraphs-v1",2362), ("middle-sound-v1",1705)]:
+            preview(key,variation)
+            page.locator("[data-hear-word]").click()
+            page.wait_for_function("document.querySelector('.word-station audio').currentTime > 0")
+            self.assertAlmostEqual(page.locator(".word-station audio").evaluate("a=>a.playbackRate"),.82)
+            self.assertEqual(page.locator("#directions-audio").evaluate("a=>a.playbackRate"),1)
+        preview("snail-v1",7)
+        expect(page.get_by_role("button",name="The bench")).to_be_visible()
+        expect(page.get_by_role("button",name="The log")).to_contain_text("🪵")
+        screen("landmarks","#activity")
+
+        item = preview("sentence-v1",4253)
+        self.exercise_sentence_retry(page,item)
+        for key, step in [("water-works-v1",2),("train-tracks-v1",0)]:
+            preview(key,14,step)
+            page.locator("[data-run]").click()
+            stop = page.locator(".is-stop")
+            expect(stop).to_be_visible()
+            encoded = list(map(int,page.locator("[name=tool_state]").input_value().split(",")))
+            trace = encoded[page.locator("button.route-cell").count()+2:]
+            self.assertNotIn(int(stop.get_attribute("data-index")), trace)
+            if key == "water-works-v1":
+                expect(page.locator(".route-console .retry-note")).to_be_visible()
+                self.assertEqual(len(page.evaluate("tones")),2)
+
+        item = preview("water-works-v1",14,1)
+        for node,state in zip(page.locator("button.route-cell").all(), winning_moves(item["board"])[0], strict=True):
+            if state and node.get_attribute("aria-label").startswith("empty space"):
+                page.locator("[data-spare]").click()
+            for _ in range(state): node.click()
+        page.locator("[data-run]").click()
+        expect(page.locator(".route-console .answer-party")).to_be_visible(timeout=12000)
+        self.assertEqual(len(page.evaluate("tones")),3)
+        screen("flow",".route-game")
+        page.locator("[data-next]").click()
+        expect(page.locator("[data-question-start]")).to_have_text("Step 3 of 5")
+        preview("light-paths-v1",25)
+        mirror = page.locator(".puzzle-mirror").first
+        initial = mirror.evaluate("el=>getComputedStyle(el).transform")
+        mirror.locator("xpath=ancestor::button").click()
+        expect(mirror).not_to_have_css("transform",initial)
+        screen("mirror",".route-grid")
+        for step in (1,2):
+            item = preview("bridges-v1",33,step)
+            buttons = page.locator("button.route-cell")
+            for node,state in zip(buttons.all(),winning_moves(item["board"])[0],strict=True):
+                for _ in range(state): node.click()
+            if step == 1:
+                plank = page.locator(".bridge-plank i").bounding_box()
+                self.assertGreater(plank["height"],1.8*buttons.first.bounding_box()["height"])
+            screen(f"bridge-{step}",".route-grid")
+            page.locator("[data-run]").click()
+            expect(page.locator("[data-next]")).to_be_visible(timeout=12000)
+        preview("bridges-v1",4)
+        expect(page.locator(".bridge-rover")).to_be_visible()
+        self.assertEqual(page.locator(".bridge-rover").evaluate("el=>el.style.transform"),"rotate(270deg)")
+        self.assertEqual(errors,[])
+
+    def exercise_sentence_retry(self, page, item):
+        check = page.locator("[data-check]")
+        words = item["answer"].split()
+        def tile(word):
+            return page.get_by_role("button", name=word, exact=True)
+        tile(words[-1]).click()
+        check.click()
+        expect(page.locator("#answer-feedback")).to_contain_text("more words")
+        for word in words[:-1]: tile(word).click()
+        check.click()
+        expect(page.locator("#answer-feedback")).to_contain_text("Check the word order")
+        page.get_by_role("button", name="Start over").click()
+        tile(words[-1]).click()
+        page.get_by_role("button", name="Undo last word").click()
+        for word in words: tile(word).click()
+        check.click()
+        expect(page.locator(".answer-party")).to_be_visible()
+        expect(page.locator("[data-question-start]")).to_contain_text("Step 2")
 
     def test_family_lesson_feedback(self):
         parent = get_user_model().objects.get(username="reviewer")
@@ -1941,6 +2180,7 @@ class VisualReview(StaticLiveServerTestCase):
         retry = page.get_by_text("Try again", exact=True)
         expect(retry).to_be_visible()
         self.capture(page, "try-again")
+        page.locator("[data-screen-keyboard] summary").click()
         page.get_by_role("button", name=target4, exact=True).click()
         expect(page.get_by_text("Step 5 of 5", exact=True)).to_be_visible()
         self.capture(page, "five-key-finish")

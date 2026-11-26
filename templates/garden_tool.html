@@ -7,7 +7,7 @@
 {% elif lesson.tool == 'shift' %}
 <p class="garden-sign"><output data-initial>_</output>{{ item.name_tail }}</p>
 <p>Hold <kbd>Shift ⇧</kbd> and press <kbd>{{ item.answer }}</kbd> on your keyboard.</p>
-<details data-screen-keyboard><summary>Show on-screen keyboard</summary><div data-keyboard aria-label="Capital letter keyboard">
+<details data-screen-keyboard><summary>Show on-screen keyboard</summary><p>Hold Shift and tap a letter, or slide from Shift to the letter and lift.</p><div data-keyboard aria-label="Capital letter keyboard">
 <button type="button" data-action="shift" aria-pressed="false">Shift ⇧</button>
 {% for ch in item.letters %}<button type="button" data-letter="{{ ch }}">{{ ch }}</button>{% endfor %}</div></details>
 {% elif lesson.tool == 'backspace' %}
@@ -32,7 +32,7 @@
 <p class="scene-strip" role="img" aria-label="{{ item.scene_alt }}">{{ item.scene }}</p>
 <p class="word-line" aria-label="Your sentence"><output></output></p>
 <div>{% for word in item.tiles %}<button type="button" data-tile="{{ word }}">{{ word }}</button>{% endfor %}</div>
-<button type="button" data-action="undo"><span aria-hidden="true">↶</span> Undo last word</button>
+<button type="button" data-action="undo"><span aria-hidden="true">↶</span> Undo last word</button> <button type="button" data-action="reset"><span aria-hidden="true">↺</span> Start over</button>
 {% elif lesson.tool == 'piles' %}
 <div class="two-sides">{% for n in item.piles %}<button class="acorn-card" name="answer" value="{% cycle 'left' 'right' %}" aria-label="{% cycle 'Left' 'Right' %} pile with {{ n }} {{ lesson.world.many|default:"acorns" }}"><span class="acorn-pile">{% for x in '123456' %}{% if forloop.counter <= n %}{% if lesson.world %}<i>{{ lesson.world.cargo_icon }}</i>{% else %}<i class="acorn"></i>{% endif %}{% endif %}{% endfor %}</span>{% cycle 'Left' 'Right' %} pile</button>{% endfor %}</div>
 {% elif lesson.tool == 'pairs' %}
@@ -42,10 +42,10 @@
 <div class="measure-strip" data-length="{{ item.length }}" data-unit="{{ lesson.world.cargo_icon }}" style="--units:{{ item.length }}">
 <div class="length-object {% if lesson.world %}themed-length{% else %}{{ item.object }}{% endif %}" role="img" aria-label="{{ item.measure_name|default:item.object }}"></div>
 <div class="acorn-ruler">{% for unit in '123456' %}<span></span>{% endfor %}</div></div>
-<button type="button" data-action="count"><span aria-hidden="true">➕</span> Lay one {{ lesson.world.one|default:"acorn" }}</button><button type="button" data-action="undo"><span aria-hidden="true">↶</span> Take one back</button>
+<button type="button" data-action="count"><span aria-hidden="true">➕</span> Lay one {{ lesson.world.one|default:"acorn" }}</button><button type="button" data-action="undo"><span aria-hidden="true">−</span> Take one back</button>
 {% elif lesson.tool == 'coins' %}
 <div class="coin-drawer">{% for coin in 'pnd' %}<button type="button" data-coin="{% cycle '1' '5' '10' %}"><b>{% cycle '1¢' '5¢' '10¢' %}</b>{% cycle 'Penny' 'Nickel' 'Dime' %}</button>{% endfor %}</div>
-<p class="coin-counter" aria-label="Coins on the counter"><output></output></p><button type="button" data-action="undo"><span aria-hidden="true">↶</span> Take one back</button>
+<p class="coin-counter" aria-label="Coins on the counter"><output></output></p><button type="button" data-action="undo"><span aria-hidden="true">−</span> Take one back</button>
 {% if not mirror %}<details data-amount-hint data-target="{{ item.price }}"><summary>💡 Show a hint</summary><p data-hint-message role="status"></p></details>{% endif %}
 {% elif lesson.tool == 'clock' %}
 <svg class="lesson-clock" viewBox="0 0 140 140" role="img" aria-label="Analog clock with the short hand at {{ item.hour_position }} and the long hand at {{ item.minute_position }}">

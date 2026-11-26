@@ -52,6 +52,17 @@ def prompt_icon(key):
 
 # Picture labels for choices that ask a child to recognize an idea rather than decode text.
 STORY_ICONS = {
+    "The bench":"🪑", "The hive":"🍯", "The lamp":"💡", "The nest":"🪺", "The log":"🪵", "The pot":"🪴",
+    "To keep the parcel safe":"📦", "To take a nap":"💤", "To catch the wind":"🌬️",
+    "A ribbon":"🎀", "A map":"🗺️", "A card":"💌", "A drawing":"🖼️", "A seed packet":"🌱",
+    "The red cab":"🚚", "The big rig":"🚛", "The tool box":"🧰", "The road map":"🗺️",
+    "The moon map":"🌕🗺️", "The red sun":"☀️", "The jet pod":"🚀", "The star lab":"🔭",
+    "The sea bed":"🪸", "The fin tip":"🦈", "The red fin":"🐟", "The wet net":"🥅",
+    "The rail map":"🗺️", "The box car":"🚃", "The new cap":"🧢", "The oak log":"🪵",
+    "The red fox":"🦊", "The nut bag":"🥜", "The sun hat":"👒", "The hot bun":"🥖",
+    "The jam pot":"🫙", "The egg cup":"🥚", "The nut bar":"🥜", "The dig pit":"⛏️",
+    "The mud map":"🗺️", "The egg bed":"🪺", "The sun cap":"🧢", "The hay bed":"🌾",
+    "The pig pen":"🐖", "The red hen":"🐔", "The mud pit":"🟤", "The bee hut":"🐝",
     "The gate":"🚪", "The door":"🚪", "The red pot":"🪴", "The pond":"💧", "At the pond":"💧",
     "To find Dot":"🔎", "To eat":"🍽️", "To stay dry":"☂️", "It rained":"🌧️",
     "Dot opened it":"📬", "Pip rested":"💤", "Bee":"🐝", "Moth":"🦋", "Pip":"🐌",

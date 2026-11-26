@@ -592,7 +592,16 @@ main:has(#live-room) {max-width:1600px}
 
 [data-screen-keyboard] summary,[data-amount-hint] summary{cursor:pointer;padding:.5rem 0;font-weight:650}
 .arrow-pad [data-blocked]{outline:3px dashed var(--focus);outline-offset:2px}
-[data-maze-status]{min-height:1.5em;margin:.3rem 0}
+[data-maze-status]{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.river-channel .river-bank{stroke:#50826a;stroke-width:38}
+.river-channel .river-water{stroke:#70c8dc;stroke-width:31}
+.river-channel ~ #guide,.river-channel ~ .live-guide{stroke:#c8f3f8;stroke-width:4;stroke-dasharray:3 4}
+[data-action="shift"],[data-letter],.sort-piece{touch-action:none;user-select:none}
+.sort-piece{cursor:grab}.sort-piece.dragging{position:relative;z-index:4;pointer-events:none;opacity:.84;cursor:grabbing}
+.sort-bin.drop-target,[data-area="0"].drop-target{outline:3px solid var(--focus);outline-offset:2px}
+.key-rows button{min-height:44px;min-width:0;padding:.4rem .16rem;margin:.1rem;flex:1}
+.key-rows div{display:flex;max-width:32rem}.key-rows{margin:.5rem 0}
+.story-picture{width:2.2em;height:1.7em;vertical-align:middle}
 .fill-container{margin:1rem 0;max-width:26rem;border:2px solid var(--edge);border-radius:1.2rem;background:var(--wash);padding:.65rem 1rem}
 .fill-container figcaption{font-weight:700}.fill-container figcaption span{font-size:1.8rem}
 .fill-container .basket{margin:.35rem 0;min-height:2.5rem}

@@ -51,7 +51,12 @@ button.route-cell:focus-visible{outline:4px solid var(--focus);z-index:3;outline
 .route-cell[data-kind="water"],.route-cell[data-kind="bridgePeg"]{background:#b2dce4;color:#245a6d}
 .route-cell[data-kind="path"],.route-cell[data-kind="parcel"]{background:var(--plate)}
 .route-cell[data-kind="gear"] .workshop-face,.route-cell[data-kind="gearPeg"][data-placed=true] .workshop-face,.route-game[data-mode=gears] [data-kind=source] .workshop-face{font-size:clamp(1.6rem,9vw,4.6rem);color:var(--rail)}
-.route-cell[data-kind="bridgePeg"][data-placed=true]::before{content:"";position:absolute;z-index:1;pointer-events:none;left:50%;top:28%;height:44%;width:calc(100% * var(--plank-length));transform-origin:0 50%;transform:rotate(var(--plank-turn)) translateX(calc(-50% / var(--plank-length)));background:repeating-linear-gradient(90deg,#c89058 0 12px,#845c39 12px 15px);border-block:3px solid #705236}
+.bridge-plank{pointer-events:none;position:absolute;z-index:1;width:calc(100% / var(--cols));height:calc(100% / var(--rows))}
+.bridge-plank i{position:absolute;left:3%;top:27%;height:46%;width:calc(var(--plank-length) * 100% - 6%);box-sizing:border-box;border:3px solid #664326;border-radius:3px;background:repeating-linear-gradient(90deg,#e4ad70 0 10px,#936138 10px 13px)}
+.route-game[data-mode=bridge] .route-grid{clip-path:inset(-2px)}
+.route-game[data-mode=bridge] button.route-cell:focus-visible{z-index:auto}
+.bridge-rover{width:80%;height:80%}
+.puzzle-mirror{display:block;width:84%;height:27%;box-sizing:border-box;border:3px solid #526981;border-bottom-color:#334250;border-radius:30%;box-shadow:0 1px 0 #edfaff;background:linear-gradient(115deg,#8bc7d7 15%,#fff 18% 27%,#a5dfef 30% 56%,#f3fcff 60% 66%,#78adbe 70%);transform:rotate(var(--mirror-turn))}
 .route-cell[data-kind] .route-mark,.route-cell[data-kind][data-marker]::after{z-index:3}
 .route-cell.workshop-live{background-color:var(--warm)}
 .route-game[data-mode=gears] .workshop-live .workshop-face{animation:gear-turn 2s linear infinite}

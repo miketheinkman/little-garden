@@ -231,7 +231,12 @@ def _raw_round(key, number):
     elif group == "ladybugs":
         for item, x in zip(items,rng.sample(range(12,78),len(items))):
             item.update(x=x,y=rng.randint(12,67),prompt=rng.choice(["Can you spot the ladybug?", "Tap the ladybug where it landed.", "Click the little red beetle."]))
-    elif group in ("lines","river"):
+    elif group == "river":
+        for item in items:
+            bend = rng.randint(16, 47)
+            item.update(path=f"M18 96 C56 {96-bend*2} 65 {120-bend} 92 77 S140 {78+bend} 182 42",
+                        prompt="Start at the gold dot. Glide along the river bend.")
+    elif group == "lines":
         for item in items:
             bend=rng.randint(14,55)
             item.update(path=f"M20 85 Q60 {85-bend*1.4:.0f} 100 75 T180 {75+bend}",

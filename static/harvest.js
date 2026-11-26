@@ -10,7 +10,10 @@ function paintHarvest(board, shares) {
     pen.querySelector("output").textContent = counts[index];
     pen.querySelector(".carrot-pile").textContent = board.dataset.icon.repeat(counts[index]);
     const feed = pen.querySelector("[data-feed]");
-    if (feed) feed.disabled = used === total;
+    if (feed) {
+      feed.disabled = used === total;
+      pen.querySelector("[data-take]").disabled = counts[index] === 0;
+    }
   });
 }
 
@@ -29,9 +32,12 @@ function startHarvest(board, form) {
     finish.disabled = used > 0 && !equal;
     finish.querySelector("[data-sharing-label]").textContent = used ? "We shared equally" : "We shared with our own counters";
     board.querySelector("[data-share-hint]").textContent = used === total
-      ? (equal ? "Each " + board.dataset.role + " has " + counts[0] + " " + board.dataset.plural + "." : "Look at the piles. Start over and give one to each helper in turn.") : "";
+      ? (equal ? "Each " + board.dataset.role + " has " + counts[0] + " " + board.dataset.plural + "." : "Look at the piles. Take one back and give it to another helper.") : "";
   }
   buttons.forEach((button, index) => {
+    const take = button.closest(".rabbit-pen").querySelector("[data-take]");
+    take.hidden = false;
+    take.onclick = () => { if (counts[index]) counts[index]--; update(); };
     button.hidden = false;
     button.onclick = () => { counts[index]++; update(); };
   });

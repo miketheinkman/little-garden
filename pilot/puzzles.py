@@ -150,7 +150,6 @@ def simulate(board, moves):
                 fault = ("loop", pos)
             continue
         seen.add((pos, incoming))
-        trace.append(pos)
         cell = cells[pos]
         kind = cell["kind"]
         ports = connections(cell, states[pos])
@@ -158,6 +157,7 @@ def simulate(board, moves):
             if not fault:
                 fault = ("gap", pos)
             continue
+        trace.append(pos)
         if kind == "goal":
             goals.add(pos)
             continue

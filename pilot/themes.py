@@ -20,7 +20,7 @@ def lesson_title(key, original, w):
         "berry-basket": f"Fill the {w['box']}", "market": f"Orders at the {w['site']}",
         "harvest": f"Share the {w['many']}", "pattern": f"{w['place'].capitalize()} patterns",
         "tens": f"Bundle the {w['many']}", "signs": f"Type the {w['place']} signs",
-        "river": f"Follow the {actor} trail", "snail": f"Delivery at the {w['site']}",
+        "river": f"River crossing with the {actor}", "snail": f"Delivery at the {w['site']}",
         "story": f"The last {unit}", "weather": f"{w['place'].capitalize()} picture log",
         "color": f"Color the {w['place']}", "mirror": f"Mirror at the {w['site']}",
         "measure": f"Measure with {w['many']}", "coins": f"Coins at the {w['site']}",
@@ -90,8 +90,10 @@ def style_item(group, it, w, variation, i, rng):
         it["prompt"] = f"Find the {a} key on the {site} keyboard."
     elif group == "case-match":
         it["prompt"] = f"Which lowercase label at the {site} matches this key?"
-    elif group in {"lines", "river", "letters", "digits", "lowercase"}:
-        it["prompt"] = (f"Guide the {actor} along the path from the gold dot." if group in {"lines", "river"} else
+    elif group == "river":
+        it["prompt"] = "Start at the gold dot. Glide along the river bend."
+    elif group in {"lines", "letters", "digits", "lowercase"}:
+        it["prompt"] = (f"Guide the {actor} along the path from the gold dot." if group == "lines" else
                         f"Start at the dot and trace {a} on the {w['line']}.")
     elif group == "ladybugs":
         it.update(prompt=f"Find and tap the {actor}.", target=actor, icon=w["actor"]["icon"])

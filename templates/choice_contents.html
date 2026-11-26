@@ -1,1 +1,1 @@
-{% load lesson_cues %}{% choice_icon key lesson choice as symbol %}{% if symbol %}<span aria-hidden="true">{{ symbol }}</span> {% endif %}{{ choice }}
+{% load lesson_cues %}{% choice_icon key lesson choice as symbol %}{% if key == 'snail-v1' and choice == 'The bench' or key == 'snail-v1' and choice == 'The gate' %}{% include 'story_landmark.html' %} {% elif symbol %}<span aria-hidden="true">{{ symbol }}</span> {% endif %}{{ choice }}

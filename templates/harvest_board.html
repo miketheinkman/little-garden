@@ -4,7 +4,7 @@
     {% for rabbit in '123' %}{% if forloop.counter <= item.rabbits %}
     <div class="rabbit-pen"><span aria-hidden="true">{{ lesson.world.friend.icon|default:"🐇" }}</span><strong>{{ lesson.world.friend.name|default:"rabbit"|capfirst }} {{ rabbit }}</strong>
       <output aria-label="{{ lesson.world.friend.name|default:"rabbit"|capfirst }} {{ rabbit }} {{ lesson.world.many|default:"carrots" }}">0</output><span class="carrot-pile" aria-hidden="true"></span>
-      {% if not mirror %}<button type="button" data-feed hidden aria-label="{% if lesson.world %}Give one {{ lesson.world.one }} to {{ lesson.world.friend.name }}{% else %}Give a carrot to rabbit{% endif %} {{ rabbit }}"><span aria-hidden="true">➕</span> Give one</button>{% endif %}
+      {% if not mirror %}<button type="button" data-feed hidden aria-label="{% if lesson.world %}Give one {{ lesson.world.one }} to {{ lesson.world.friend.name }}{% else %}Give a carrot to rabbit{% endif %} {{ rabbit }}"><span aria-hidden="true">➕</span> Give one</button><button type="button" data-take hidden aria-label="Take one back from {{ lesson.world.friend.name|default:'rabbit' }} {{ rabbit }}"><span aria-hidden="true">−</span> Take one back</button>{% endif %}
     </div>{% endif %}{% endfor %}
   </div>
   {% if not mirror %}<input type="hidden" name="shares"><button class="link" type="button" data-redeal hidden><span aria-hidden="true">↺</span> Start over</button>

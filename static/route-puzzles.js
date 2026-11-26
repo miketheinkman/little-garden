@@ -141,10 +141,12 @@ function paintRouteMirror(root, encoded) {
              (values[n] || 0) - 1, (values[n + 1] || 0) - 1);
 }
 
-function startRoutePuzzle(root, form, signal) {
+function startRoutePuzzle(root, form, signal, sounds) {
   const {board, mutable, paint, nodes} = routeRenderer(root);
   const button = key => root.querySelector("[data-" + key + "]");
   const message = root.querySelector(".route-message");
+  const feedback = document.querySelector("#answer-feedback");
+  if (board.mode === "water") message.after(feedback);
   const initial = mutable.map(() => 0);
   let moves = initial.slice(), history = [], trace = [], spot = -1, highlight = -1;
   let busy = "", solved = false, selected = false, version = 0, hintDepth = 0;
@@ -169,6 +171,7 @@ function startRoutePuzzle(root, form, signal) {
     if (help & 2) button("parent").textContent = "✓ Grown-up help recorded";
   }
   function clearRun() {
+    if (board.mode === "water") feedback.replaceChildren();
     solved = false; trace = []; spot = highlight = -1; selected = false; hintDepth = 0;
   }
   function edit(index) {
@@ -208,6 +211,10 @@ function startRoutePuzzle(root, form, signal) {
     button("run").focus();
   };
   async function request(action) {
+    if (board.mode === "water" && action === "run") {
+      feedback.replaceChildren();
+      sounds.prepare();
+    }
     const id = ++version;
     busy = action; refresh();
     const data = new FormData(form);
@@ -227,6 +234,19 @@ function startRoutePuzzle(root, form, signal) {
         }
         if (id !== version || signal.aborted || !root.isConnected) return;
         solved = result.success;
+        if (board.mode === "water") {
+          const outcome = solved ? "correct" : "retry";
+          const note = gardenAnswerNote(outcome, Number(feedback.dataset.successSeed));
+          feedback.replaceChildren(note);
+          setTimeout(() => {
+            if (note.isConnected) {
+              note.remove();
+              document.dispatchEvent(new Event("garden-answer"));
+            }
+          }, 2000);
+          sounds.play(outcome);
+          document.dispatchEvent(new Event("garden-answer"));
+        }
         spot = solved ? -1 : result.spot;
         const reasons = {edge:"The path ran off the board.", rock:"A rock blocks this path.", pickup:"A stop was missed.",
           spin:"The flower is turning the other way.", gears:"The gears stop turning here.", bridge:"There is still a gap at the bank.",

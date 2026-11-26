@@ -48,9 +48,10 @@ function startAnswerSounds(signal) {
     const now = ctx.currentTime;
     // A rising C-major flourish, or a soft two-note wobble with a little upward curl.
     const retry = result === "retry";
-    const notes = retry
+    const movement = {move: [[0, 440, 560, .095]], blocked: [[0, 210, 145, .14]]};
+    const notes = movement[result] || (retry
       ? [[0, 392, 330, .15], [.15, 294, 330, .23]]
-      : [[0, 523.25, 523.25, .16], [.10, 659.25, 659.25, .18], [.21, 783.99, 783.99, .33]];
+      : [[0, 523.25, 523.25, .16], [.10, 659.25, 659.25, .18], [.21, 783.99, 783.99, .33]]);
     notes.forEach(([offset, from, to, duration], index) => {
       const start = now + offset;
       const voice = ctx.createOscillator();

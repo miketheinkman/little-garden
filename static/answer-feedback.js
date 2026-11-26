@@ -1,7 +1,6 @@
-function startAnswerFeedback(activity) {
+function startAnswerFeedback(activity, sounds) {
   const skip = document.querySelector(".skip-step");
   const feedback = document.querySelector("#answer-feedback");
-  const sounds = startAnswerSounds(lessonEvents.signal);
   let busy = false;
 
   function lock(locked) {
@@ -42,12 +41,17 @@ function startAnswerFeedback(activity) {
         focus?.focus({preventScroll: true});
         if (focus?.matches('input[type="text"]')) focus.select();
         feedback.replaceChildren(gardenAnswerNote("retry"));
+        if (activity.querySelector('[data-tool="sentence"]')) {
+          const hint = document.createElement("p");
+          hint.textContent = "Check the word order. Undo the last word or start over.";
+          feedback.append(hint);
+        }
         sounds.play("retry");
         document.dispatchEvent(new Event("garden-answer"));
         return;
       }
       if (!reply.next) throw new Error();
-      if (reply.result === "correct" || reply.result === "finished") {
+      if ((reply.result === "correct" || reply.result === "finished") && (!activity.querySelector('[data-mode="water"].route-solved') || reply.tier_gain)) {
         feedback.replaceChildren(gardenAnswerNote(reply.result, Number(feedback.dataset.successSeed), reply.tier_gain));
         sounds.play(reply.result);
         document.dispatchEvent(new Event("garden-answer"));
@@ -81,7 +85,8 @@ function startLesson() {
   const form = document.querySelector("#activity");
   if (!form) return;
   lessonEvents = new AbortController();
-  startActivity(form, lessonEvents.signal);
-  startAnswerFeedback(form);
+  const sounds = startAnswerSounds(lessonEvents.signal);
+  startActivity(form, lessonEvents.signal, sounds);
+  startAnswerFeedback(form, sounds);
 }
 startLesson();

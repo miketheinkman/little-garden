@@ -1,7 +1,11 @@
-function startActivity(form, signal) {
+function startActivity(form, signal, sounds) {
   const directions = document.querySelector("#directions-audio");
   const call = document.querySelector("[data-call-audio]");
   const word = document.querySelector(".word-station audio");
+  if (word?.dataset.wordRate) {
+    word.preservesPitch = true;
+    word.defaultPlaybackRate = word.playbackRate = Number(word.dataset.wordRate);
+  }
   const status = document.querySelector("#audio-status");
   const stopButton = document.querySelector("#stop-audio");
   const listen = document.querySelector("#listen");
@@ -73,7 +77,7 @@ function startActivity(form, signal) {
   document.addEventListener("visibilitychange", startWhenVisible, {signal});
   startWhenVisible();
   const route = form.querySelector(".route-game");
-  if (route) startRoutePuzzle(route, form, signal);
+  if (route) startRoutePuzzle(route, form, signal, sounds);
   const harvest = form.querySelector(".harvest");
   if (harvest) startHarvest(harvest, form);
 
@@ -97,9 +101,20 @@ function startActivity(form, signal) {
     });
   }
   const tool = form.querySelector(".garden-tool");
-  if (tool) startGardenTool(tool, form, answer, signal);
+  if (tool) startGardenTool(tool, form, answer, signal, sounds);
 
   if (form.dataset.kind === "key") {
+    const keyboard = form.querySelector("[data-keyboard-round]");
+    if (keyboard) {
+      const preference = "garden-visible-keyboard";
+      try { keyboard.open = sessionStorage.getItem(preference) === keyboard.dataset.keyboardRound; } catch {}
+      keyboard.addEventListener("toggle", () => {
+        try {
+          if (keyboard.open) sessionStorage.setItem(preference, keyboard.dataset.keyboardRound);
+          else if (sessionStorage.getItem(preference) === keyboard.dataset.keyboardRound) sessionStorage.removeItem(preference);
+        } catch {}
+      });
+    }
     document.addEventListener("keydown", event => {
       if (form.inert) return;
       if (event.target.closest("a, button, input, textarea, select, [contenteditable]") && !form.contains(event.target)) return;

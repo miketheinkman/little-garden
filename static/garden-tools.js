@@ -94,16 +94,31 @@ function paintGardenTool(board, encoded = "") {
   }
   if (check) {
     check.value = value;
-    check.disabled = !count || !value;
+    check.disabled = board.dataset.tool !== "sentence" && (!count || !value);
   }
 }
 
-function startGardenTool(board, form, answer, signal) {
+function startGardenTool(board, form, answer, signal, sounds) {
   let steps = [];
   const tool = board.dataset.tool;
   function update() {
     form.elements.tool_state.value = steps.join(",");
     paintGardenTool(board, form.elements.tool_state.value);
+  }
+  if (tool === "sentence") {
+    const check = board.querySelector("[data-check]");
+    const feedback = document.querySelector("#answer-feedback");
+    check.after(feedback);
+    form.addEventListener("submit", event => {
+      if (check.value) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const remaining = board.querySelectorAll("[data-tile]:enabled").length;
+      feedback.textContent = "Choose " + remaining + (remaining === 1 ? " more word." : " more words.");
+    });
+    board.addEventListener("click", event => {
+      if (event.target.closest("[data-tile],[data-action]")) feedback.replaceChildren();
+    });
   }
   if (tool === "dots") {
     const surface = board.querySelector(".dot-board");
@@ -158,8 +173,48 @@ function startGardenTool(board, form, answer, signal) {
   if (tool === "sort") {
     steps = Array(board.querySelectorAll("[data-piece]").length).fill(0);
     let selected = null;
+    let drag = null, suppressClick = false;
+    function dropTarget(event) {
+      return document.elementFromPoint(event.clientX, event.clientY)?.closest('.sort-bin,[data-area="0"]');
+    }
+    board.addEventListener("pointerdown", event => {
+      const piece = event.target.closest("[data-piece]");
+      suppressClick = false;
+      if (!piece || drag || form.inert || event.button !== 0) return;
+      drag = {piece, id:event.pointerId, x:event.clientX, y:event.clientY, moving:false};
+      piece.setPointerCapture(event.pointerId);
+    });
+    board.addEventListener("pointermove", event => {
+      if (drag?.id !== event.pointerId) return;
+      if (Math.hypot(event.clientX-drag.x, event.clientY-drag.y) < 6 && !drag.moving) return;
+      drag.moving = true;
+      drag.piece.classList.add("dragging");
+      drag.piece.style.translate = (event.clientX - drag.x) + "px " + (event.clientY - drag.y) + "px";
+      board.querySelector(".drop-target")?.classList.remove("drop-target");
+      const target = dropTarget(event);
+      if (target && board.contains(target)) target.classList.add("drop-target");
+    });
+    function finishDrag(event) {
+      if (drag?.id !== event.pointerId) return;
+      const {piece, moving} = drag;
+      drag = null;
+      const target = moving && event.type === "pointerup" && dropTarget(event);
+      piece.style.removeProperty("translate");
+      piece.classList.remove("dragging");
+      board.querySelector(".drop-target")?.classList.remove("drop-target");
+      if (!moving) return;
+      suppressClick = true;
+      if (!target || !board.contains(target)) return;
+      steps[Number(piece.dataset.piece)] = Number(target.querySelector("[data-bin]")?.dataset.bin || 0);
+      selected = null;
+      board.querySelector('[aria-pressed="true"]')?.setAttribute("aria-pressed", "false");
+      board.querySelector("[data-unplace]").disabled = true;
+      update();
+    }
+    for (const name of ["pointerup", "pointercancel", "lostpointercapture"]) board.addEventListener(name, finishDrag);
     board.addEventListener("click", event => {
       const piece = event.target.closest("[data-piece]");
+      if (suppressClick && event.detail) { suppressClick = false; return; }
       const bin = event.target.closest("[data-bin]");
       const remove = board.querySelector("[data-unplace]");
       if (event.target.closest("[data-sort-reset]")) {
@@ -191,18 +246,61 @@ function startGardenTool(board, form, answer, signal) {
   }
   function typeInitial(letter) {
     const upper = letter === letter.toUpperCase();
-    steps = [0, letter.toUpperCase().charCodeAt(0) - 64 + (upper ? 0 : 26)];
+    steps = [steps[0] || 0, letter.toUpperCase().charCodeAt(0) - 64 + (upper ? 0 : 26)];
     update();
     answer(letter);
   }
+  if (tool === "shift") {
+    const shift = board.querySelector('[data-action="shift"]');
+    let held = null;
+    let letterPress = null;
+    board.addEventListener("pointerdown", event => {
+      const key = event.target.closest("[data-letter]");
+      if (!key || event.button !== 0 || form.inert) return;
+      letterPress = {id:event.pointerId, key, upper:steps[0] === 1};
+    });
+    board.addEventListener("pointerup", event => {
+      if (letterPress?.id !== event.pointerId) return;
+      const {key, upper} = letterPress;
+      letterPress = null;
+      if (!form.inert && key.contains(document.elementFromPoint(event.clientX, event.clientY))) {
+        typeInitial(upper ? key.dataset.letter.toUpperCase() : key.dataset.letter);
+      }
+    });
+    board.addEventListener("pointercancel", event => {
+      if (letterPress?.id === event.pointerId) letterPress = null;
+    });
+    shift.addEventListener("pointerdown", event => {
+      if (held !== null || event.button !== 0 || form.inert) return;
+      held = event.pointerId;
+      shift.setPointerCapture(held);
+      steps = [1, steps[1] || 0];
+      update();
+    });
+    function release(event) {
+      if (held !== event.pointerId) return;
+      held = null;
+      const letter = event.type === "pointerup" && document.elementFromPoint(event.clientX, event.clientY)?.closest("[data-letter]");
+      steps[0] = 0;
+      if (letter && board.contains(letter) && !form.inert) typeInitial(letter.dataset.letter.toUpperCase());
+      else update();
+    }
+    for (const name of ["pointerup", "pointercancel", "lostpointercapture"]) shift.addEventListener(name, release);
+    window.addEventListener("blur", () => {
+      held = null;
+      if (steps[0]) { steps[0] = 0; update(); }
+    }, {signal});
+  }
   const moveBy = {"↑": -5, "↓": 5, "←": -1, "→": 1};
   function move(direction) {
+    sounds.prepare();
     const maze = board.querySelector("[data-maze]").dataset.maze;
     const here = steps[0] ?? maze.indexOf("B");
     const next = here + moveBy[direction];
     const status = board.querySelector("[data-maze-status]");
     if (next < 0 || next >= maze.length || Math.abs(next % 5 - here % 5) > 1 || maze[next] === "#") {
       const pad = board.querySelector(`[data-direction="${direction}"]`);
+      sounds.play("blocked");
       status.textContent = direction + " Blocked. Try another arrow.";
       const cell = board.querySelector("[data-maze]").children[here];
       if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -213,6 +311,7 @@ function startGardenTool(board, form, answer, signal) {
       pad.setAttribute("data-blocked", "");
       return;
     }
+    sounds.play("move");
     status.textContent = "";
     board.querySelector("[data-blocked]")?.removeAttribute("data-blocked");
     steps = [next];
@@ -228,6 +327,7 @@ function startGardenTool(board, form, answer, signal) {
     }
     if (button.dataset.direction) { move(button.dataset.direction); return; }
     if (button.dataset.letter) {
+      if (event.detail) return;
       typeInitial(steps[0] === 1 ? button.dataset.letter.toUpperCase() : button.dataset.letter);
       return;
     }
@@ -238,7 +338,7 @@ function startGardenTool(board, form, answer, signal) {
     }
     if (button.dataset.coin && steps.length < 40) steps.push(Number(button.dataset.coin));
     switch (button.dataset.action) {
-      case "shift": steps = [steps[0] === 1 ? 0 : 1]; break;
+      case "shift": return;
       case "beat": {
         if (steps.length >= 40) break;
         steps.push(1);
@@ -260,7 +360,7 @@ function startGardenTool(board, form, answer, signal) {
           event.target.closest("textarea,select,input,[contenteditable=true]") ||
           (event.target.closest("a,button,summary") && !board.contains(event.target) &&
            !event.target.closest("#listen,#stop-audio"))) return;
-      if (tool === "shift" && event.key === "Shift" && !event.repeat) { steps = [1]; update(); }
+      if (tool === "shift" && event.key === "Shift" && !event.repeat) { steps[0] = 1; update(); }
       const arrows = {ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→"};
       if (tool === "maze" && arrows[event.key]) { event.preventDefault(); move(arrows[event.key]); }
       if (tool === "backspace" && event.key === "Backspace") {
@@ -274,7 +374,7 @@ function startGardenTool(board, form, answer, signal) {
     }, {signal});
     if (tool === "shift") {
       document.addEventListener("keyup", event => {
-        if (event.key === "Shift" && steps[0] === 1) { steps = [0]; update(); }
+        if (event.key === "Shift" && steps[0] === 1) { steps[0] = 0; update(); }
       }, {signal});
     }
   }
@@ -438,5 +538,5 @@ function paintSort(board, steps) {
   const reset = board.querySelector("[data-sort-reset]");
   if (reset) reset.disabled = count === 0;
   board.querySelector("[data-sort-status]").textContent = count === pieces.length
-    ? "Check your baskets. To fix one, select the item and choose another basket." : "Choose an item, then a basket.";
+    ? "Check your baskets. To fix one, select the item and choose another basket." : "Drag an item to a basket, or tap the item and then its basket.";
 }
