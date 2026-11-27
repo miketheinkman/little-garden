@@ -2290,3 +2290,44 @@ class VisualReview(StaticLiveServerTestCase):
                     page.get_by_role("link",name="Check Z",exact=True).click()
                     expect(page.locator("[data-question-start]")).to_have_text("Step 1 of 1")
             browser.close()
+
+    def test_cross_lesson_focus_examples(self):
+        parent = get_user_model().objects.get(username="reviewer")
+        child = Learner.objects.create(parent=parent, nickname="Fern")
+        child.focuses.create(name="Five, M and S",
+                             config={"letters":["M","S"], "numbers":["5"], "context":85, "mode":"only"})
+        older = Learner.objects.create(parent=parent, nickname="Sage")
+        older.focuses.create(name="Eight", config={"numbers":["8"], "context":65, "mode":"only"})
+        family = Client()
+        family.force_login(parent)
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375,1200):
+                for theme in ("light","dark"):
+                    self.variant = f"focus-examples-{width}-{theme}"
+                    with browser.new_context(viewport={"width":width,"height":820},color_scheme=theme) as ctx:
+                        ctx.add_cookies([{"name":"sessionid","value":family.cookies["sessionid"].value,
+                                          "url":self.live_server_url}])
+                        page = ctx.new_page()
+                        for group in ("berry-basket","more","harvest","animal-lookout"):
+                            page.goto(self.live_server_url+reverse("preview",args=[child.pk,group+"-v1",0])+"?v=2")
+                            if group == "berry-basket":
+                                page.locator("#add-berry").click()
+                                expect(page.locator("#check-basket")).to_have_attribute("value","1")
+                            elif group == "more":
+                                expect(page.get_by_role("button",name=re.compile("pile with 5 "))).to_be_visible()
+                            elif group == "harvest":
+                                expect(page.locator("[data-carrots]")).to_have_attribute("data-carrots","10")
+                            else:
+                                expect(page.locator("#prompt")).to_have_text(re.compile(r"find the [ms]", re.I))
+                            self.capture(page,group)
+                        page.goto(self.live_server_url+reverse("preview",args=[older.pk,"more-v1",0])+"?v=2")
+                        pile = page.get_by_role("button",name=re.compile("pile with 8 "))
+                        expect(pile.locator(".acorn-pile i")).to_have_count(8)
+                        self.capture(page,"larger-piles")
+                        page.goto(self.live_server_url+reverse("preview",args=[older.pk,"berry-basket-v1",0])+"?v=2")
+                        for _ in range(8):
+                            page.locator("#add-berry").click()
+                        expect(page.locator("#check-basket")).to_have_attribute("value","8")
+                        self.capture(page,"larger-basket")
+            browser.close()

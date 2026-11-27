@@ -231,3 +231,81 @@ class FocusTests(TestCase):
         self.assertEqual([i["answer"] for i in selected[1]["items"]],list("SAT"))
         self.assertEqual(direct_target("digraphs-v1",{"answer":"sh","word":"ship","prompt":"Listen."},0)["facets"]["phonemes"],["SH · /ʃ/"])
         self.assertNotIn("phonemes",direct_target("digraphs-v1",{"answer":"ch","word":"choir","prompt":"Listen."},0)["facets"])
+
+    def test_comparison_sharing_and_basket_follow_one_number(self):
+        from .focus import has_audio, lesson_weight
+        from .question_sets import identity
+        for theme in ("garden","space"):
+            for n in (0,5,8,12):
+                configs = [{"numbers":[str(n)],"context":0,"mode":"only"}]
+                policy = {"theme":theme,"mode":"only","configs":configs}
+                for key in ("more-v1","berry-basket-v1","harvest-v1"):
+                    with self.subTest(theme=theme,n=n,key=key):
+                        items = compile_round(key,4,None,policy)["items"]
+                        if key=="harvest-v1" and n==0:
+                            self.assertEqual(lesson_weight(key,configs,theme),0)
+                            continue
+                        self.assertGreater(lesson_weight(key,configs,theme),0)
+                        signatures = set()
+                        for i,item in enumerate(items):
+                            self.assertTrue(has_audio(key,item))
+                            self.assertIn(str(n),direct_target(key,item,i)["facets"]["numbers"])
+                            sig = identity(key.rsplit("-v",1)[0],item,i)
+                            self.assertNotIn(sig,signatures)
+                            signatures.add(sig)
+                            if key=="more-v1":
+                                a,b = item["piles"]
+                                self.assertNotEqual(a,b)
+                                self.assertEqual(item["answer"],"left" if a>b else "right")
+                            elif key=="harvest-v1":
+                                self.assertLessEqual(item["carrots"],12)
+                                self.assertEqual(item["carrots"] % item["rabbits"],0)
+                            else:
+                                self.assertEqual(item["answer"],str(n))
+        self.child.focuses.create(name="Eight",config={"numbers":["8"],"mode":"only"})
+        preview = self.client.get(reverse("preview",args=[self.child.pk,"more-v1",1]))
+        self.assertContains(preview, "pile with 8")
+        counts = preview.context["item"]["piles"]
+        self.assertEqual(preview.content.count(b'<i class="acorn"></i>'),sum(counts))
+
+    def test_initials_bias_animals_without_letter_credit(self):
+        from .focus import has_audio, lesson_weight
+        config = {"letters":["M","S"],"context":85}
+        self.child.focuses.create(name="Initials",config=config)
+        key = "animal-lookout-v1"
+        self.assertEqual(lesson_weight(key,[config]),0)
+        for n in range(6):
+            row = assign_lesson(self.child,key,n)
+            items = assignment_lesson(row)["items"]
+            self.assertGreaterEqual(sum(i["answer"][0].upper() in config["letters"] for i in items),4)
+            self.assertEqual(len({i["answer"] for i in items}), len(items))
+            for step,item in enumerate(items):
+                self.assertIn(item["answer"],[a["name"] for a in item["animals"]])
+                self.assertTrue(has_audio(key,item))
+                self.assertEqual(direct_target(key,item,step)["facets"],{"animals":[item["answer"]]})
+        base = build_round(key,0)
+        for c in ({"letters":["M"],"context":0},{"letters":["Q"],"context":85}):
+            self.assertEqual(compile_round(key,0,None,{"theme":"garden","configs":[c]}),base)
+
+    def test_context_catalog_and_preserved_activities(self):
+        from .focus import CONTEXT_SLOTS, TARGETS, has_audio
+        from .focus_context import EXAMPLE_GROUPS, LINKED_GROUPS
+        from .question_sets import identity
+        fixed = set("lines river arrow-maze water-works train-tracks light-paths bridges delivery-routes gears-motion gates-switches number-check key-check sound-check".split())
+        config = {"letters":["M","S"],"numbers":["3","4","5"],"colors":["red"],
+                  "shapes":["triangle"],"interests":["space"],"context":85}
+        for key in CURRENT_LESSONS:
+            group = key.rsplit("-v",1)[0]
+            with self.subTest(key=key):
+                result = compile_round(key,2,None,{"theme":"garden","configs":[config]})
+                if group in fixed:
+                    self.assertEqual(result,build_round(key,2))
+                else:
+                    self.assertTrue(objectives(key)[0] in TARGETS or group in EXAMPLE_GROUPS
+                                    | LINKED_GROUPS | CONTEXT_SLOTS | {"pattern","ladybugs","blend"})
+                signatures = set()
+                for step,item in enumerate(result["items"]):
+                    self.assertTrue(has_audio(key,item))
+                    sig = identity(group,item,step)
+                    self.assertNotIn(sig,signatures)
+                    signatures.add(sig)

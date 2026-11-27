@@ -4,8 +4,8 @@ import json
 from itertools import cycle
 from functools import lru_cache
 from math import log
-from django.conf import settings
-from .audio import lesson_clips
+from .audio import has_audio
+from .focus_context import MOUSE_CONTEXT_PROMPT, contextual_examples, extended_piles, extra_examples, linked_examples
 from collections import defaultdict
 
 from django.core import signing
@@ -22,7 +22,7 @@ from .themes import themed_round
 # Only standalone prompts may be exchanged. Linked stories, multi-tier check-ins,
 # construction sequences and tools whose stages depend on position stay intact.
 TARGETS = {**dict.fromkeys(LETTER, "letters"), **dict.fromkeys(SOUND, "letters"),
-           **dict.fromkeys(NUMBER | {"five", "ten", "more", "market", "add-groups", "take-away"}, "numbers"),
+           **dict.fromkeys(NUMBER | {"five", "ten", "more", "market", "add-groups", "take-away", "harvest", "measure", "coins"}, "numbers"),
            **dict.fromkeys(COLOR, "colors"), "animal-lookout": "vocabulary", "animal-calls": "vocabulary",
            "same-different": "shapes", "syllables": "vocabulary", "rhymes": "vocabulary"}
 FACET = {"letters": "letters", "numbers": "numbers", "colors": "colors", "vocabulary": "words"}
@@ -154,7 +154,16 @@ def supported_targets(key,theme):
             values = direct_target(key,item,step)["facets"].get(field,[])
             if values and has_audio(key,item):
                 result.add(frozenset(values))
+    result.update(frozenset([item["answer"]]) for item in extra_examples(obj) if has_audio(key,item))
+    if obj == "more" and result:
+        result.update(frozenset((str(a), str(b))) for a in range(13) for b in range(a+1,13))
     return result
+
+
+def can_anchor(obj):
+    # The child can compare a focused pile with a companion, or split a
+    # focused amount even when every operand is not itself a focus number.
+    return obj in {"more","harvest","five","ten","market","add-groups","take-away"}
 
 
 def lesson_weight(key, configs, theme="garden"):
@@ -166,7 +175,7 @@ def lesson_weight(key, configs, theme="garden"):
             weight = activity_weight(c,obj)
             wanted = set(c.get(TARGETS.get(obj),[]))
             if weight and wanted and len(objectives(key)) == 1:
-                if not any(values <= wanted for values in supported_targets(key,theme)):
+                if not any(values <= wanted or (can_anchor(obj) and values & wanted) for values in supported_targets(key,theme)):
                     continue
             total += weight
     return total
@@ -212,15 +221,6 @@ def read_token(child, key, value):
     return policy
 
 
-@lru_cache(maxsize=8192)
-def recorded(path):
-    return (settings.BASE_DIR / "static" / path).is_file()
-
-
-def has_audio(key,item):
-    return all(recorded(path) for path in lesson_clips(item,key).values() if path)
-
-
 def contextual_words(items, configs, key, theme, rng):
     # Reuse complete recorded syllable prompts, matching the original beat count.
     # This keeps the correct number, difficulty and drum interaction identical.
@@ -244,21 +244,40 @@ def contextual_words(items, configs, key, theme, rng):
     return result
 
 
-def context_picture(configs, rng):
-    scores = defaultdict(float)
-    for c in configs:
-        strength = c.get("context",0)
-        if not strength:
+def context_prop(configs, rng, *, allow_symbols=False):
+    chance = rng.random()
+    candidates = []
+    for config in configs:
+        if chance >= config.get("context",0)/100:
             continue
+        letters = config.get("letters",())
         for icon, word, color, shape, interest in PROPS:
-            matches = (word[:1].upper() in c.get("letters",[]) or word in c.get("vocabulary",[])
-                       or color in c.get("colors",[]) or shape in c.get("shapes",[])
-                       or interest in c.get("interests",[]) or word in c.get("interests",[]))
-            if matches:
-                scores[icon] += strength
-    if scores and rng.random() < min(.85,max(scores.values())/100):
-        return rng.choices(list(scores),weights=list(scores.values()))[0]
-    return None
+            if (any(word.upper().startswith(letter) for letter in letters) or
+                    word in config.get("vocabulary",()) or color in config.get("colors",()) or
+                    shape in config.get("shapes",()) or interest in config.get("interests",()) or
+                    word in config.get("interests",())):
+                candidates.append((icon,word))
+        if allow_symbols:
+            candidates.extend((v,v) for field in ("letters","numbers") for v in config.get(field,()))
+    return rng.choice(candidates) if candidates else (None,None)
+
+
+def contextual_patterns(items, configs, rng):
+    result = []
+    seen = {identity("pattern",item,i) for i,item in enumerate(items)}
+    for index,item in enumerate(items):
+        symbol, _ = context_prop(configs,rng,allow_symbols=True)
+        if symbol and symbol not in item["choices"]:
+            old = rng.choice(item["choices"])
+            replace = lambda value: symbol if value == old else value
+            candidate = dict(item, choices=[replace(v) for v in item["choices"]],
+                             answer=replace(item["answer"]),
+                             display=" ".join(replace(v) for v in item["display"].split()))
+            if identity("pattern",candidate,index) not in seen:
+                item = candidate
+        result.append(item)
+        seen.add(identity("pattern",item,index))
+    return result
 
 
 def compile_round(key, number, letters, policy):
@@ -309,7 +328,16 @@ def compile_round(key, number, letters, policy):
     elif wanted and group not in ("sound-check","key-check","number-check") and not letters:
         facet = target_facet(obj,domain)
         known = {v for o,f,v in policy.get("known",[]) if o == obj and f == facet} - wanted
-        direct, review = {}, {}
+        direct, anchors, review = {}, {}, {}
+        if group == "more" and wanted & {"0","7","8","9","10","11","12"} and has_audio(key,items[0]):
+            for item in extended_piles(items[0],rng):
+                pair = set(map(str,item["piles"]))
+                if pair & wanted:
+                    pool = direct if pair <= wanted else anchors
+                    pool[identity(group,item,0)] = item
+        for item in extra_examples(group):
+            if item["answer"] in wanted and has_audio(key,item):
+                direct[identity(group,item,0)] = item
         count = round_count(key)
         variations = [number,*rng.sample(range(count),min(count,16)),*bank_variations(key)]
         for v in variations:
@@ -321,10 +349,14 @@ def compile_round(key, number, letters, policy):
                 ident = identity(group,item,index)
                 if vals <= wanted or (policy.get("contains") and vals & wanted):
                     direct.setdefault(ident,item)
+                elif can_anchor(obj) and vals & wanted:
+                    anchors.setdefault(ident,item)
                 elif vals <= known:
                     review.setdefault(ident,item)
             if len(direct) >= len(items)*3 and (not known or len(review)>=len(items)):
                 break
+        if not direct:
+            direct = anchors
         if direct:
             n = len(items)
             picks = list(direct.values())
@@ -338,19 +370,32 @@ def compile_round(key, number, letters, policy):
             items = picks[:n]
             rng.shuffle(items)
         else:
-            notice = "This activity has no available questions for these targets. Showing its usual round."
+            limits = {"more": "The two piles use different counts from 0 to 12.",
+                      "berry-basket": "The basket holds 0 to 12 items.",
+                      "harvest": "This activity splits up to 12 items evenly between two or three helpers."}
+            notice = " ".join(filter(None, ("This activity has no available questions for these targets.",
+                                            limits.get(group), "Showing its usual round.")))
+    if not wanted:
+        items = contextual_examples(key,theme,items,configs,rng)
+        items = linked_examples(key,theme,items,configs,rng)
     if group == "syllables" and not wanted:
         items = contextual_words(items,configs,key,theme,rng)
+    if group == "ladybugs":
+        contextual = []
+        for item in items:
+            symbol, label = context_prop(configs,rng,allow_symbols=True)
+            if symbol:
+                candidate = dict(item,icon=symbol,target=label,prompt=MOUSE_CONTEXT_PROMPT)
+                if has_audio(key,candidate):
+                    item = candidate
+            contextual.append(item)
+        items = contextual
+    if group == "pattern":
+        items = contextual_patterns(items,configs,rng)
     if group in CONTEXT_SLOTS:
         contextual = []
         for item in items:
-            icon = context_picture(configs,rng)
-            # On a letter-memory deck every back can carry the same number.
-            if group == "letter-memory" and icon is None:
-                numbers = [v for c in configs if c.get("numbers") and rng.random()<c.get("context",0)/100
-                           for v in c["numbers"]]
-                if numbers:
-                    icon = rng.choice(numbers)
+            icon, _ = context_prop(configs,rng,allow_symbols=group.endswith("-memory"))
             contextual.append(dict(item,context_icon=icon) if icon else item)
         items = contextual
     # Store presented items; applying theme transforms a second time can change phonics answers.

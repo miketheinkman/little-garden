@@ -118,8 +118,13 @@ def direct_target(key, item, step):
         operands, _ = identity("market",item,step)
         if operands:
             facets["numbers"] = list(dict.fromkeys(operands))
-    elif objective in {"more", "harvest"}:
-        facets["numbers"] = list(dict.fromkeys(map(str, item.get("piles", [item.get("carrots"), item.get("rabbits")]))))
+    elif objective == "more":
+        facets["numbers"] = list(map(str,item["piles"]))
+    elif objective == "harvest":
+        total, groups = item["carrots"], item["rabbits"]
+        facets["numbers"] = list(dict.fromkeys(map(str,(total,groups,total//groups))))
+    elif objective in {"coins","measure"}:
+        facets["numbers"] = [answer]
     elif objective in {"rhymes", "syllables", "magic-e", "backspace", "copy-word", "signs"}:
         facets["words"] = [item.get("word") or answer]
     elif objective in {"left-right-pics", "over-under", "inside-outside", "big-small", "tall-short"}:

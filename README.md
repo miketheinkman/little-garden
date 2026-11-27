@@ -126,6 +126,10 @@ In **Family garden**, open **Practice focus** beside a learner. Choose a subject
 
 **Selected targets** previews a short round from eligible questions. **With familiar targets** mixes in review supported by the same skill. A weekly plan proposes five editable days and enters the family calendar when a parent saves it. A recurring assignment can follow future focus changes or keep its settings. Automatic targets use direct evidence to advance. Interests can influence interchangeable pictures without adding assignments or earning credit.
 
+For example, a focus on 5 can produce a basket order for five, a pile of five beside another pile, or ten counters shared between two helpers. Focused baskets and piles support 0–12. Equal sharing uses whole shares and at most twelve counters. A letter focus can bring matching animals into Animal Lookout, with the frequency set by **Use focus in other lesson examples**. Animal recognition supplies the evidence for that activity.
+
+Of the 89 catalog activities, 36 accept specific practice targets, 39 more can use context in their examples, and word blending can use demonstrated sounds in automatic mode. The three multi-tier check-ins keep their standard sampling. Ten motor and logic activities keep their original paths, boards and cues. Linked readings and experiments use whole authored versions so their questions, materials and directions stay together. Existing assignments keep their saved questions.
+
 Open **Skill details**, choose initial placement or review, then expand a subject and skill area. Select an objective to inspect question attempts, parent observations, and available targeted checks. Scores roll up once per question. Historical scores without a reliably frozen question remain broad. “Demonstrated” is a practice estimate using up to six recent independent scores, averaging at least 80% across two or more rounds.
 
 ## Capacity testing

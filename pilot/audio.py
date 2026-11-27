@@ -1,5 +1,7 @@
 """Stable asset names for the text displayed in a saved or generated lesson round."""
+from functools import lru_cache
 from hashlib import sha256
+from django.conf import settings
 import re
 
 
@@ -20,3 +22,12 @@ def spoken_directions(key, item):
 def lesson_clips(item, key=None):
     return {"direction_clip": clip_path("directions", spoken_directions(key, item)),
             "word_clip": clip_path("word", item["word"]) if item.get("word") else None}
+
+
+@lru_cache(maxsize=8192)
+def recorded(path):
+    return (settings.BASE_DIR / "static" / path).is_file()
+
+
+def has_audio(key,item):
+    return all(recorded(path) for path in lesson_clips(item,key).values() if path)

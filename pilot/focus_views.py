@@ -49,7 +49,8 @@ class FocusForm(forms.Form):
     shapes = multiple("Shapes", AUTO_SHAPES)
     vocabulary = forms.CharField(required=False,max_length=180, label="Words", help_text="Separate words with commas.")
     interests = forms.CharField(required=False,max_length=180, help_text="For example, space, trains or dinosaurs.")
-    context = forms.TypedChoiceField(label="Use matching pictures in other lessons", coerce=int,
+    context = forms.TypedChoiceField(label="Use focus in other lesson examples", coerce=int,
+                                     help_text="An S focus can bring a snake into Animal Lookout. Finding the snake counts toward animal recognition.",
                                      choices=[(0,"Off"),(30,"Occasionally"),(65,"Often"),(85,"Frequently")],initial=65)
     mode = forms.ChoiceField(label="Practice rounds", choices=[("only","Only selected targets"),("mixed","Mix in familiar targets")])
     familiar = forms.CharField(label="Familiar letters for keyboard review",required=False,max_length=90)

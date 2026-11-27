@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.conf import settings
 
 from pilot.audio import clip_path, spoken_directions
+from pilot.focus_context import MOUSE_CONTEXT_PROMPT, extra_examples
 from pilot.practice import LESSONS, build_round, round_count
 from pilot.themes import THEMES, themed_round
 
@@ -27,6 +28,9 @@ class Command(BaseCommand):
                             words.add(item["word"])
         # Parents may choose any letter when assigning My Letter Patch.
         directions.update(f"Find the {letter} key." for letter in "ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+        directions.add(MOUSE_CONTEXT_PROMPT)
+        for group in ("berry-basket","animal-lookout"):
+            directions.update(item["prompt"] for item in extra_examples(group))
         catalog = {clip_path(kind, text): text for kind, texts in (("directions", directions), ("word", words))
                    for text in texts}
         if len(catalog) != len(directions) + len(words):
