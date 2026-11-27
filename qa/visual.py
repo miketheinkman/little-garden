@@ -2245,3 +2245,48 @@ class VisualReview(StaticLiveServerTestCase):
             page.emulate_media(color_scheme=scheme)
             expect(page.locator("html")).to_have_attribute("data-theme", scheme)
         self.assertEqual(errors, [])
+
+    def test_focus_configuration_week_and_evidence(self):
+        from pilot.assignments import assign_lesson
+        parent = get_user_model().objects.get(username="reviewer")
+        family = Client()
+        family.force_login(parent)
+        cases = []
+        for width in (375,1200):
+            for theme in ("light","dark"):
+                child = Learner.objects.create(parent=parent,nickname="Fern")
+                row = assign_lesson(child,"keys-v2",0,purpose="placement")
+                row.samples.create(step=0,strand="Keyboard use",level=1,score=100,
+                                   direct={"objective":"keys","facets":{"letters":["S"]}})
+                cases.append((width,theme,child.pk))
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width,theme,child_id in cases:
+                self.variant = f"focus-{width}-{theme}"
+                with browser.new_context(viewport={"width":width,"height":820},color_scheme=theme) as ctx:
+                    ctx.add_cookies([{"name":"sessionid","value":family.cookies["sessionid"].value,"url":self.live_server_url}])
+                    page = ctx.new_page()
+                    page.goto(self.live_server_url+reverse("focus",args=[child_id]))
+                    self.capture(page,"empty")
+                    page.get_by_label("Focus name",exact=True).fill("Keyboard practice")
+                    page.get_by_role("button",name="Save focus").click()
+                    expect(page.get_by_text("Choose a subject, target or interest",exact=False)).to_be_visible()
+                    page.get_by_label("Letters",exact=True).fill("M S")
+                    page.get_by_role("button",name="Save focus").click()
+                    expect(page.get_by_role("heading",name="Keyboard practice")).to_be_visible()
+                    self.capture(page,"saved")
+                    page.get_by_role("link",name="Weekly plan").click()
+                    self.capture(page,"week")
+                    page.goto(self.live_server_url+reverse("skill_report",args=[child_id]))
+                    page.get_by_label("Evidence from").select_option("placement")
+                    page.get_by_role("button",name="Show evidence").click()
+                    page.locator("summary").filter(has_text="Keyboard and mouse").click()
+                    page.locator(".focus-branch > summary").filter(has_text="Keyboard").click()
+                    expect(page.get_by_text("Letter · S")).to_be_visible()
+                    self.capture(page,"skills")
+                    page.get_by_role("link",name="Find a letter key",exact=True).click()
+                    expect(page.get_by_role("link",name="Check Z",exact=True)).to_be_visible()
+                    self.capture(page,"targets")
+                    page.get_by_role("link",name="Check Z",exact=True).click()
+                    expect(page.locator("[data-question-start]")).to_have_text("Step 1 of 1")
+            browser.close()

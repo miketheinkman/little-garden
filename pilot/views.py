@@ -10,6 +10,8 @@ from django.urls import reverse
 from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from .skills import direct_target
+from .focus import compile_round, policy_for, token, read_token
 from .forms import ParentSignupForm, RecoveryEmailForm
 from .invitations import invited_signup
 from django.db import connection, transaction
@@ -233,7 +235,8 @@ def library(request, pk):
             purpose = request.POST.get("purpose", Purpose.PRACTICE)
             if purpose not in Purpose.values:
                 return HttpResponseBadRequest("Choose a session purpose.")
-            added, active = queue_available(child, [key], variation, letters, purpose=purpose)
+            policy = read_token(child,key,request.POST["focus"]) if request.POST.get("focus") else None
+            added, active = queue_available(child, [key], variation, letters, purpose=purpose, policy=policy)
             title = summary(key, LESSONS[key], child.lesson_theme)["title"]
             note = (f"{title} added to {child.nickname}’s queue." if added else
                     f"{title} is already in {child.nickname}’s queue.")
@@ -333,21 +336,33 @@ def preview(request, pk, key, step):
         letters = letter_selection(request.GET["letters"]) if key == PATCH and "letters" in request.GET else None
     except ValueError as error:
         return HttpResponseBadRequest(str(error))
-    raw = discovery_round(key, number, letters) if letters else build_round(key, number)
-    if step > len(raw["items"]):
-        raise Http404
-    lesson = themed_round(key, raw, child.lesson_theme, number)
     purpose = request.GET.get("purpose", Purpose.PRACTICE)
     if purpose not in Purpose.values:
         raise Http404
+    mode = request.GET.get("mode")
+    if mode not in (None, "only", "mixed"):
+        raise Http404
+    if request.GET.get("focus"):
+        policy = read_token(child, key, request.GET["focus"])
+    else:
+        policy = policy_for(child, key, purpose, mode=mode)
+    raw = compile_round(key, number, letters, policy)
+    if step > len(raw["items"]):
+        raise Http404
+    preview_theme = policy.get("theme", child.lesson_theme)
+    lesson = themed_round(key, raw, preview_theme, number)
     round_query = f"&letters={letters}" if letters else ""
+    focus_token = token(child,key,policy) if policy else ""
+    if focus_token:
+        round_query += "&focus=" + focus_token
     return_fields = selected_fields(request, SCHEDULING_FIELDS)
     schedule_query = urlencode(return_fields)
     if schedule_query:
         round_query += "&" + schedule_query
     if purpose != Purpose.PRACTICE:
         round_query += f"&purpose={purpose}"
-    schedule_round_query = round_query
+    action_token = focus_token or token(child,key,{})
+    schedule_round_query = round_query if focus_token else round_query + "&focus=" + action_token
     library_url = reverse("library", args=[pk])
     catalog = request.GET.get("catalog", "")
     catalog_fields = {}
@@ -369,7 +384,7 @@ def preview(request, pk, key, step):
     finished = step == len(lesson["items"])
     context = {
         "preview": True, "appearance": child.appearance, "child": child, "key": key, "step": step, "lesson": lesson,
-        "round_query": round_query, "purpose": purpose, "schedule_query": schedule_query,
+        "action_token": action_token, "focus_token": focus_token, "round_query": round_query, "purpose": purpose, "schedule_query": schedule_query,
         "library_url": library_url, "catalog_fields": catalog_fields, "schedule_round_query": schedule_round_query,
         "session_purpose": Purpose(purpose).label if purpose != Purpose.PRACTICE else "", "feedback_kinds": LessonFeedback.Kind.choices, "finished": finished, "variation": number,
         "next_variant": (number+1) % round_count(key),
@@ -382,7 +397,7 @@ def preview(request, pk, key, step):
             return HttpResponseBadRequest("Choose a feedback type and use at most 1500 characters.")
         LessonFeedback.objects.create(parent=request.user, lesson=key, step=None if finished else step,
                                       kind=kind, note=note, variation=number,
-                                      preview_settings={"theme": child.lesson_theme, "letters": letters, "purpose": purpose})
+                                      preview_settings={"theme": preview_theme, "letters": letters, "purpose": purpose, **({"round":raw} if policy else {})})
         if request.headers.get("Accept") == "application/json":
             return JsonResponse({"saved": True})
         messages.success(request, "Feedback saved. Thank you for helping shape this lesson.")
@@ -404,7 +419,7 @@ def feedback_round(request, pk):
     saved = note.preview_settings
     letters = saved.get("letters")
     raw = discovery_round(key, number, letters) if letters and key == PATCH else build_round(key, number)
-    lesson = themed_round(key, raw, saved.get("theme", "garden"), number)
+    lesson = themed_round(key, saved.get("round",raw), saved.get("theme", "garden"), number)
     try:
         step = int(request.GET.get("step", note.step or 0))
     except ValueError:
@@ -552,7 +567,7 @@ def start_suggestion(request):
     key = request.POST.get("lesson")
     if key not in {entry["key"] for entry in Progress(child).recommendations()}:
         return redirect("home")
-    return redirect("play", assign_lesson(child, key).pk)
+    return redirect("play", assign_lesson(child, key, policy=policy_for(child,key,mode="mixed")).pk)
 
 
 def key_pace(request, catalog, item):
@@ -645,7 +660,7 @@ def play(request, pk):
             if updated and not skip and score is not None:
                 sample, created = SkillSample.objects.get_or_create(
                     assignment=row, step=row.step, defaults={
-                        "strand": catalog["strand"], "level": item.get("level",catalog["level"]),
+                        "direct": direct_target(row.lesson, item, row.step), "strand": catalog["strand"], "level": item.get("level",catalog["level"]),
                         "score": score if accepted else 0, "puzzle_help": help_used,
                         "ms_per_key": pace if accepted else None,
                     })

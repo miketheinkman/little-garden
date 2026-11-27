@@ -1,0 +1,8 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Weekly focus plan{% endblock %}{% block extra_styles %}<link rel="stylesheet" href="{% static 'focus.css' %}">{% endblock %}
+{% block content %}<nav class="focus-nav"><a href="{% url 'focus' child.pk %}">Practice focus</a><a href="{% url 'planner' child.pk %}">Lesson planner</a></nav>
+<h1>{{ child.nickname }}’s weekly plan</h1><p>Choose the activities to schedule for the next five days. Leave any day open.</p>
+<form method="post" class="focus-form">{% csrf_token %}{% for day in days %}<article class="focus-card"><h2>{{ day.day|date:"l, M j" }}</h2>{% if day.saved %}<p>{{ day.saved_title }} · {% if day.saved.next_on %}<a href="{% url 'planner' child.pk %}?edit={{ day.saved.pk }}">Edit scheduled lesson</a>{% else %}Already released to the queue{% endif %}</p>{% elif day.options %}
+{% if day.targets %}<p>{{ day.targets|join:" · " }}</p>{% endif %}
+<label>Activity <select name="{{ day.day.isoformat }}"><option value="">Leave this day open</option>{% for option in day.options %}<option value="{{ option.key }}" {% if option.key == day.selected %}selected{% endif %}>{{ option.title }}</option>{% endfor %}</select></label>
+{% else %}<p>No direct focus activity for this date.</p>{% endif %}</article>{% endfor %}<button>Schedule selected days</button></form>{% endblock %}

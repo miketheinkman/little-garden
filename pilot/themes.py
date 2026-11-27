@@ -59,6 +59,8 @@ def summary(key, lesson, theme):
 
 
 def themed_round(key, lesson, theme, variation=0):
+    if "_focus_theme" in lesson:
+        return summary(key, lesson, lesson["_focus_theme"])
     result = summary(key, lesson, theme)
     if result is lesson:
         return lesson

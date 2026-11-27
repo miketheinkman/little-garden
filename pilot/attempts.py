@@ -1,6 +1,7 @@
 """Parent-readable evidence from submitted lesson answers."""
 from itertools import groupby
 
+from .skills import direct_target
 from .assessment import evidence_method
 from .models import QuestionAttempt
 
@@ -47,7 +48,7 @@ def record_attempt(row, item, lesson, data, *, submission, method, accepted, ski
     else:
         outcome = Outcome.COMPLETED if accepted else Outcome.RETRY
     prompt, expected, response = descriptions(item, lesson, data, method)
-    QuestionAttempt.objects.create(assignment=row, step=row.step, outcome=outcome, advanced=advanced, submission=submission,
+    QuestionAttempt.objects.create(assignment=row, step=row.step, direct=direct_target(row.lesson,item,row.step), outcome=outcome, advanced=advanced, submission=submission,
                                    prompt=prompt, expected=expected, response="" if skip else response,
                                    score=score if method == "art" and accepted else None,
                                    ms_per_key=pace, help_used=help_used)

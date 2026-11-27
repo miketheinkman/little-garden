@@ -7,6 +7,7 @@
 <div>{{ form.start.label_tag }}{{ form.start }}{{ form.start.errors }}</div>
 <div>{{ form.repeat.label_tag }}{{ form.repeat }}{{ form.repeat.errors }}</div>
 </div>
+{% if has_focus %}<label>Focus on future dates <select name="focus_choice"><option value="follow">Use the current focus on each date</option><option value="pin"{% if editing and not editing.follow_focus %} selected{% endif %}>Keep these focus settings</option></select></label>{% endif %}
 <fieldset data-weekdays><legend>Practice days</legend>{{ form.weekdays }}{{ form.weekdays.errors }}</fieldset>
 <div data-end>{{ form.end.label_tag }}{{ form.end }}{{ form.end.errors }}</div>
 <p data-repeat-note>Each repeat gets a fresh round. If a previous session from this plan is still in the queue, it stays there for {{ child.nickname }} to finish.</p>

@@ -52,12 +52,14 @@ def release_due(child, today=None):
                 if today < date.max:
                     following = occurrence(plan, today + timedelta(days=1))
             if plan.repeat == LessonPlan.Repeat.ONCE or not plan.assignment_set.filter(completed=None, removed_at=None).exists():
-                row = assign_lesson(child, plan.lesson, plan.first_variation, plan.letters, purpose=plan.purpose)
+                row = assign_lesson(child, plan.lesson, plan.first_variation, plan.letters, purpose=plan.purpose, policy=plan.focus_policy)
                 row.plan = plan
                 row.scheduled_for = day
                 row.save(update_fields=["plan", "scheduled_for"])
                 plan.first_variation = None
+                if plan.follow_focus:
+                    plan.focus_policy = None
                 if following and plan.purpose == Purpose.PLACEMENT:
                     plan.purpose = Purpose.REVIEW
             plan.next_on = following
-            plan.save(update_fields=["next_on", "first_variation", "purpose"])
+            plan.save(update_fields=["next_on", "first_variation", "purpose", "focus_policy"])

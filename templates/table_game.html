@@ -2,7 +2,7 @@
 {% if lesson.tool == 'memory' %}
 <div class="match-deck" data-size="{{ item.deck|length }}" aria-label="Memory cards">
 {% for card in item.deck %}<button type="button" data-card="{{ card.pair }}" data-label="{{ card.label }}"{% if card.clip %} data-clip="{% static card.clip %}"{% endif %} aria-label="Card {{ forloop.counter }}, face down">
-<span class="card-back" aria-hidden="true">{{ lesson.world.actor.icon|default:'🌻' }}</span>
+<span class="card-back" aria-hidden="true">{% firstof item.context_icon lesson.world.actor.icon '🌻' %}</span>
 <span class="card-face" hidden>{% if card.clip %}♫{% else %}{% if card.symbol %}<b>{{ card.symbol }}</b>{% endif %}{% if not card.dots %}{{ card.label }}{% endif %}{% endif %}</span></button>{% endfor %}
 </div>
 <p data-table-status role="status"></p>

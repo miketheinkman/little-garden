@@ -120,6 +120,14 @@ Keyboard lessons and check-ins measure focused time to submit a physical key or 
 
 Each strand’s estimate fits the latest 24 observations, weighting recent ones more heavily and limiting the estimate to one tier above the highest attempted task. The family and learner views plot the most recent 12 scored-round checkpoints on a fixed 1–5 scale. These pilot estimates are provisional. After initial placement, a first-time gain to a higher whole tier in a skill triggers a two-second beanstalk climb on the learner screen and the parent mirror. The reduced-motion view shows the climber at the top. The dated round history shows raw scores and changes for comparable tasks. Suggestions stay within one tier of the current estimate, prioritize practice after difficulty, rotate among strands, and rest a lesson for two weeks following two recent fluent rounds. The parent queue always takes priority. A child can opt into a suggested activity when the parent queue is empty.
 
+### Practice focus and skill details
+
+In **Family garden**, open **Practice focus** beside a learner. Choose a subject for a broad preference, or narrow it to a skill, letters, numbers, operations, colors, shapes or words. Separate focuses can run together and can have different dates, activity weights and context settings. A focus is optional. An empty selection of active focuses uses the original round generator and recommendations.
+
+**Selected targets** previews a short round from eligible questions. **With familiar targets** mixes in review supported by the same skill. A weekly plan proposes five editable days and enters the family calendar when a parent saves it. A recurring assignment can follow future focus changes or keep its settings. Automatic targets use direct evidence to advance. Interests can influence interchangeable pictures without adding assignments or earning credit.
+
+Open **Skill details**, choose initial placement or review, then expand a subject and skill area. Select an objective to inspect question attempts, parent observations, and available targeted checks. Scores roll up once per question. Historical scores without a reliably frozen question remain broad. “Demonstrated” is a practice estimate using up to six recent independent scores, averaging at least 80% across two or more rounds.
+
 ## Capacity testing
 
 The [two-vCPU lesson benchmark](qa/CAPACITY.md) includes measured concurrency, answer latency, memory use, and instructions for repeating the trial with synthetic families.

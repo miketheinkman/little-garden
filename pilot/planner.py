@@ -14,6 +14,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
 from .assignments import active_lesson_keys, session_purpose
+from .focus import policy_for, read_token
 from .calendar import scheduled_entries
 from .discovery import PATCH, letter_selection
 from .models import Learner, LessonPlan, Purpose
@@ -101,6 +102,7 @@ def planner(request, pk):
                "repeat": editing.repeat if editing else ("fourweeks" if purpose == Purpose.REVIEW else "once"), "weekdays": list(editing.weekdays) if editing else [],
                "end": editing.ends_on if editing else None, "submission": editing.submission if editing else uuid.uuid4()}
     form = PlanForm(request.POST if request.method == "POST" else None, initial=initial, label_suffix="")
+    frozen = read_token(child,key,request.GET["focus"]) if key and request.GET.get("focus") else None
     title = summary(key, LESSONS[key], child.lesson_theme)["title"] if key else ""
     if key:
         form.fields["lesson"].choices = [(key, title)]
@@ -115,7 +117,7 @@ def planner(request, pk):
             groups[info["category"]].append((lesson_key, info["title"]))
         form.fields["lesson"].choices = [("", "Choose a lesson"), *sorted(groups.items())]
     form_context = {"child": child, "form": form, "editing": editing, "variation": variation, "letters": letters,
-                    "title": title, "batch_count": len(batch), "calendar_back": calendar_day(selected or today)
+                    "has_focus": bool(frozen or child.focuses.exists() or (editing and editing.focus_policy)), "title": title, "batch_count": len(batch), "calendar_back": calendar_day(selected or today)
                     if calendar_scope in {"child", "family"} else None}
     form.fields["start"].widget.attrs["min"] = today.isoformat()
     if request.method == "POST" and request.POST.get("action") == "cancel":
@@ -137,6 +139,14 @@ def planner(request, pk):
             for lesson_key in keys:
                 values = dict(purpose=session_purpose(child, lesson_key, data["purpose"] or purpose), lesson=lesson_key,
                               next_on=data["next_on"], repeat=data["repeat"], weekdays="".join(data["weekdays"]), ends_on=data["end"])
+                follow = request.POST.get("focus_choice", "pin" if editing and not editing.follow_focus else "follow") == "follow"
+                policy = editing.focus_policy if editing and follow == editing.follow_focus else frozen
+                if not follow and policy is None:
+                    policy = (editing.focus_policy if editing and editing.focus_policy is not None else
+                              policy_for(child, lesson_key, values["purpose"]))
+                if editing and not editing.follow_focus and follow:
+                    policy = None
+                values.update(follow_focus=follow, focus_policy=policy)
                 if editing:
                     if not upcoming.filter(pk=editing.pk).update(**values):
                         raise Http404

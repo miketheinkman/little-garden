@@ -1,0 +1,9 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}{{ title }} · {{ child.nickname }}{% endblock %}{% block extra_styles %}<link rel="stylesheet" href="{% static 'focus.css' %}">{% endblock %}
+{% block content %}<nav class="focus-nav"><a href="{% url 'skill_report' child.pk %}?purpose={{ purpose }}">Skill details</a><a href="{% url 'focus' child.pk %}">Practice focus</a></nav>
+<h1>{{ title }}</h1><p>{{ child.nickname }} · {% if purpose %}{{ purpose|capfirst }}{% else %}All sessions{% endif %}</p>
+{% for t in targets %}<div class="focus-concept"><strong>{{ t.label }} · {{ t.value }}</strong><span>{{ t.status }}{% if t.count %} · {{ t.count }} scored{% endif %}</span>
+{% if t.link %}<a href="{% url 'preview' child.pk key 0 %}?focus={{ t.link }}&amp;purpose={% if t.count %}review{% else %}placement{% endif %}">Check {{ t.value }}</a>{% endif %}</div>{% endfor %}
+{% if notes %}<h2>Parent observations</h2>{% for note in notes %}<p>{{ note.observed_on }} · {{ note.text }}</p>{% endfor %}{% endif %}
+<h2>Question attempts</h2>{% for a in history %}<article class="focus-card"><strong>{{ a.prompt }}</strong><p>{{ a.created|date:"M j, Y" }} · {{ a.assignment.get_purpose_display }} · {{ a.get_outcome_display }}{% if a.help_used %} · With help{% endif %}</p>{% if a.response %}<p>Response · {{ a.response }}</p>{% endif %}</article>{% empty %}<p>No question attempts recorded with this objective yet.</p>{% endfor %}
+{% if history.has_previous %}<a href="?purpose={{ purpose }}&amp;page={{ history.previous_page_number }}">Newer attempts</a>{% endif %} {% if history.has_next %}<a href="?purpose={{ purpose }}&amp;page={{ history.next_page_number }}">Older attempts</a>{% endif %}{% endblock %}

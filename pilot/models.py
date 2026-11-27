@@ -31,6 +31,16 @@ class Learner(models.Model):
         return {"accent": accent, "ink": ink, "font": self.font}
 
 
+class PracticeFocus(models.Model):
+    learner = models.ForeignKey(Learner, related_name="focuses", on_delete=models.CASCADE)
+    name = models.CharField(max_length=64)
+    config = models.JSONField(default=dict)
+    paused = models.BooleanField(default=False)
+    starts = models.DateField(null=True, blank=True)
+    ends = models.DateField(null=True, blank=True)
+    automatic = models.BooleanField(default=False)
+
+
 class Purpose(models.TextChoices):
     PRACTICE = "practice", "Practice"
     PLACEMENT = "placement", "Initial placement"
@@ -38,6 +48,8 @@ class Purpose(models.TextChoices):
 
 
 class LessonPlan(models.Model):
+    focus_policy = models.JSONField(null=True, blank=True)
+    follow_focus = models.BooleanField(default=True, db_default=True)
     class Repeat(models.TextChoices):
         ONCE = "once", "Just once"
         DAILY = "daily", "Every day"
@@ -133,6 +145,7 @@ class FeedbackEmailPreference(models.Model):
 
 
 class SkillSample(models.Model):
+    direct = models.JSONField(default=dict, blank=True, db_default={})
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE, related_name="samples")
     step = models.PositiveIntegerField()
     strand = models.CharField(max_length=60)
@@ -160,6 +173,7 @@ class Observation(models.Model):
 
 
 class QuestionAttempt(models.Model):
+    direct = models.JSONField(default=dict, blank=True, db_default={})
     class Outcome(models.TextChoices):
         CORRECT = "correct", "Correct"
         INCORRECT = "incorrect", "Incorrect"

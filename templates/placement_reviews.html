@@ -2,7 +2,7 @@
 {% block title %}Placement &amp; reviews · {{ child.nickname }}{% endblock %}
 {% block extra_styles %}<link rel="stylesheet" href="{% static 'placement-reviews.css' %}">{% endblock %}
 {% block content %}
-<nav class="history-nav"><a href="{% url 'home' %}">Family garden</a><a href="{% url 'planner' child.pk %}">Lesson planner</a><a href="{% url 'family_calendar' %}?child={{ child.pk }}">Calendar</a></nav>
+<nav class="history-nav"><a href="{% url 'home' %}">Family garden</a><a href="{% url 'skill_report' child.pk %}">Skill details</a><a href="{% url 'planner' child.pk %}">Lesson planner</a><a href="{% url 'family_calendar' %}?child={{ child.pk }}">Calendar</a></nav>
 <h1>Placement &amp; reviews</h1>
 <p>Choose a skill to check with <strong>{{ child.nickname }}</strong>. Keyboard use, letter sounds and number sense offer short multi-tier checks. Every lesson also has its own check.</p>
 {% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}

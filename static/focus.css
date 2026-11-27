@@ -1,0 +1,18 @@
+.focus-nav,.focus-tags,.focus-concept {display:flex;flex-wrap:wrap;align-items:center;gap:.6rem 1rem;margin:.7rem 0}
+.focus-nav form {margin:0}
+.focus-card,.focus-box {border:1px solid var(--border,currentColor);border-radius:.8rem;margin:1rem 0;padding:1rem}
+.focus-box summary,.focus-branch summary {cursor:pointer;padding:.3rem 0;line-height:1.5}
+.focus-box summary small {margin-inline-start:.7rem}
+.focus-branch,.focus-objective {margin:.7rem 0;padding:.6rem .8rem;border-inline-start:3px solid var(--border,currentColor)}
+.focus-objective h3,.focus-card h2 {margin:.2rem 0 .55rem}
+.focus-tags span {padding:.15rem .55rem;border:1px solid;border-radius:.5rem}
+.focus-form {max-width:48rem}.focus-field {min-width:0;margin:.6rem 0}
+.focus-field label,.focus-field small {display:block}.focus-form select,.focus-field input {max-width:100%;box-sizing:border-box}
+.focus-pair,.focus-checks {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(12rem,100%),1fr));gap:.25rem .85rem}
+.focus-checks label,.focus-form>label {display:block;padding:.35rem 0}
+.focus-form fieldset {min-width:0;margin:.7rem 0}
+.focus-concept {border-bottom:1px solid var(--border,currentColor);padding:.45rem 0}
+@media(max-width:500px){.focus-branch,.focus-objective {padding-inline:.45rem}.focus-box summary small {display:block;margin-inline-start:1.1rem}}
+.focus-form input[type=checkbox] {display:inline-block;vertical-align:middle}
+.focus-box,.focus-branch,.focus-card,.focus-objective,.focus-concept {border-color:var(--line)}
+.focus-box>summary small {color:var(--muted)}

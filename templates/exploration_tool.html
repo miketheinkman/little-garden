@@ -13,15 +13,15 @@
 <button name="answer" value="{{ variant }}" class="scene-option" aria-label="{% if item.place %}{{ item.noun }} {{ variant }}{% if variant == 'left' or variant == 'right' %} of{% endif %} the {{ item.place }}{% else %}{{ variant }} object{% endif %}">
 <span class="mini-scene pos-{{ variant }}" aria-hidden="true">
 {% if item.place %}<span class="landmark landmark-{{ item.place }}">{% if item.place == 'tree' %}🌳{% elif item.place == 'fridge' %}<i></i>{% endif %}</span>{% endif %}
-{% if variant == 'tall' or variant == 'short' %}<span class="height-tower"><b>{{ item.specimen }}</b></span>
-{% else %}<span class="scene-object">{% if lesson.tool == 'compare' %}{{ item.specimen }}{% else %}{{ item.specimen }}{% endif %}</span>{% endif %}
+{% if variant == 'tall' or variant == 'short' %}<span class="height-tower"><b>{% firstof item.context_icon item.specimen %}</b></span>
+{% else %}<span class="scene-object">{% if lesson.tool == 'compare' %}{% firstof item.context_icon item.specimen %}{% else %}{% firstof item.context_icon item.specimen %}{% endif %}</span>{% endif %}
 </span></button>{% endfor %}</div>
 {% elif lesson.tool == 'arithmetic' %}
-<div class="object-equation" role="img" aria-label="{{ item.equation }}"><div>{% for i in item.left %}<span>{{ lesson.world.cargo_icon|default:'🍎' }}</span>{% empty %}{% if not item.subtract %}0{% endif %}{% endfor %}</div>
-{% if not item.subtract %}<b>+</b>{% endif %}<div>{% for i in item.right %}<span{% if item.subtract %} class="taken-away"{% endif %}>{{ lesson.world.cargo_icon|default:'🍎' }}</span>{% empty %}{% if not item.subtract %}0{% endif %}{% endfor %}</div></div>
+<div class="object-equation" role="img" aria-label="{{ item.equation }}"><div>{% for i in item.left %}<span>{% firstof item.context_icon lesson.world.cargo_icon '🍎' %}</span>{% empty %}{% if not item.subtract %}0{% endif %}{% endfor %}</div>
+{% if not item.subtract %}<b>+</b>{% endif %}<div>{% for i in item.right %}<span{% if item.subtract %} class="taken-away"{% endif %}>{% firstof item.context_icon lesson.world.cargo_icon '🍎' %}</span>{% empty %}{% if not item.subtract %}0{% endif %}{% endfor %}</div></div>
 <p class="number-equation">{{ item.equation }} = ?</p>
 {% elif lesson.tool == 'money-id' %}<div class="cash-options">{% for piece in item.money %}<button name="answer" value="{{ piece.mark }}" aria-label="{{ piece.mark }} {% if piece.material == 'bill' %}bill{% else %}coin{% endif %}">{% include "money_piece.html" %}</button>{% endfor %}</div>
 {% elif lesson.tool == 'money-total' %}<div class="cash-tray" role="group" aria-label="Money to count">{% for piece in item.handful %}{% include "money_piece.html" %}{% endfor %}</div>
-{% elif lesson.tool == 'pretend' %}<p class="picture-sample" aria-hidden="true">{{ item.specimen }}</p>
+{% elif lesson.tool == 'pretend' %}<p class="picture-sample" aria-hidden="true">{% firstof item.context_icon item.specimen %}</p>
 {% endif %}
 {% if item.choices %}<div class="explore-options">{% for option in item.choices %}<button name="answer" value="{{ option }}">{% if lesson.tool == "pretend" %}<span aria-hidden="true">{% if option == "Real life" %}🌎{% else %}💭{% endif %}</span> {% endif %}{{ option }}</button>{% endfor %}</div>{% endif %}

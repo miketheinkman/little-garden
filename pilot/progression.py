@@ -155,7 +155,7 @@ class Progress:
             })
         return charts
 
-    def recommendations(self):
+    def recommendations(self, *, configs=None, seed=None, limit=3):
         candidates = []
         # Give fluent rounds a rest, even when there is no harder lesson in that strand yet.
         by_lesson = defaultdict(list)
@@ -189,13 +189,15 @@ class Progress:
                       "A small stretch" if estimate is not None and gap > .4 else
                       "A starting activity" if estimate is None else "Practice near the current level")
             candidates.append((weight,key,strand,reason))
+        from .focus import active_configs, focus_rank
+        candidates = focus_rank(candidates, active_configs(self.child) if configs is None else configs, self.child, seed or len(self.recent))
         result = []
         used = defaultdict(int)
-        while candidates and len(result)<3:
+        while candidates and len(result)<limit:
             chosen = max(candidates,key=lambda c:c[0]-.95*used[c[2]])
             candidates.remove(chosen)
             _,key,strand,reason = chosen
-            if used[strand] >= 2:
+            if limit <= 3 and used[strand] >= 2:
                 continue
             used[strand] += 1
             result.append(dict(key=key,title=summary(key, LESSONS[key], self.theme)["title"],reason=reason,band=self.label(LESSONS[key])))

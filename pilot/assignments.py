@@ -4,7 +4,7 @@ import random
 from django.db import transaction
 from django.db.models import F, Max
 
-from .discovery import PATCH, discovery_round
+from .focus import compile_round, policy_for
 from .models import Learner, Purpose
 from .practice import CURRENT_VERSION, FIVE_PROMPT_ROUNDS, LESSONS, build_round, round_count
 from .themes import themed_round
@@ -59,14 +59,19 @@ def session_purpose(child, key, purpose):
 
 
 @transaction.atomic
-def assign_lesson(child, key, variation=None, letters=None, *, purpose=Purpose.PRACTICE):
+def assign_lesson(child, key, variation=None, letters=None, *, purpose=Purpose.PRACTICE, policy=None):
     Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))
     purpose = session_purpose(child, key, purpose)
     if variation is None:
         variation = next_round(child, key)
     last = child.assignment_set.aggregate(last=Max("position"))["last"] or 0
+    if policy is None:
+        policy = policy_for(child, key, purpose)
+    snapshot = compile_round(key, variation, letters, policy)
+    if policy and "_opened_theme" not in snapshot:
+        snapshot = dict(snapshot, _opened_theme=policy["theme"])
     return child.assignment_set.create(lesson=key, purpose=purpose, position=last+1, variation=variation,
-                                round_snapshot=discovery_round(key, variation, letters) if key == PATCH and letters else build_round(key, variation))
+                                round_snapshot=snapshot)
 
 
 def active_lesson_keys(child):
@@ -75,7 +80,7 @@ def active_lesson_keys(child):
 
 
 @transaction.atomic
-def queue_available(child, keys, variation=None, letters=None, *, purpose=Purpose.PRACTICE):
+def queue_available(child, keys, variation=None, letters=None, *, purpose=Purpose.PRACTICE, policy=None):
     # Serialize single and bulk adds before reading the queue, including on SQLite.
     Learner.objects.filter(pk=child.pk).update(nickname=F("nickname"))
     active = active_lesson_keys(child)
@@ -83,7 +88,7 @@ def queue_available(child, keys, variation=None, letters=None, *, purpose=Purpos
     for key in keys:
         current = CURRENT_VERSION.get(key, key)
         if current not in active:
-            assign_lesson(child, key, variation, letters, purpose=purpose)
+            assign_lesson(child, key, variation, letters, purpose=purpose, policy=policy)
             active.add(current)
             added.append(key)
     return added, active

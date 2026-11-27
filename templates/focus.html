@@ -1,0 +1,27 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}Practice focus · {{ child.nickname }}{% endblock %}
+{% block extra_styles %}<link rel="stylesheet" href="{% static 'focus.css' %}">{% endblock %}
+{% block content %}
+<nav class="focus-nav"><a href="{% url 'home' %}">Family garden</a><a href="{% url 'skill_report' child.pk %}">Skill details</a><a href="{% url 'focus_week' child.pk %}">Weekly plan</a></nav>
+<h1>{{ child.nickname }}’s practice focus</h1>
+{% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
+{% for row in rows %}<article class="focus-card"><h2>{{ row.name }}</h2>
+<p>{% if row.paused %}Paused{% elif row.automatic %}Automatic targets{% else %}Parent-selected targets{% endif %}{% if row.starts %} · From {{ row.starts }}{% endif %}{% if row.ends %} · Through {{ row.ends }}{% endif %}</p>
+<div class="focus-tags">{% for label in row.skill_labels %}<span>{{ label }}</span>{% endfor %}{% for k,values in row.config.items %}{% if k == 'subjects' or k == 'letters' or k == 'numbers' or k == 'operators' or k == 'colors' or k == 'shapes' or k == 'branches' or k == 'vocabulary' or k == 'interests' %}{% for value in values %}<span>{{ value }}</span>{% endfor %}{% endif %}{% endfor %}</div>
+<div class="focus-nav"><a href="?edit={{ row.pk }}#focus-form">Edit {{ row.name }}</a>
+<form method="post">{% csrf_token %}<input type="hidden" name="focus_id" value="{{ row.pk }}"><button class="secondary" name="action" value="{% if row.paused %}resume{% else %}pause{% endif %}">{% if row.paused %}Resume{% else %}Pause{% endif %}</button></form></div></article>
+{% empty %}<p>Lessons use the usual mix. Choose a focus when there’s something you’d like to practice more often.</p>{% endfor %}
+{% if picks %}<details class="focus-box"><summary>Preview focused practice</summary><ul>{% for key,title in picks %}<li>{{ title }} · <a href="{% url 'preview' child.pk key 0 %}?mode=only">Selected targets</a> · <a href="{% url 'preview' child.pk key 0 %}?mode=mixed">With familiar targets</a></li>{% endfor %}</ul></details>{% endif %}
+<form id="focus-form" class="focus-card focus-form" method="post">{% csrf_token %}
+<h2>{% if editing %}Edit focus{% else %}New focus{% endif %}</h2>{{ form.non_field_errors }}
+<label for="{{ form.name.id_for_label }}">{{ form.name.label }}</label>{{ form.name }}{{ form.name.errors }}
+<div class="focus-pair">{% include "focus_field.html" with field=form.letters %}{% include "focus_field.html" with field=form.numbers %}</div>
+<details class="focus-box"><summary>Subjects, skill areas and operations</summary>{% include "focus_checks.html" with field=form.subjects %}{% include "focus_checks.html" with field=form.branches %}{% include "focus_field.html" with field=form.objectives %}{% include "focus_checks.html" with field=form.operators %}</details>
+<details class="focus-box"><summary>Colors, shapes, words and interests</summary>{% include "focus_checks.html" with field=form.colors %}{% include "focus_checks.html" with field=form.shapes %}{% include "focus_field.html" with field=form.vocabulary %}{% include "focus_field.html" with field=form.interests %}</details>
+{% include "focus_field.html" with field=form.mode %}{% include "focus_field.html" with field=form.context %}
+<label>{{ form.context_only }} {{ form.context_only.label }}</label>
+<details class="focus-box"><summary>Activity mix and familiar letters</summary><p>Higher weights favor an activity. Zero leaves it out of focus-driven suggestions.</p><div class="focus-pair">{% for field in weights %}{% include "focus_field.html" %}{% endfor %}</div>{% include "focus_field.html" with field=form.familiar %}</details>
+<details class="focus-box" {% if form.ends.errors %}open{% endif %}><summary>Dates and automatic progression</summary><div class="focus-pair">{% include "focus_field.html" with field=form.starts %}{% include "focus_field.html" with field=form.ends %}</div>
+<label>{{ form.automatic }} {{ form.automatic.label }}</label><p>Manual targets take priority. Automatic targets continue until recent direct responses average at least 80% across two or more rounds.</p><label>{{ form.name_letters }} {{ form.name_letters.label }}</label></details>
+<button>Save focus</button>{% if editing %} <a href="{% url 'focus' child.pk %}">Cancel edit</a>{% endif %}</form>
+{% endblock %}
