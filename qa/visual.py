@@ -38,33 +38,34 @@ class VisualReview(StaticLiveServerTestCase):
     @override_settings(INVITE_ONLY_SIGNUP=True)
     def test_parent_invitation(self):
         from datetime import timedelta
+        cases = [(width, theme, f"invitation-{width}-{theme}")
+                 for width in (375, 1200) for theme in ("light", "dark")]
+        for _, _, code in cases:
+            ParentInvitation.objects.create(email=f"{code}@example.org", code_digest=code_digest(code),
+                                            expires_at=timezone.now() + timedelta(days=1))
         with sync_playwright() as pw:
             browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
-            for width in (375, 1200):
-                for theme in ("light", "dark"):
-                    self.variant = f"invitation-{width}-{theme}"
-                    email = f"{self.variant}@example.org"
-                    ParentInvitation.objects.create(
-                        email=email, code_digest=code_digest(self.variant),
-                        expires_at=timezone.now() + timedelta(days=1))
-                    with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
-                        page = ctx.new_page()
-                        page.goto(self.live_server_url + reverse("signup"))
-                        self.capture(page, "gate")
-                        page.get_by_label("Invitation code").fill("incorrect")
-                        page.get_by_role("button", name="Continue").click()
-                        expect(page.get_by_text("That code is invalid", exact=False)).to_be_visible()
-                        self.capture(page, "error")
-                        page.get_by_label("Invitation code").fill(self.variant)
-                        page.get_by_role("button", name="Continue").click()
-                        expect(page.get_by_label("Parent recovery email")).to_have_value(email)
-                        expect(page.get_by_label("Parent recovery email")).to_be_disabled()
-                        page.get_by_label("Username").fill(self.variant)
-                        self.capture(page, "parent-form")
-                        page.locator("#id_password1").fill("Clover-test-Garden-41")
-                        page.locator("#id_password2").fill("Clover-test-Garden-41")
-                        page.get_by_role("button", name="Create a parent account").click()
-                        expect(page).to_have_url(self.live_server_url + "/")
+            for width, theme, code in cases:
+                self.variant = code
+                email = f"{code}@example.org"
+                with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                    page = ctx.new_page()
+                    page.goto(self.live_server_url + reverse("signup"))
+                    self.capture(page, "gate")
+                    page.get_by_label("Invitation code").fill("incorrect")
+                    page.get_by_role("button", name="Continue").click()
+                    expect(page.get_by_text("That code is invalid", exact=False)).to_be_visible()
+                    self.capture(page, "error")
+                    page.get_by_label("Invitation code").fill(self.variant)
+                    page.get_by_role("button", name="Continue").click()
+                    expect(page.get_by_label("Parent recovery email")).to_have_value(email)
+                    expect(page.get_by_label("Parent recovery email")).to_be_disabled()
+                    page.get_by_label("Username").fill(self.variant)
+                    self.capture(page, "parent-form")
+                    page.locator("#id_password1").fill("Clover-test-Garden-41")
+                    page.locator("#id_password2").fill("Clover-test-Garden-41")
+                    page.get_by_role("button", name="Create a parent account").click()
+                    expect(page).to_have_url(self.live_server_url + "/")
             browser.close()
 
     @override_settings(STRIPE_TEST_ONE_TIME_LINK="https://donate.stripe.com/test_Once",
