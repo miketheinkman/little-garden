@@ -85,6 +85,27 @@ with connection.cursor() as c:
 assert not get_user_model().objects.exists()
 get_user_model().objects.create_user('rehearsal-parent')
 """)
+        manage("shell", "-c", """
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core import mail
+from django.core.management import call_command
+from django.test import Client, override_settings
+from pilot.models import ParentInvitation
+assert settings.INVITE_ONLY_SIGNUP
+parent = Client(HTTP_HOST=settings.PUBLIC_HOST)
+fields = dict(username='invited-family', email='override@example.org', password1='RehearsalGarden83', password2='RehearsalGarden83')
+assert b'Invitation code' in parent.post('/signup/', fields, secure=True).content
+assert not get_user_model().objects.filter(username=fields['username']).exists()
+with override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend'):
+    call_command('invite_parent', 'invited@example.org')
+    code = mail.outbox[-1].body.split(chr(10) * 2)[2]
+assert parent.post('/signup/', {'code': code}, secure=True).status_code == 302
+assert parent.post('/signup/', fields, secure=True).url == '/'
+assert get_user_model().objects.get(username=fields['username']).email == 'invited@example.org'
+assert not ParentInvitation.available().exists()
+assert b'invalid or has expired' in Client(HTTP_HOST=settings.PUBLIC_HOST).post('/signup/', {'code': code}, secure=True).content
+""")
         compose("up", "-d", "--no-build", "web")
         check_http()
         compose("down")

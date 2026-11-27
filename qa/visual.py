@@ -10,7 +10,8 @@ from django.urls import reverse
 from django.utils import timezone
 from playwright.sync_api import expect, sync_playwright
 
-from pilot.models import Learner, SkillSample
+from pilot.invitations import code_digest
+from pilot.models import Learner, ParentInvitation, SkillSample
 from pilot.practice import LESSONS
 from pilot.views import assign_lesson
 
@@ -33,6 +34,38 @@ class VisualReview(StaticLiveServerTestCase):
     def capture(self, page, name):
         page.screenshot(path=self.out / f"{self.variant}-{name}.png", full_page=True, animations="disabled")
         self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"), name)
+
+    @override_settings(INVITE_ONLY_SIGNUP=True)
+    def test_parent_invitation(self):
+        from datetime import timedelta
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375, 1200):
+                for theme in ("light", "dark"):
+                    self.variant = f"invitation-{width}-{theme}"
+                    email = f"{self.variant}@example.org"
+                    ParentInvitation.objects.create(
+                        email=email, code_digest=code_digest(self.variant),
+                        expires_at=timezone.now() + timedelta(days=1))
+                    with browser.new_context(viewport={"width": width, "height": 820}, color_scheme=theme) as ctx:
+                        page = ctx.new_page()
+                        page.goto(self.live_server_url + reverse("signup"))
+                        self.capture(page, "gate")
+                        page.get_by_label("Invitation code").fill("incorrect")
+                        page.get_by_role("button", name="Continue").click()
+                        expect(page.get_by_text("That code is invalid", exact=False)).to_be_visible()
+                        self.capture(page, "error")
+                        page.get_by_label("Invitation code").fill(self.variant)
+                        page.get_by_role("button", name="Continue").click()
+                        expect(page.get_by_label("Parent recovery email")).to_have_value(email)
+                        expect(page.get_by_label("Parent recovery email")).to_be_disabled()
+                        page.get_by_label("Username").fill(self.variant)
+                        self.capture(page, "parent-form")
+                        page.locator("#id_password1").fill("Clover-test-Garden-41")
+                        page.locator("#id_password2").fill("Clover-test-Garden-41")
+                        page.get_by_role("button", name="Create a parent account").click()
+                        expect(page).to_have_url(self.live_server_url + "/")
+            browser.close()
 
     @override_settings(STRIPE_TEST_ONE_TIME_LINK="https://donate.stripe.com/test_Once",
                        STRIPE_TEST_MONTHLY_LINK="https://buy.stripe.com/test_Monthly")

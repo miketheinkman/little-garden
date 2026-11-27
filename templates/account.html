@@ -14,7 +14,7 @@
 {% endfor %}
 {% endif %}
 <button>{{ heading|default:"Sign in" }}</button></form>
-<p>{% if heading %}<a href="{% url 'login' %}">Already have an account? Sign in</a>{% else %}<a href="{% url 'signup' %}">Create a free parent account</a> · <a href="{% url 'password_reset' %}">Forgot password?</a>{% endif %}</p>
+<p>{% if heading %}<a href="{% url 'login' %}">Already have an account? Sign in</a>{% else %}<a href="{% url 'signup' %}">Parent registration</a> · <a href="{% url 'password_reset' %}">Forgot password?</a>{% endif %}</p>
 </section>
 {% if not heading %}<script defer src="{% static 'login-password.js' %}"></script>{% endif %}
 {% endblock %}

@@ -95,3 +95,6 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 
 PASSWORD_RESET_TIMEOUT = 3600
 TEST_RUNNER = "qa.runner.GardenTestRunner"
+
+# Hosted enrollment stays closed unless a parent presents an invitation.
+INVITE_ONLY_SIGNUP = True

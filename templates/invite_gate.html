@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Join the Little Garden alpha{% endblock %}
+{% block content %}
+<section class="account">
+<h1>Join the Little Garden alpha</h1>
+<p>We’re inviting a few families at a time. Enter the code from your invitation email to create your free parent account.</p>
+{% if expired %}<p role="alert">This invitation is no longer available. Use the code from your latest invitation.</p>{% endif %}
+<form method="post">{% csrf_token %}{{ form.as_p }}<button>Continue</button></form>
+<p><a href="{% url 'login' %}">Already have an account? Sign in</a></p>
+</section>
+{% endblock %}

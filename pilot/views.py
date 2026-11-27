@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from .forms import ParentSignupForm, RecoveryEmailForm
+from .invitations import invited_signup
 from django.db import connection, transaction
 from django.core.paginator import Paginator
 from django.db.models import Case, F, Q, Value, When
@@ -18,6 +19,7 @@ from django.db.models.functions import Coalesce
 from django.http import Http404, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST, require_http_methods
 
 from .models import Assignment, Learner, LessonFeedback, FeedbackEmailPreference
@@ -115,7 +117,11 @@ def answer_transition(request, destination, lesson, accepted=False, tier_gain=No
     return JsonResponse({"result": result, "next": destination, **({"tier_gain": tier_gain} if tier_gain else {})})
 
 
+@never_cache
+@require_http_methods(["GET", "POST"])
 def signup(request):
+    if settings.INVITE_ONLY_SIGNUP:
+        return invited_signup(request)
     form = ParentSignupForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         request.session.flush()

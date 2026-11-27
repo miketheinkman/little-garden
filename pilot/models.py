@@ -183,3 +183,14 @@ class QuestionAttempt(models.Model):
     class Meta:
         ordering = ["assignment_id", "step", "pk"]
         constraints = [models.UniqueConstraint(fields=["assignment", "submission"], name="unique_question_submission")]
+
+
+class ParentInvitation(models.Model):
+    email = models.EmailField(unique=True)
+    code_digest = models.CharField(max_length=64, unique=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True)
+
+    @classmethod
+    def available(cls):
+        return cls.objects.filter(used_at__isnull=True, expires_at__gt=timezone.now())
