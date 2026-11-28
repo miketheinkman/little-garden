@@ -136,6 +136,14 @@ Open **Skill details**, choose initial placement or review, then expand a subjec
 
 The [two-vCPU lesson benchmark](qa/CAPACITY.md) includes measured concurrency, answer latency, memory use, and instructions for repeating the trial with synthetic families.
 
+## Learner shortcuts
+
+On **Family garden**, select a learner’s name to expand their queue, settings and progress. The **☰** menu opens their planner, reports and device settings while the card is collapsed.
+
+Choose **Learner devices**, name a device and create a setup code. Open the displayed link on the child’s device over HTTPS. Add it to the home screen first, open the shortcut, and enter the code within 15 minutes. Each launch opens that learner’s garden. A device can also use the same link in its paired browser. Lessons require a network connection. Clearing browser storage or changing profiles requires pairing again.
+
+Little Garden issues a one-year X.509 certificate for a non-exportable P-256 key created by the browser. The app signs a short-lived, session-bound challenge at launch. Each shortcut has a separate session scoped to its own path. Removing access in **Learner devices** takes effect on the next request, including during an existing lesson. Anyone who can use the paired browser profile can open that learner’s garden. Parent management continues to require a parent session.
+
 ## Visual review
 
 Install the optional browser tests with `.venv/bin/pip install -r requirements-visual.txt` and `.venv/bin/python -m playwright install chromium`. Run `.venv/bin/python manage.py test` and `.venv/bin/python manage.py test qa.visual`. On Linux with Chrome already installed, you can use `PLAYWRIGHT_CHROME_PATH=/usr/bin/google-chrome .venv/bin/python manage.py test qa.visual` for the browser run.

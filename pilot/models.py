@@ -208,3 +208,14 @@ class ParentInvitation(models.Model):
     @classmethod
     def available(cls):
         return cls.objects.filter(used_at__isnull=True, expires_at__gt=timezone.now())
+
+
+class LearnerDevice(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    learner = models.ForeignKey(Learner, on_delete=models.CASCADE, related_name="devices")
+    label = models.CharField(max_length=60)
+    code_digest = models.CharField(max_length=64, blank=True)
+    expires = models.DateTimeField()
+    certificate = models.BinaryField(default=bytes)
+    generation = models.PositiveBigIntegerField(default=0)
+    last_used = models.DateTimeField(null=True)

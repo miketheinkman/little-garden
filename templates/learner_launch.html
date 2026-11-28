@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load static %}
+{% block content %}<article id="device-launch" data-device="{{ request.garden_device }}" data-worker="{% url 'device_worker' %}" data-pair="{% url 'pair' %}" data-prove="{% url 'prove' %}">
+<h1>Learner garden</h1>
+{% if available %}
+<form id="device-pair" {% if not pending %}hidden{% endif %}>{% csrf_token %}
+<p>On this device, use your browser’s Install or Add to Home Screen option first. Open the shortcut to finish setup.</p>
+<button id="install-garden" type="button" hidden>Install Little Garden</button>
+<label>One-time setup code <input name="code" autocomplete="off" autocapitalize="characters" required maxlength="24"></label>
+<button>Connect this garden</button></form>
+<p id="device-status" role="status">{% if not pending %}Opening your garden…{% endif %}</p>
+<button type="button" id="device-retry" hidden>Try again</button>
+<noscript>Turn on JavaScript to connect this device.</noscript>
+<script defer src="{% static 'learner-device.js' %}"></script>
+{% else %}<p>This shortcut has expired or its access was removed. Ask your parent to create a new one.</p>{% endif %}
+</article>{% endblock %}

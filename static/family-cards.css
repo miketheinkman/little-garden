@@ -1,0 +1,20 @@
+.family-card {padding:.8rem clamp(.8rem,2.1vw,1.4rem); margin:.65rem 0}
+.family-card-head {display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:.55rem;align-items:center}
+.family-card-head h2 {margin:0; min-width:0}
+.learner-toggle {display:flex;align-items:center;gap:.5rem;width:100%;text-align:left;overflow-wrap:anywhere;color:var(--ink);background:transparent;font:inherit;line-height:1.22;padding:.45rem .1rem}
+.card-chevron {font:1.1rem system-ui;color:var(--muted);flex:none}
+.learner-toggle[aria-expanded=true] .card-chevron {transform:rotate(90deg)}
+.library-shortcut {font-size:.95rem;white-space:nowrap;padding:.6rem .75rem}
+.learner-menu {position:relative;margin:0}
+.learner-menu > summary {display:grid;place-items:center;list-style:none;width:2.75rem;height:2.75rem;background:var(--wash);color:var(--ink);border-radius:.7rem;border:1px solid var(--edge);cursor:pointer;font:1.4rem system-ui}
+.learner-menu > summary::-webkit-details-marker {display:none}
+.learner-menu > summary:focus-visible {outline:3px solid var(--focus);outline-offset:2px}
+.learner-menu nav {position:absolute;right:0;top:calc(100% + .3rem);z-index:5;width:max-content;max-width:calc(100vw - 3.6rem);padding:.35rem;background:var(--surface);border:1px solid var(--edge);border-radius:.8rem;box-shadow:0 .4rem 1.3rem #0003}
+.learner-menu a {display:flex;align-items:center;gap:.65rem;min-height:2.55rem;padding:.25rem .65rem;color:var(--ink);text-decoration:none;border-radius:.45rem}
+.learner-menu a:hover,.learner-menu a:focus-visible {background:var(--wash)}
+.learner-menu a span {min-width:1.45em;text-align:center}
+.family-card-body {border-top:1px solid var(--line);margin-top:.7rem;padding:.7rem 0}
+.device-code {font:700 1.3rem monospace;letter-spacing:.08em}
+
+.device-form {display:grid;justify-items:start;gap:.65rem}
+.device-link {overflow-wrap:anywhere}

@@ -1,6 +1,7 @@
 {% load static %}<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+{% if request.garden_device %}<link rel="manifest" href="{% url 'manifest' %}"><meta name="theme-color" content="#28563e">{% endif %}
 <title>{% block title %}Little Garden{% endblock %}</title>
 <link rel="icon" href="{% static 'brand/book-sprout.svg' %}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="{% static 'brand/apple-touch-icon.png' %}">
@@ -9,12 +10,12 @@
 <link rel="stylesheet" href="{% static 'route-puzzles.css' %}?v=family-round2">
 {% block extra_styles %}{% endblock %}</head><body>
 <header>
-  <a class="brand" href="/"><img src="{% static 'brand/book-sprout.svg' %}" width="32" height="32" alt=""> Little Garden</a>
+  <a class="brand" href="{% url 'home' %}"><img src="{% static 'brand/book-sprout.svg' %}" width="32" height="32" alt=""> Little Garden</a>
   <div class="theme-control"><label for="theme">Theme</label> <select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></div>
   <nav aria-label="Account">{% if user.is_staff or perms.pilot.review_lessons %}<a href="{% url 'dashboard' %}">Admin dashboard</a>{% endif %}
   {% if user.is_authenticated %}<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="link">Sign out</button></form>
-  {% elif request.session.child %}<a href="{% url 'login' %}">Parent sign in</a>{% endif %}</nav>
+  {% elif request.session.child and not request.garden_device %}<a href="{% url 'login' %}">Parent sign in</a>{% endif %}</nav>
 </header>
 <main {% include 'appearance_attrs.html' %}>{% block content %}{% endblock %}</main>
-<footer>Little Garden · Free for every family · <a href="{% url 'welcome' %}">Garden opening</a>{% if user.is_authenticated or not request.session.child %} · <a href="{% url 'mission' %}">Mission statement</a>{% endif %}</footer>
+<footer>Little Garden · Free for every family{% if not request.garden_device %} · <a href="{% url 'welcome' %}">Garden opening</a>{% if user.is_authenticated or not request.session.child %} · <a href="{% url 'mission' %}">Mission statement</a>{% endif %}{% endif %}</footer>
 </body></html>

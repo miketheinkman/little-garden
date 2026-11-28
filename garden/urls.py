@@ -2,7 +2,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth import views as auth
 from django.urls import path
 from django.views.generic import TemplateView
-from pilot import coview, views
+from pilot import coview, devices, views
 from pilot.reviews import placement_reviews
 from pilot.focus_views import focus_home, focus_week, skill_report, objective_details
 from pilot.calendar import family_calendar
@@ -54,6 +54,7 @@ urlpatterns = [
     path("children/<int:pk>/focus/week/", focus_week, name="focus_week"),
     path("children/<int:pk>/skills/<slug:objective>/", objective_details, name="objective_details"),
     path("children/<int:pk>/skills/", skill_report, name="skill_report"),
+    path("children/<int:pk>/devices/", devices.devices, name="devices"),
     path("children/add/", views.add_child, name="add_child"),
     path("children/<int:pk>/", views.manage, name="manage"),
     path("suggestions/start/", views.start_suggestion, name="start_suggestion"),

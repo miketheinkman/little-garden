@@ -1,0 +1,15 @@
+{% extends "base.html" %}{% load static %}{% block extra_styles %}<link rel="stylesheet" href="{% static 'family-cards.css' %}">{% endblock %}
+{% block content %}
+<a href="{% url 'home' %}">Family garden</a>
+<h1>{{ child.nickname }}’s devices</h1>
+<p>Give this learner a home-screen shortcut that opens their garden. Anyone using that browser profile can open it.</p>
+{% if code %}<article role="status"><h2>Connect the learner’s device</h2>
+<p>Open this link on the learner’s device. Add it to the home screen, then open the shortcut and enter the code.</p>
+<p class="device-link"><a href="{{ link }}">{{ link }}</a></p><p class="device-code">{{ code }}</p>
+<p>The code works once and expires in 15 minutes. You can name the shortcut for {{ child.nickname }} when your browser offers that option.</p></article>{% endif %}
+<article><h2>Add a device</h2><form class="device-form" method="post">{% csrf_token %}<label>Device name <input name="label" required maxlength="60" placeholder="Kitchen tablet"></label>
+{% if error %}<p role="alert">{{ error }}</p>{% endif %}<button>Create setup code</button></form></article>
+<article><h2>Device access</h2>{% for device in devices %}<div><h3>{{ device.label }}</h3>
+<p>{% if device.expires <= now %}Expired{% elif device.code_digest %}Waiting for setup{% else %}Connected · Expires {{ device.expires|date:"M j, Y" }}{% endif %}{% if device.last_used %} · Last opened {{ device.last_used|date:"M j" }}{% endif %}</p>
+<form method="post">{% csrf_token %}<input type="hidden" name="device" value="{{ device.pk }}"><button class="secondary" name="action" value="revoke">Remove access for {{ device.label }}</button></form></div>{% empty %}<p>No devices connected.</p>{% endfor %}</article>
+{% endblock %}

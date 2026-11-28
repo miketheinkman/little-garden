@@ -112,6 +112,7 @@ class VisualReview(StaticLiveServerTestCase):
                     ctx.add_cookies([{"name":"sessionid","value":family.cookies["sessionid"].value,"url":self.live_server_url}])
                     page = ctx.new_page()
                     page.goto(self.live_server_url)
+                    page.locator(f'[data-learner="{child.pk}"] .learner-menu summary').click()
                     page.locator(f'[data-learner="{child.pk}"]').get_by_role("link",name="Placement & reviews",exact=True).click()
                     page.get_by_label("Skill area").select_option("Money sense")
                     page.get_by_role("button",name="Show",exact=True).click()
@@ -921,6 +922,7 @@ class VisualReview(StaticLiveServerTestCase):
                         })()""")
                     page.goto(self.live_server_url)
                     card = page.locator(f'[data-learner="{child.pk}"]')
+                    card.locator(".learner-toggle").click()
                     box = card.get_by_role("checkbox", name=f"Play directions automatically for {child.nickname}")
                     expect(box).not_to_be_checked()
                     box.check()
@@ -932,6 +934,7 @@ class VisualReview(StaticLiveServerTestCase):
                     expect(page.locator(".question-heading .prompt-icon")).to_have_text("📖")
                     page.locator("main article").first.screenshot(path=self.out / f"{self.variant}-story-cues.png")
                     page.goto(self.live_server_url)
+                    card.locator(".learner-toggle").click()
                     card.get_by_role("button", name=f"Open {child.nickname}’s garden").click()
                     page.get_by_role("link", name="Start lesson").click()
                     expect(page.locator("#activity")).to_have_attribute("data-autoplay-directions", "")
@@ -1252,6 +1255,7 @@ class VisualReview(StaticLiveServerTestCase):
                                          "url": self.live_server_url}])
                         page = ctx.new_page()
                         page.goto(self.live_server_url)
+                        page.locator(f'[data-learner="{new_learner.pk}"] .learner-menu summary').click()
                         page.locator(f'[data-learner="{new_learner.pk}"]').get_by_role("link", name="Assignment history").click()
                         expect(page.get_by_role("heading", name="No assignments yet")).to_be_visible()
                         self.capture(page, "history-empty")
@@ -1319,6 +1323,7 @@ class VisualReview(StaticLiveServerTestCase):
                         page.goto(self.live_server_url + reverse("preview", args=[child.pk, key, step]))
                     page.goto(self.live_server_url)
                     card = page.locator(f'article[data-learner="{child.pk}"]')
+                    card.locator(".learner-toggle").click()
                     card.locator(".look-editor summary").click()
                     editor = card.locator("[data-look-form]")
                     editor.locator("[name=accent]").fill("#7955c2")
@@ -1839,6 +1844,7 @@ class VisualReview(StaticLiveServerTestCase):
                         page.goto(self.live_server_url)
                         panel = page.locator("article").filter(has=page.get_by_role("link",name="Browse lesson library")).filter(
                             has=page.locator(f'form[action="/children/{child.pk}/"]'))
+                        panel.locator(".learner-toggle").click()
                         panel.get_by_role("combobox").select_option(slug)
                         panel.get_by_role("button", name="Save lesson theme").click()
                         expect(panel.get_by_role("combobox")).to_have_value(slug)
@@ -1854,6 +1860,7 @@ class VisualReview(StaticLiveServerTestCase):
                         page.locator("article").filter(has=page.locator("#activity")).screenshot(path=self.out / f"{self.variant}-world-{slug}.png")
                         self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"))
                     page.goto(self.live_server_url)
+                    panel.locator(".learner-toggle").click()
                     panel.get_by_text("Skill placement and progress", exact=True).click()
                     panel.get_by_role("button", name="Keyboard check-in", exact=True).click()
                     expect(panel.locator("[data-current-queue]")).to_contain_text("Keyboard check-in")
@@ -2197,6 +2204,7 @@ class VisualReview(StaticLiveServerTestCase):
         self.capture(page, "admin")
 
         page.goto(self.live_server_url)
+        page.locator(".learner-toggle").first.click()
         self.capture(page, "queue-controls")
         page.get_by_role("button", name="Remove", exact=True).last.click()
         expect(page.get_by_role("button", name="Remove", exact=True)).to_have_count(1)
@@ -2235,6 +2243,7 @@ class VisualReview(StaticLiveServerTestCase):
         page.locator("#id_username").fill("reviewer")
         page.locator("#id_password").fill("garden-qa-only")
         page.locator("#id_password").press("Enter")
+        page.locator(".learner-toggle").first.click()
         page.get_by_text("Skill placement and progress", exact=True).click()
         expect(page.get_by_text("s/key (median)", exact=False).first).to_be_visible()
         page.get_by_text("This week’s learning record", exact=True).click()
@@ -2331,3 +2340,100 @@ class VisualReview(StaticLiveServerTestCase):
                         expect(page.locator("#check-basket")).to_have_attribute("value","8")
                         self.capture(page,"larger-basket")
             browser.close()
+
+    def test_collapsed_cards_and_installed_gardens(self):
+        from pilot.assignments import assign_lesson
+        parent = get_user_model().objects.get(username="reviewer")
+        children = [Learner.objects.create(parent=parent,nickname=name) for name in ("Linden","Hazel")]
+        for child in children:
+            assign_lesson(child,"keys-v2",0)
+        family = Client()
+        family.force_login(parent)
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375,1200):
+                for theme in ("light","dark"):
+                    self.variant = f"learner-cards-{width}-{theme}"
+                    with browser.new_context(viewport={"width":width,"height":820},color_scheme=theme) as ctx:
+                        ctx.add_cookies([{"name":"sessionid","value":family.cookies["sessionid"].value,"url":self.live_server_url}])
+                        parent_page = ctx.new_page()
+                        parent_page.goto(self.live_server_url)
+                        card = parent_page.locator(f'[data-learner="{children[0].pk}"]')
+                        expect(card.locator(".family-card-body")).to_be_hidden()
+                        self.capture(parent_page,"collapsed")
+                        card.locator(".learner-toggle").click()
+                        expect(card.get_by_text("Lesson queue",exact=True)).to_be_visible()
+                        card.locator(".learner-toggle").click()
+                        menu = card.get_by_label("Tools for Linden",exact=True).first
+                        menu.click()
+                        expect(card.get_by_role("link",name="Skill details")).to_be_visible()
+                        self.capture(parent_page,"menu")
+                        parent_page.keyboard.press("Escape")
+                        expect(card.get_by_role("link",name="Skill details")).not_to_be_visible()
+                        expect(menu).to_be_focused()
+                        menu.click()
+                        card.get_by_role("link",name="Learner devices").click()
+                        self.capture(parent_page,"devices")
+                        if (width,theme) != (375,"light"):
+                            continue
+                        launches = []
+                        for child in children:
+                            parent_page.goto(self.live_server_url+reverse("devices",args=[child.pk]))
+                            parent_page.get_by_label("Device name").fill("Garden tablet")
+                            parent_page.get_by_role("button",name="Create setup code").click()
+                            setup = parent_page.get_by_role("status")
+                            url = setup.get_by_role("link").get_attribute("href")
+                            code = setup.locator(".device-code").inner_text()
+                            tab = ctx.new_page()
+                            tab.goto(url)
+                            self.capture(tab,"connect")
+                            tab.get_by_label("One-time setup code").fill(code)
+                            tab.get_by_role("button",name="Connect this garden").click()
+                            expect(tab.get_by_role("heading",name=child.nickname+"’s garden")).to_be_visible()
+                            expect(tab.get_by_role("link",name="Admin dashboard")).to_have_count(0)
+                            tab.get_by_role("link",name="Start lesson").click()
+                            expect(tab).to_have_url(re.compile(re.escape(url)+"play/"))
+                            tab.get_by_role("link",name="My lessons").click()
+                            launches.append((url,tab))
+                        for (url,tab),child in zip(launches,children):
+                            tab.goto(url)
+                            expect(tab.get_by_role("heading",name=child.nickname+"’s garden")).to_be_visible()
+                        parent_page.get_by_role("button",name="Remove access",exact=False).click()
+                        launches[-1][1].reload()
+                        expect(launches[-1][1].get_by_text("This shortcut has expired",exact=False)).to_be_visible()
+                        parent_page.goto(self.live_server_url)
+                        expect(parent_page.get_by_role("heading",name="Family garden")).to_be_visible()
+            browser.close()
+
+    def test_device_key_survives_browser_restart(self):
+        from tempfile import TemporaryDirectory
+        from pilot.assignments import assign_lesson
+        family = Client()
+        child = Learner.objects.get(pk=self.child_id)
+        assign_lesson(child,"keys-v2",0)
+        family.force_login(child.parent)
+        issued = family.post(reverse("devices",args=[child.pk]),{"label":"Dedicated tablet"},secure=True)
+        code = issued.context["code"]
+        url = self.live_server_url+f"/g/{child.devices.get().pk}/"
+        with TemporaryDirectory(prefix="lg-browser-profile-") as profile, sync_playwright() as pw:
+            opts = dict(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"),headless=True)
+            ctx = pw.chromium.launch_persistent_context(profile,**opts)
+            page = ctx.pages[0]
+            page.goto(url)
+            page.evaluate("navigator.serviceWorker.ready.then(() => true)")
+            cdp = ctx.new_cdp_session(page)
+            manifest = cdp.send("Page.getAppManifest")
+            self.assertFalse(manifest["errors"])
+            self.assertFalse(cdp.send("Page.getInstallabilityErrors")["installabilityErrors"])
+            page.get_by_label("One-time setup code").fill(code)
+            page.get_by_role("button",name="Connect this garden").click()
+            expect(page.get_by_role("heading",name="Fern’s garden")).to_be_visible()
+            ctx.clear_cookies()
+            ctx.close()
+            ctx = pw.chromium.launch_persistent_context(profile,**opts)
+            page = ctx.pages[0]
+            page.goto(url)
+            expect(page.get_by_role("heading",name="Fern’s garden")).to_be_visible()
+            page.get_by_role("link",name="Start lesson").click()
+            expect(page.locator("#activity")).to_be_visible()
+            ctx.close()
