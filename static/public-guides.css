@@ -1,0 +1,41 @@
+.public-nav,.guide-jumps,.share-links { display:flex; flex-wrap:wrap; align-items:center; gap:.4rem 1rem }
+.public-nav a,.guide-jumps a { padding:.45rem .12rem; text-underline-offset:.22em; font-weight:650 }
+.public-nav a[aria-current] { text-decoration-thickness:.18em }
+.story-header .public-nav { justify-content:center; padding:.2rem 1rem; border-radius:2rem; background:var(--sky) }
+.story-header .public-nav a { color:var(--title) }
+.public-guide { max-width:54rem }
+.public-guide h1 { margin:.55em 0 .12em; line-height:1.08 }
+.guide-intro { font:1.3rem/1.55 Georgia,serif; max-width:48rem }
+.guide-jumps { padding:.7rem 1rem; border-block:1px solid var(--line); background:var(--wash) }
+.public-guide section { margin:2.4rem 0; scroll-margin-top:1rem }
+.public-guide section > p { max-width:72ch }
+.guide-steps dt { font-size:1.15rem; font-weight:750; margin-top:1.15rem }
+.guide-steps dd { margin:.25rem 0 0; max-width:72ch }
+.lesson-gallery { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.85rem; align-items:start }
+.lesson-gallery figure { margin:0; padding:.55rem; border:1px solid var(--line); background:var(--surface); border-radius:.85rem }
+.lesson-gallery img { display:block; width:100%; height:auto; border-radius:.45rem }
+.lesson-gallery figcaption { padding:.65rem .25rem .25rem; font-size:.95rem }
+.lesson-gallery strong { display:block; font: bold 1.25rem/1.4 Georgia,serif; margin-bottom:.2rem }
+.guide-topic { border-bottom:1px solid var(--line); padding:.55rem 0; margin:0 }
+.guide-topic summary { font-weight:700; padding:.4rem }
+.guide-topic small { color:var(--muted) }
+.guide-topic li { margin:.65rem 0 }
+.guide-next,.invite-panel { background:var(--wash); border-radius:1rem; padding:1.15rem 1.5rem }
+.invite-panel { max-width:40rem }
+.invite-panel input { width:min(100%,25rem) }
+.guide-next { font-weight:700 }
+.share-links { font-size:.9rem; padding:.65rem 0; gap:.4rem .9rem }
+.share-links a { text-underline-offset:.2em; padding:.3em 0 }
+@media(max-width:700px) {
+  .story-header .public-nav { order:3; width:100%; gap:.4rem 1rem; padding:.1rem 0 }
+  .story-header { gap:.5rem }
+  .lesson-gallery { grid-template-columns:1fr }
+  .lesson-gallery figure { max-width:30rem }
+}
+@media print { .share-links { display:none } }
+@media(min-width:701px) {
+  .lesson-gallery { align-items:stretch }
+  .lesson-gallery figure { display:flex; flex-direction:column }
+  .lesson-gallery a { display:grid; place-items:center; height:13rem; background:#fffef8; border-radius:.5rem }
+  .lesson-gallery img { max-height:13rem; object-fit:contain }
+}

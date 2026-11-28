@@ -1,0 +1,5 @@
+<nav class="public-nav" aria-label="Explore Little Garden">
+  <a href="{% url 'curriculum' %}" {% if request.resolver_match.url_name == 'curriculum' %}aria-current="page"{% endif %}>Curriculum</a>
+  <a href="{% url 'how_it_works' %}" {% if request.resolver_match.url_name == 'how_it_works' %}aria-current="page"{% endif %}>How it works</a>
+  <a href="{% url 'request_invite' %}" {% if request.resolver_match.url_name == 'request_invite' %}aria-current="page"{% endif %}>Request invite</a>
+</nav>

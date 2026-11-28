@@ -99,3 +99,11 @@ TEST_RUNNER = "qa.runner.GardenTestRunner"
 
 # Hosted enrollment stays closed unless a parent presents an invitation.
 INVITE_ONLY_SIGNUP = True
+
+INVITE_REQUEST_RECIPIENTS = [
+    address.strip() for address in os.environ.get("GARDEN_INVITE_REQUEST_RECIPIENTS", "").split(",")
+    if address.strip()
+]
+
+STRIPE_LIVE_ONE_TIME_LINK = os.environ.get("GARDEN_STRIPE_LIVE_ONE_TIME_LINK", "").strip()
+STRIPE_LIVE_MONTHLY_LINK = os.environ.get("GARDEN_STRIPE_LIVE_MONTHLY_LINK", "").strip()

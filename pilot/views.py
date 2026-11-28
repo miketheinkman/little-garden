@@ -45,13 +45,15 @@ from .practice import CURRENT_LESSONS, CURRENT_VERSION, LESSONS, ORIGINALS, buil
 
 
 def mission(request):
-    once = settings.STRIPE_TEST_ONE_TIME_LINK
-    monthly = settings.STRIPE_TEST_MONTHLY_LINK
-    links = [
-        (label, url) for label, url in (("Give once", once), ("Give monthly", monthly))
-        if once != monthly and re.fullmatch(r"https://(?:buy|donate)\.stripe\.com/test_[A-Za-z0-9]+", url)
-    ]
-    return render(request, "mission.html", {"donation_links": links})
+    once, monthly = settings.STRIPE_LIVE_ONE_TIME_LINK, settings.STRIPE_LIVE_MONTHLY_LINK
+    live = bool(once or monthly)
+    if not live:
+        once, monthly = settings.STRIPE_TEST_ONE_TIME_LINK, settings.STRIPE_TEST_MONTHLY_LINK
+    prefix = "" if live else "test_"
+    pattern = rf"https://(?:buy|donate)\.stripe\.com/{prefix}[A-Za-z0-9]+"
+    links = [(label, url) for label, url in (("Give once", once), ("Give monthly", monthly))
+             if once != monthly and re.fullmatch(pattern, url)]
+    return render(request, "mission.html", {"donation_links": links, "live_donations": live})
 
 
 CATALOG_FILTERS = ("category", "participation", "tier", "fit")

@@ -6,11 +6,11 @@
 <link rel="apple-touch-icon" href="{% static 'brand/apple-touch-icon.png' %}">
 <script src="{% static 'theme.js' %}"></script>
 <link rel="stylesheet" href="{% static 'garden.css' %}?v=family-round2"><link rel="stylesheet" href="{% static 'welcome.css' %}">
-</head><body class="welcome">
+<link rel="stylesheet" href="{% static 'public-guides.css' %}"></head><body class="welcome">
 <div class="story-page">
 {% include 'welcome_scene.html' %}
 <header class="story-header"><a class="brand" href="{% url 'welcome' %}"><img src="{% static 'brand/book-sprout.svg' %}" width="36" height="36" alt=""> Little Garden</a>
-<div class="theme-control"><label for="theme">Theme</label> <select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></div></header>
+{% include 'public_nav.html' %}<div class="theme-control"><label for="theme">Theme</label> <select id="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select></div></header>
 <main class="invitation">
 <h1>Little <em>Garden</em></h1>
 <p>Free for everybody. Forever.</p>
@@ -18,4 +18,5 @@
 </main>
 <div class="story-footer"><a href="{% url 'mission' %}">Our mission</a><button type="button" id="replay" hidden>↻ &nbsp;Replay opening</button></div>
 </div>
+{% if user.is_authenticated or not request.session.child %}<footer class="welcome-sharing">{% include 'share_links.html' %}</footer>{% endif %}
 <script src="{% static 'welcome.js' %}" defer></script></body></html>

@@ -1,0 +1,9 @@
+{% extends 'base.html' %}{% block title %}Invite requests · Little Garden{% endblock %}
+{% block content %}{% include 'dashboard_nav.html' %}<h1>Invite requests</h1>
+{% for message in messages %}<p role="status">{{ message }}</p>{% endfor %}
+{% for entry in page %}<article><strong>{{ entry.email }}</strong><p>Requested {{ entry.requested_at }} · {% if entry.invited_at %}Invited {{ entry.invited_at }}{% else %}Awaiting invitation{% endif %}</p>
+<form method="post">{% csrf_token %}<input type="hidden" name="entry" value="{{ entry.pk }}">
+{% if not entry.notified_at %}<button name="action" value="notify">Retry staff notification</button>{% endif %}
+{% if invite_only and not entry.invited_at %}<button name="action" value="invite">Send invitation</button>{% endif %}</form></article>
+{% empty %}<p>No families have requested an invite yet.</p>{% endfor %}
+<nav aria-label="Request pages">{% if page.has_previous %}<a href="?page={{ page.previous_page_number }}">Newer requests</a>{% endif %} {% if page.has_next %}<a href="?page={{ page.next_page_number }}">Older requests</a>{% endif %}</nav>{% endblock %}

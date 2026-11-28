@@ -26,8 +26,9 @@
   <h2>Supporting Little Garden</h2>
   <p>We welcome optional donations to help cover hosting and the work of creating and reviewing lessons. Every family gets the same tools whether they give or not.</p>
   {% if donation_links %}
-  <h3>Try a test donation</h3>
-  <p>These buttons open Stripe’s sandbox. Use a test card. No money changes hands.</p>
+  {% if live_donations %}<p>Choose a donation below to continue to Stripe’s secure checkout.</p>
+  {% else %}<h3>Try a test donation</h3>
+  <p>These buttons open Stripe’s sandbox. Use a test card. No money changes hands.</p>{% endif %}
   <div class="preview-nav">
     {% for label, url in donation_links %}<a class="button" href="{{ url }}" rel="noreferrer">{{ label }}</a>{% endfor %}
   </div>

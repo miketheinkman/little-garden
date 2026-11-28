@@ -163,3 +163,11 @@ Co-viewing recreates the visible Little Garden activity, including the prompt, t
 The server matches the signed-in parent with each selected learner. Their browsers try a WebRTC data channel using local host candidates and no external STUN or TURN service. Each tile shows **Live · Direct** or **Live · Server relay**. During matching or after a connection fails, the server carries updates roughly once a second. On a healthy direct connection, drawing and typing updates travel between browsers. The server continues to check household access and supply lesson context and submitted responses. The learner keeps the same connection when answering, skipping, or moving between the queue and lessons. The mirror plays each celebration beside the answered question for two seconds, including when a relay update arrives after the child advances. Browser or Wi-Fi restrictions can keep a tile on the relay.
 
 Leaving the child page or losing its connection causes the live frame to expire after eight seconds. Temporary snapshots are scoped to the household and shared between the two Linux pilot listeners through the user’s private runtime directory. The app does not capture the device screen, camera, microphone, or activity in other tabs.
+
+### Public guides and invite requests
+
+The Welcome page links to Curriculum, How it works and Request invite. Curriculum builds its subject list from the current lessons. See AGENTS.md for screenshot refresh and guide maintenance during feature checks.
+
+Set `GARDEN_INVITE_REQUEST_RECIPIENTS` to comma-separated reviewer email addresses in the private deployment environment. Each new address creates one request. Staff can review submissions in **Admin dashboard → Invite requests**, retry a failed staff notification, or issue a seven-day invitation. Submitting the public form never enrolls a family.
+
+Set `GARDEN_STRIPE_LIVE_ONE_TIME_LINK` or `GARDEN_STRIPE_LIVE_MONTHLY_LINK` to the corresponding public live Stripe-hosted Payment Links. Each is optional. Hosted deployments only offer configured live links. No payment credentials are needed by Django. Parent sharing links always share the official public Welcome page.

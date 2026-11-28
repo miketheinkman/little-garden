@@ -8,6 +8,7 @@
 <script src="{% static 'theme.js' %}"></script>
 <link rel="stylesheet" href="{% static 'garden.css' %}?v=family-round2">
 <link rel="stylesheet" href="{% static 'route-puzzles.css' %}?v=family-round2">
+<link rel="stylesheet" href="{% static 'public-guides.css' %}">
 {% block extra_styles %}{% endblock %}</head><body>
 <header>
   <a class="brand" href="{% url 'home' %}"><img src="{% static 'brand/book-sprout.svg' %}" width="32" height="32" alt=""> Little Garden</a>
@@ -17,5 +18,5 @@
   {% elif request.session.child and not request.garden_device %}<a href="{% url 'login' %}">Parent sign in</a>{% endif %}</nav>
 </header>
 <main {% include 'appearance_attrs.html' %}>{% block content %}{% endblock %}</main>
-<footer>Little Garden · Free for every family{% if not request.garden_device %} · <a href="{% url 'welcome' %}">Garden opening</a>{% if user.is_authenticated or not request.session.child %} · <a href="{% url 'mission' %}">Mission statement</a>{% endif %}{% endif %}</footer>
+<footer>Little Garden · Free for every family{% if not request.garden_device %} · <a href="{% url 'welcome' %}">Garden opening</a>{% if user.is_authenticated or not request.session.child %} · <a href="{% url 'mission' %}">Mission statement</a>{% endif %}{% endif %}{% if not request.garden_device %}{% if user.is_authenticated or not request.session.child %}{% include 'share_links.html' %}{% endif %}{% endif %}</footer>
 </body></html>

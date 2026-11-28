@@ -1,0 +1,22 @@
+{% extends "public_guide.html" %}{% load static %}
+{% block title %}Curriculum · Little Garden{% endblock %}
+{% block guide %}
+<h1>Curriculum</h1>
+<p class="guide-intro">What does your child know today, and what would be a good stretch tomorrow? Short rounds help families answer those questions as children learn to read, count, reason and use a computer.</p>
+<nav class="guide-jumps" aria-label="On this page"><a href="#lessons">Inside a lesson</a><a href="#placement">Placement &amp; progress</a><a href="#subjects">Explore subjects</a></nav>
+<section id="lessons"><h2>Inside a lesson</h2>
+<div class="lesson-gallery">{% for title, image, caption in gallery %}
+<figure><a href="{% static image %}" aria-label="Enlarge {{ title }} screenshot"><img src="{% static image %}" alt="{{ title }} lesson in the garden" loading="eager"></a><figcaption><strong>{{ title }}</strong>{{ caption }}</figcaption></figure>
+{% endfor %}</div></section>
+<section id="placement"><h2>From a first try to a next step</h2>
+<dl class="guide-steps">
+<dt>Find a starting point</dt><dd>Choose an untimed check-in for numbers, keyboard use or word sounds, or assign an initial placement in a specific activity. A complete check with evidence establishes a baseline. For hands-on activities, you can record what you saw.</dd>
+<dt>Read the evidence</dt><dd>Independent first answers show accuracy. A retry, skip or adult-assisted solve tells a different story and stays visible. Coloring can measure coverage and puzzles record hints. Guided tracing records participation. Keyboard pace can refine the estimate after three correct first tries.</dd>
+<dt>Choose the next round</dt><dd>Tiers 1–5 describe task difficulty within a skill. The library compares a lesson with your child’s current estimate and labels its fit. Your queue comes first. When it’s empty, suggestions favor skills that need practice and stay within one tier of the estimate.</dd>
+<dt>Revisit a skill</dt><dd>A review is suggested after four weeks, or after eight later fully scored rounds in that skill area. Open Skill details to see the individual letters, numbers or concepts behind a score. A “Demonstrated” target averages at least 80% across recent independent attempts from at least two rounds.</dd>
+</dl>
+<p>Want to spend a week on M and S? A practice focus can keep a round short or mix those letters with familiar ones. Focus is optional. The three multi-tier check-ins keep their standard mix so you can compare results over time.</p></section>
+<section id="subjects"><h2>Explore subjects</h2><p>Browse the {{ lesson_count }} activities currently in the lesson library. Each entry shows what your child practices and whether a grown-up takes part.</p>
+{% for subject, lessons in subjects.items %}<details class="guide-topic"><summary>{{ subject }} <small>{{ lessons|length }}</small></summary><ul>{% for lesson in lessons %}<li><strong>{{ lesson.title }}</strong> · {{ lesson.skill }} <small>{{ lesson.participation }}</small></li>{% endfor %}</ul></details>{% endfor %}</section>
+<p class="guide-next"><a href="{% url 'how_it_works' %}">See how to plan your family’s first week →</a></p>
+{% endblock %}

@@ -219,3 +219,10 @@ class LearnerDevice(models.Model):
     certificate = models.BinaryField(default=bytes)
     generation = models.PositiveBigIntegerField(default=0)
     last_used = models.DateTimeField(null=True)
+
+
+class InviteRequest(models.Model):
+    email = models.EmailField(unique=True)
+    requested_at = models.DateTimeField(auto_now_add=True)
+    notified_at = models.DateTimeField(null=True, blank=True)
+    invited_at = models.DateTimeField(null=True, blank=True)

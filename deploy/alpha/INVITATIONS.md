@@ -15,3 +15,5 @@ sudo docker exec little-garden-alpha-web-1 python manage.py invite_parent --revo
 ```
 
 For the public cutover, first verify the invite gate through Nginx, enable Cloudflare-only HTTPS ingress to the origin, and set Cloudflare to Full (strict). Publish the proxied A record when that path is ready. Verify signup, sign-in, password resets and private-page caching through the public hostname before sending family invitations.
+
+Parents can also request a place at `/request-invite/`. In the private alpha environment, set `GARDEN_INVITE_REQUEST_RECIPIENTS` to the comma-separated staff inboxes and recreate the web container when changing it. Check **Admin dashboard → Invite requests** for every submission. Requests are deduplicated by email. During a burst, automatic reviewer emails pause after 20 accepted notifications in ten minutes. Staff can retry a notification or send the actual invitation from the queue. The command above also marks the matching request as invited.

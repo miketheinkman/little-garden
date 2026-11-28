@@ -2,7 +2,7 @@ from django.contrib.auth.views import LoginView, LogoutView
 from django.contrib.auth import views as auth
 from django.urls import path
 from django.views.generic import TemplateView
-from pilot import coview, devices, views
+from pilot import coview, devices, public_guides, views
 from pilot.reviews import placement_reviews
 from pilot.focus_views import focus_home, focus_week, skill_report, objective_details
 from pilot.calendar import family_calendar
@@ -14,6 +14,11 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("welcome/", TemplateView.as_view(template_name="welcome.html"), name="welcome"),
     path("preview/tier-promotion/", TemplateView.as_view(template_name="tier_preview.html"), name="tier_preview"),
+    path("curriculum/", public_guides.curriculum, name="curriculum"),
+    path("how-it-works/", TemplateView.as_view(template_name="how_it_works.html"), name="how_it_works"),
+    path("request-invite/", public_guides.request_invite, name="request_invite"),
+    path("request-invite/received/", TemplateView.as_view(template_name="invite_received.html"), name="invite_received"),
+    path("dashboard/invite-requests/", public_guides.invite_requests, name="invite_requests"),
     path("mission/", views.mission, name="mission"),
     path("signup/", views.signup, name="signup"),
     path("login/", LoginView.as_view(template_name="account.html"), name="login"),

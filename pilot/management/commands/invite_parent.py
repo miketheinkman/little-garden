@@ -12,7 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from pilot.invitations import code_digest
-from pilot.models import ParentInvitation
+from pilot.models import InviteRequest, ParentInvitation
 
 
 class Command(BaseCommand):
@@ -50,4 +50,5 @@ class Command(BaseCommand):
                              settings.DEFAULT_FROM_EMAIL, [email])
             if sent != 1:
                 raise CommandError("The mail service did not accept the invitation.")
+            InviteRequest.objects.filter(email=email).update(invited_at=timezone.now())
         self.stdout.write("Invitation submitted to the mail service.")

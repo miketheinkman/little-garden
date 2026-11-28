@@ -1,0 +1,11 @@
+{% extends "public_guide.html" %}
+{% block title %}Request an invite · Little Garden{% endblock %}
+{% block guide %}
+<h1>Request an invite</h1>
+<p class="guide-intro">We’re inviting early adopters who enjoy telling us what happened at the kitchen table. Where did your child light up? Which direction was confusing? What would you like to teach next?</p>
+<section class="invite-panel"><h2>Join the family alpha</h2>
+<p>We review requests and send invitations by email as places open. Your feedback helps us tune existing lessons and decide what to build next. Little Garden is free for every family.</p>
+<form method="post">{% csrf_token %}{{ form.as_p }}<button>Request my invite</button></form>
+<p class="meta">We use this address to review your request and contact you about joining.</p></section>
+<p>Already have a code? <a href="{% url 'signup' %}">Use your invitation</a>.</p>
+{% endblock %}

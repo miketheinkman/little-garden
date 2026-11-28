@@ -14,7 +14,8 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - run: python manage.py lesson_audio_catalog --check
       - run: python manage.py test
-      - run: python manage.py test qa.visual
+      - name: Check family workflows, public guides and curriculum screenshots
+        run: python manage.py test qa.visual
       - uses: actions/upload-artifact@v4
         if: always()
         with:

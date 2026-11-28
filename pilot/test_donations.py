@@ -27,3 +27,16 @@ class DonationTests(TestCase):
                 page = self.client.get(reverse("mission"))
                 self.assertContains(page, "Online donations are coming soon")
                 self.assertNotContains(page, "buy.stripe.com")
+
+    def test_live_mode_uses_only_live_hosted_checkouts(self):
+        with self.settings(STRIPE_LIVE_ONE_TIME_LINK="https://donate.stripe.com/abc01",
+                           STRIPE_LIVE_MONTHLY_LINK="https://buy.stripe.com/test_Monthly"):
+            page = self.client.get(reverse("mission"))
+            self.assertContains(page, 'href="https://donate.stripe.com/abc01"')
+            self.assertNotContains(page, "test_")
+            self.assertNotContains(page, "Give monthly")
+            self.assertNotContains(page, "sandbox")
+        with self.settings(STRIPE_LIVE_MONTHLY_LINK="https://buy.stripe.com/abc02"):
+            page = self.client.get(reverse("mission"))
+            self.assertContains(page, "Give monthly")
+            self.assertNotContains(page, "Give once")

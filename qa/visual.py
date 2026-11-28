@@ -2437,3 +2437,97 @@ class VisualReview(StaticLiveServerTestCase):
             page.get_by_role("link",name="Start lesson").click()
             expect(page.locator("#activity")).to_be_visible()
             ctx.close()
+
+    def test_curriculum_gallery(self):
+        """Refresh the public crops with UPDATE_GUIDE_SCREENSHOTS=1."""
+        from pilot.public_guides import GALLERY
+        family = Client()
+        family.force_login(get_user_model().objects.get(username="reviewer"))
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            ctx = browser.new_context(viewport={"width": 660, "height": 940},
+                                      color_scheme="light", reduced_motion="reduce")
+            ctx.add_cookies([{"name": "sessionid", "value": family.cookies["sessionid"].value,
+                              "url": self.live_server_url}])
+            page = ctx.new_page()
+            for key, slug, _ in GALLERY:
+                page.goto(self.live_server_url + reverse("preview", args=[self.child_id, key, 0]) + "?v=2")
+                expect(page.get_by_role("button", name="Hear directions")).to_be_visible()
+                filename = f"{slug}.png"
+                target = Path("static/guides") / filename
+                area = page.locator(".question-work-area")
+                area.screenshot(path=self.out / filename, animations="disabled")
+                if os.getenv("UPDATE_GUIDE_SCREENSHOTS") == "1":
+                    target.parent.mkdir(exist_ok=True)
+                    target.write_bytes((self.out / filename).read_bytes())
+                self.assertTrue(target.is_file(), filename)
+            browser.close()
+
+    @override_settings(INVITE_REQUEST_RECIPIENTS=["review@example.org"])
+    def test_public_family_guides(self):
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375, 1200):
+                for theme in ("light", "dark"):
+                    self.variant = f"guides-{width}-{theme}"
+                    with browser.new_context(viewport={"width": width, "height": 840}, color_scheme=theme,
+                                             reduced_motion="reduce") as ctx:
+                        page = ctx.new_page()
+                        page.goto(self.live_server_url)
+                        self.capture(page, "welcome")
+                        page.get_by_role("link", name="Curriculum", exact=True).click()
+                        expect(page.locator(".lesson-gallery img")).to_have_count(3)
+                        page.locator(".lesson-gallery img").evaluate_all(
+                            "(images) => Promise.all(images.map(image => image.decode()))")
+                        page.locator(".guide-topic summary").first.click()
+                        self.capture(page, "curriculum")
+                        page.get_by_role("link", name="How it works", exact=True).click()
+                        page.get_by_role("link", name="Read progress", exact=True).click()
+                        expect(page.locator("#progress h2")).to_be_in_viewport()
+                        self.capture(page, "parent-guide")
+                        page.get_by_role("navigation", name="Explore Little Garden").get_by_text("Request invite").click()
+                        page.get_by_label("Parent or caregiver email").fill(f"guide-{width}-{theme}@example.org")
+                        self.capture(page, "invite")
+                        page.get_by_role("button", name="Request my invite").click()
+                        expect(page.get_by_role("heading", name="Request received")).to_be_visible()
+                        self.capture(page, "received")
+                        share = page.get_by_role("navigation", name="Share Little Garden")
+                        expect(share.get_by_text("Facebook")).to_have_attribute("href", re.compile("littlegarden.academy"))
+            browser.close()
+
+    @override_settings(INVITE_ONLY_SIGNUP=True, PUBLIC_HOST="testserver",
+                       STRIPE_LIVE_ONE_TIME_LINK="https://donate.stripe.com/ExampleOnce",
+                       STRIPE_LIVE_MONTHLY_LINK="https://buy.stripe.com/ExampleMonthly")
+    def test_staff_requests_and_live_donation_handoff(self):
+        from pilot.models import InviteRequest
+        family = Client()
+        family.force_login(get_user_model().objects.get(username="reviewer"))
+        self.assertContains(family.get(reverse("invite_requests")), "No families have requested an invite yet.")
+        cases = [(width, theme, InviteRequest.objects.create(email=f"{width}-{theme}@example.org",
+                                                             notified_at=timezone.now()))
+                 for width in (375, 1200) for theme in ("light", "dark")]
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width, theme, entry in cases:
+                self.variant = f"guides-{width}-{theme}"
+                with browser.new_context(viewport={"width": width, "height": 840}, color_scheme=theme) as ctx:
+                    ctx.add_cookies([{"name": "sessionid", "value": family.cookies["sessionid"].value,
+                                      "url": self.live_server_url}])
+                    page = ctx.new_page()
+                    page.goto(self.live_server_url + reverse("invite_requests"))
+                    card = page.locator("article").filter(has_text=entry.email)
+                    card.get_by_role("button", name="Send invitation").click()
+                    expect(card).to_contain_text("Invited")
+                    self.capture(page, "staff-invites")
+                    page.route(re.compile(r"^https://(?:buy|donate)\.stripe\.com/"),
+                               lambda route: route.fulfill(status=200, body="QA checkout"))
+                    page.goto(self.live_server_url + reverse("mission"))
+                    for label, checkout in (("Give once", "https://donate.stripe.com/ExampleOnce"),
+                                            ("Give monthly", "https://buy.stripe.com/ExampleMonthly")):
+                        link = page.get_by_role("link", name=label)
+                        link.scroll_into_view_if_needed()
+                        self.capture(page, "live-donations")
+                        link.click()
+                        expect(page).to_have_url(checkout)
+                        page.go_back()
+            browser.close()
