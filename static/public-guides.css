@@ -24,13 +24,15 @@
 .invite-panel { max-width:40rem }
 .invite-panel input { width:min(100%,25rem) }
 .guide-next { font-weight:700 }
-.share-links { margin-top:.7rem; font-size:.95rem }
+.site-footer { max-width:none; display:flex; align-items:flex-start; justify-content:space-between;
+  flex-wrap:wrap; gap:1rem 2rem; padding-inline:clamp(1rem,4vw,4rem) }
+.share-links { max-width:100%; min-width:0; font-size:.9rem }
 .share-icons,.share-actions { display:flex; flex-wrap:wrap; align-items:center; gap:.4rem }
-.share-icons { margin:.45rem 0 }
-.share-icons :is(a,button) { display:grid; place-items:center; width:44px; height:44px; padding:0;
-  background:var(--surface); color:var(--link); border:1px solid var(--line); border-radius:.7rem }
+.share-icons { margin:.25rem 0; gap:.2rem }
+.share-icons :is(a,button) { display:grid; place-items:center; width:32px; height:32px; padding:0;
+  background:transparent; color:var(--link); border:0; border-radius:.45rem }
 .share-icons :is(a,button):hover { background:var(--wash); border-color:var(--edge) }
-.share-icons svg { width:21px; height:21px; fill:currentColor }
+.share-icons svg { width:18px; height:18px; fill:currentColor }
 .share-links [hidden],.share-help { display:none }
 .share-help:target { display:block; max-width:36rem; margin-top:.7rem; padding:1rem;
   background:var(--wash); border:1px solid var(--line); border-radius:.75rem; color:var(--ink) }
@@ -38,6 +40,9 @@
 .share-help input { width:100% }
 .share-actions { gap:.4rem 1rem; margin-top:.6rem }
 .share-help [role="status"]:not(:empty) { display:block; margin-top:.5rem }
+@media(max-width:700px), (pointer:coarse) {
+  .share-icons :is(a,button) { width:44px; height:44px }
+}
 @media(max-width:700px) {
   .story-header .public-nav { order:3; width:100%; gap:.4rem 1rem; padding:.1rem 0 }
   .story-header { gap:.5rem }

@@ -8,7 +8,7 @@
 <script src="{% static 'theme.js' %}"></script>
 <link rel="stylesheet" href="{% static 'garden.css' %}?v=family-round2">
 <link rel="stylesheet" href="{% static 'route-puzzles.css' %}?v=family-round2">
-<link rel="stylesheet" href="{% static 'public-guides.css' %}">
+<link rel="stylesheet" href="{% static 'public-guides.css' %}?v=footer2">
 {% block extra_styles %}{% endblock %}</head><body>
 <header>
   <a class="brand" href="{% url 'home' %}"><img src="{% static 'brand/book-sprout.svg' %}" width="32" height="32" alt=""> Little Garden</a>
@@ -18,5 +18,5 @@
   {% elif request.session.child and not request.garden_device %}<a href="{% url 'login' %}">Parent sign in</a>{% endif %}</nav>
 </header>
 <main {% include 'appearance_attrs.html' %}>{% block content %}{% endblock %}</main>
-<footer>Little Garden · Free for every family{% if not request.garden_device %} · <a href="{% url 'welcome' %}">Garden opening</a>{% if user.is_authenticated or not request.session.child %} · <a href="{% url 'mission' %}">Mission statement</a>{% endif %}{% endif %}{% if not request.garden_device %}{% if user.is_authenticated or not request.session.child %}{% share_links %}{% endif %}{% endif %}</footer>
+<footer class="site-footer"><div>Little Garden · Free for every family{% if not request.garden_device %} · <a href="{% url 'welcome' %}">Garden opening</a>{% if user.is_authenticated or not request.session.child %} · <a href="{% url 'mission' %}">Mission statement</a>{% endif %}{% endif %}</div>{% if not request.garden_device %}{% if user.is_authenticated or not request.session.child %}{% share_links %}{% endif %}{% endif %}</footer>
 </body></html>

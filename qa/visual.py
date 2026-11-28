@@ -2550,3 +2550,33 @@ class VisualReview(StaticLiveServerTestCase):
                         expect(page).to_have_url(checkout)
                         page.go_back()
             browser.close()
+
+    def test_footer_width_and_icon_size(self):
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(executable_path=os.getenv("PLAYWRIGHT_CHROME_PATH"))
+            for width in (375, 1894):
+                for theme in ("light", "dark"):
+                    with browser.new_context(viewport={"width": width, "height": 920}, color_scheme=theme) as ctx:
+                        page = ctx.new_page()
+                        for route in ("welcome", "mission"):
+                            page.goto(self.live_server_url + reverse(route))
+                            footer = page.locator("footer.site-footer")
+                            bounds = footer.bounding_box()
+                            self.assertEqual(bounds["x"], 0)
+                            self.assertEqual(bounds["width"], page.evaluate("document.documentElement.clientWidth"))
+                            self.assertFalse(page.evaluate("document.documentElement.scrollWidth > innerWidth"))
+                            expect(footer.locator(".share-icons a svg")).to_have_count(12)
+                            icon = footer.locator(".share-icons a svg").first
+                            expect(icon).to_have_css("width", "18px")
+                            expect(icon).to_have_css("height", "18px")
+                            target = footer.get_by_role("link", name="Share on Facebook")
+                            expect(target).to_have_css("width", "44px" if width == 375 else "32px")
+                            footer.screenshot(path=self.out / f"footer-{route}-{width}-{theme}.png")
+                        # Simulate a stylesheet missing the new footer rules.
+                        page.route("**/public-guides.css*", lambda route: route.fulfill(
+                            content_type="text/css", body="/* previous stylesheet */"))
+                        page.reload()
+                        expect(icon).to_have_css("width", "18px")
+                        expect(icon).to_have_css("height", "18px")
+                        self.assertTrue(icon.evaluate("(svg) => getComputedStyle(svg).fill === getComputedStyle(svg).color"))
+            browser.close()

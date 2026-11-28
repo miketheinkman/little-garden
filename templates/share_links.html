@@ -3,9 +3,9 @@
   <strong>Share Little Garden</strong>
   <div class="share-icons">
     {% for name, icon, url in destinations %}
-    <a href="{{ url }}" aria-label="Share on {{ name }}" title="Share on {{ name }}"{% if url|first != '#' %} target="_blank" rel="noopener noreferrer"{% endif %}><svg aria-hidden="true" focusable="false"><use href="{{ icons }}#{{ icon }}"></use></svg></a>
+    <a href="{{ url }}" aria-label="Share on {{ name }}" title="Share on {{ name }}"{% if url|first != '#' %} target="_blank" rel="noopener noreferrer"{% endif %}><svg width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><use href="{{ icons }}#{{ icon }}"></use></svg></a>
     {% endfor %}
-    <button type="button" hidden data-share-device data-url="{{ welcome }}" aria-label="More sharing options" title="More sharing options"><svg aria-hidden="true" focusable="false"><use href="{{ icons }}#share-nodes"></use></svg></button>
+    <button type="button" hidden data-share-device data-url="{{ welcome }}" aria-label="More sharing options" title="More sharing options"><svg width="18" height="18" fill="currentColor" aria-hidden="true" focusable="false"><use href="{{ icons }}#share-nodes"></use></svg></button>
   </div>
   {% for name, slug, tip, url in manual %}
   <div class="share-help" id="share-{{ slug }}" tabindex="-1">
