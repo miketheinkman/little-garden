@@ -71,3 +71,28 @@ class PublicGuideTests(TestCase):
         entry.refresh_from_db()
         self.assertIsNotNone(entry.notified_at)
         self.assertFalse(ParentInvitation.objects.exists())
+
+    def test_social_icons_and_public_destinations(self):
+        from urllib.parse import parse_qs, urlsplit
+        from xml.etree import ElementTree
+
+        from .templatetags.social import DESTINATIONS, MANUAL, WELCOME
+
+        sprite = ElementTree.parse(finders.find("brand/share-icons.svg"))
+        ids = {symbol.get("id") for symbol in sprite.getroot()}
+        manual = {slug for _, slug, _, _ in MANUAL}
+        page = self.client.get(reverse("mission") + "?private=family")
+        for name, icon, url in DESTINATIONS:
+            self.assertIn(icon, ids)
+            self.assertContains(page, f'aria-label="Share on {name}"')
+            self.assertContains(page, f'href="{escape(url)}"')
+            if icon in manual:
+                self.assertContains(page, f'id="share-{icon}"')
+            else:
+                fields = parse_qs(urlsplit(url).query)
+                self.assertTrue(any(WELCOME in value for values in fields.values() for value in values))
+                self.assertNotIn("private", url)
+        session = self.client.session
+        session["child"] = 12
+        session.save()
+        self.assertNotContains(self.client.get(reverse("mission")), 'aria-label="Share Little Garden"')

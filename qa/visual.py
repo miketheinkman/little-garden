@@ -2492,7 +2492,24 @@ class VisualReview(StaticLiveServerTestCase):
                         expect(page.get_by_role("heading", name="Request received")).to_be_visible()
                         self.capture(page, "received")
                         share = page.get_by_role("navigation", name="Share Little Garden")
-                        expect(share.get_by_text("Facebook")).to_have_attribute("href", re.compile("littlegarden.academy"))
+                        expect(share.get_by_role("link", name="Share on Facebook")).to_have_attribute("href", re.compile("littlegarden.academy"))
+                        expect(share.locator(".share-icons a")).to_have_count(12)
+                        for name in ("Instagram", "TikTok", "YouTube"):
+                            share_link = share.get_by_role("link", name=f"Share on {name}", exact=True)
+                            share_link.focus()
+                            share_link.press("Enter")
+                            panel = share.locator(".share-help:target")
+                            expect(panel.get_by_role("link", name=f"Open {name}")).to_be_visible()
+                            expect(panel.get_by_role("textbox")).to_have_value("https://littlegarden.academy/")
+                            if name == "Instagram":
+                                ctx.grant_permissions(["clipboard-read", "clipboard-write"], origin=self.live_server_url)
+                                panel.get_by_role("button", name="Copy link").click()
+                                expect(panel.get_by_role("status")).to_have_text("Link copied.")
+                                self.assertEqual(page.evaluate("navigator.clipboard.readText()"),
+                                                 "https://littlegarden.academy/")
+                                self.capture(page, "social-sharing")
+                            panel.get_by_role("link", name="Close").click()
+                            expect(share.locator(".share-help:visible")).to_have_count(0)
             browser.close()
 
     @override_settings(INVITE_ONLY_SIGNUP=True, PUBLIC_HOST="testserver",

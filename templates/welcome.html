@@ -1,4 +1,4 @@
-{% load static %}<!doctype html>
+{% load static social %}<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Welcome to Little Garden</title>
@@ -18,5 +18,5 @@
 </main>
 <div class="story-footer"><a href="{% url 'mission' %}">Our mission</a><button type="button" id="replay" hidden>↻ &nbsp;Replay opening</button></div>
 </div>
-{% if user.is_authenticated or not request.session.child %}<footer class="welcome-sharing">{% include 'share_links.html' %}</footer>{% endif %}
+{% if user.is_authenticated or not request.session.child %}<footer class="welcome-sharing">{% share_links %}</footer>{% endif %}
 <script src="{% static 'welcome.js' %}" defer></script></body></html>

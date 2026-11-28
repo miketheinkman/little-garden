@@ -1,6 +1,21 @@
-<nav class="share-links screen-only" aria-label="Share Little Garden">
+{% load static %}{% static 'brand/share-icons.svg' as icons %}
+<nav id="share-garden" tabindex="-1" class="share-links screen-only" aria-label="Share Little Garden">
   <strong>Share Little Garden</strong>
-  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Flittlegarden.academy%2F" target="_blank" rel="noopener noreferrer">Facebook</a>
-  <a href="https://bsky.app/intent/compose?text=Free%20homeschool%20lessons%20for%20families%3A%20https%3A%2F%2Flittlegarden.academy%2F" target="_blank" rel="noopener noreferrer">Bluesky</a>
-  <a href="https://wa.me/?text=Little%20Garden%20%E2%80%94%20free%20homeschool%20lessons%20https%3A%2F%2Flittlegarden.academy%2F" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+  <div class="share-icons">
+    {% for name, icon, url in destinations %}
+    <a href="{{ url }}" aria-label="Share on {{ name }}" title="Share on {{ name }}"{% if url|first != '#' %} target="_blank" rel="noopener noreferrer"{% endif %}><svg aria-hidden="true" focusable="false"><use href="{{ icons }}#{{ icon }}"></use></svg></a>
+    {% endfor %}
+    <button type="button" hidden data-share-device data-url="{{ welcome }}" aria-label="More sharing options" title="More sharing options"><svg aria-hidden="true" focusable="false"><use href="{{ icons }}#share-nodes"></use></svg></button>
+  </div>
+  {% for name, slug, tip, url in manual %}
+  <div class="share-help" id="share-{{ slug }}" tabindex="-1">
+    <strong>Share on {{ name }}</strong><p>{{ tip }}</p>
+    <input readonly aria-label="Little Garden link for {{ name }}" value="{{ welcome }}">
+    <div class="share-actions"><button type="button" data-copy-link hidden>Copy link</button>
+    <a href="{{ url }}" target="_blank" rel="noopener noreferrer">Open {{ name }}</a>
+    <a href="#share-garden">Close</a></div><span role="status"></span>
+  </div>
+  {% endfor %}
+  <span role="status" data-share-status></span>
 </nav>
+<script src="{% static 'social-share.js' %}" defer></script>

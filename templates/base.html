@@ -1,4 +1,4 @@
-{% load static %}<!doctype html>
+{% load static social %}<!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 {% if request.garden_device %}<link rel="manifest" href="{% url 'manifest' %}"><meta name="theme-color" content="#28563e">{% endif %}
@@ -18,5 +18,5 @@
   {% elif request.session.child and not request.garden_device %}<a href="{% url 'login' %}">Parent sign in</a>{% endif %}</nav>
 </header>
 <main {% include 'appearance_attrs.html' %}>{% block content %}{% endblock %}</main>
-<footer>Little Garden · Free for every family{% if not request.garden_device %} · <a href="{% url 'welcome' %}">Garden opening</a>{% if user.is_authenticated or not request.session.child %} · <a href="{% url 'mission' %}">Mission statement</a>{% endif %}{% endif %}{% if not request.garden_device %}{% if user.is_authenticated or not request.session.child %}{% include 'share_links.html' %}{% endif %}{% endif %}</footer>
+<footer>Little Garden · Free for every family{% if not request.garden_device %} · <a href="{% url 'welcome' %}">Garden opening</a>{% if user.is_authenticated or not request.session.child %} · <a href="{% url 'mission' %}">Mission statement</a>{% endif %}{% endif %}{% if not request.garden_device %}{% if user.is_authenticated or not request.session.child %}{% share_links %}{% endif %}{% endif %}</footer>
 </body></html>

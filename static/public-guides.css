@@ -1,4 +1,4 @@
-.public-nav,.guide-jumps,.share-links { display:flex; flex-wrap:wrap; align-items:center; gap:.4rem 1rem }
+.public-nav,.guide-jumps { display:flex; flex-wrap:wrap; align-items:center; gap:.4rem 1rem }
 .public-nav a,.guide-jumps a { padding:.45rem .12rem; text-underline-offset:.22em; font-weight:650 }
 .public-nav a[aria-current] { text-decoration-thickness:.18em }
 .story-header .public-nav { justify-content:center; padding:.2rem 1rem; border-radius:2rem; background:var(--sky) }
@@ -24,8 +24,20 @@
 .invite-panel { max-width:40rem }
 .invite-panel input { width:min(100%,25rem) }
 .guide-next { font-weight:700 }
-.share-links { font-size:.9rem; padding:.65rem 0; gap:.4rem .9rem }
-.share-links a { text-underline-offset:.2em; padding:.3em 0 }
+.share-links { margin-top:.7rem; font-size:.95rem }
+.share-icons,.share-actions { display:flex; flex-wrap:wrap; align-items:center; gap:.4rem }
+.share-icons { margin:.45rem 0 }
+.share-icons :is(a,button) { display:grid; place-items:center; width:44px; height:44px; padding:0;
+  background:var(--surface); color:var(--link); border:1px solid var(--line); border-radius:.7rem }
+.share-icons :is(a,button):hover { background:var(--wash); border-color:var(--edge) }
+.share-icons svg { width:21px; height:21px; fill:currentColor }
+.share-links [hidden],.share-help { display:none }
+.share-help:target { display:block; max-width:36rem; margin-top:.7rem; padding:1rem;
+  background:var(--wash); border:1px solid var(--line); border-radius:.75rem; color:var(--ink) }
+.share-help p { margin:.3rem 0 .6rem }
+.share-help input { width:100% }
+.share-actions { gap:.4rem 1rem; margin-top:.6rem }
+.share-help [role="status"]:not(:empty) { display:block; margin-top:.5rem }
 @media(max-width:700px) {
   .story-header .public-nav { order:3; width:100%; gap:.4rem 1rem; padding:.1rem 0 }
   .story-header { gap:.5rem }
