@@ -40,3 +40,16 @@ class DonationTests(TestCase):
             page = self.client.get(reverse("mission"))
             self.assertContains(page, "Give monthly")
             self.assertNotContains(page, "Give once")
+
+    @override_settings(STRIPE_CUSTOMER_PORTAL_LINK="https://billing.stripe.com/p/login/ExamplePortal",
+                       STRIPE_TEST_ONE_TIME_LINK="", STRIPE_TEST_MONTHLY_LINK="")
+    def test_supporters_can_cancel_even_when_new_donations_are_paused(self):
+        page = self.client.get(reverse("mission"))
+        self.assertContains(page, 'href="https://billing.stripe.com/p/login/ExamplePortal"')
+        self.assertContains(page, "You can cancel your monthly support at any time.")
+        with self.settings(STRIPE_CUSTOMER_PORTAL_LINK="https://example.org/p/login/ExamplePortal"):
+            self.assertNotContains(self.client.get(reverse("mission")), "Cancel monthly support")
+        session = self.client.session
+        session["child"] = 12
+        session.save()
+        self.assertNotContains(self.client.get(reverse("mission")), "billing.stripe.com")

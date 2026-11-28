@@ -2497,7 +2497,8 @@ class VisualReview(StaticLiveServerTestCase):
 
     @override_settings(INVITE_ONLY_SIGNUP=True, PUBLIC_HOST="testserver",
                        STRIPE_LIVE_ONE_TIME_LINK="https://donate.stripe.com/ExampleOnce",
-                       STRIPE_LIVE_MONTHLY_LINK="https://buy.stripe.com/ExampleMonthly")
+                       STRIPE_LIVE_MONTHLY_LINK="https://buy.stripe.com/ExampleMonthly",
+                       STRIPE_CUSTOMER_PORTAL_LINK="https://billing.stripe.com/p/login/ExamplePortal")
     def test_staff_requests_and_live_donation_handoff(self):
         from pilot.models import InviteRequest
         family = Client()
@@ -2519,11 +2520,12 @@ class VisualReview(StaticLiveServerTestCase):
                     card.get_by_role("button", name="Send invitation").click()
                     expect(card).to_contain_text("Invited")
                     self.capture(page, "staff-invites")
-                    page.route(re.compile(r"^https://(?:buy|donate)\.stripe\.com/"),
+                    page.route(re.compile(r"^https://(?:buy|donate|billing)\.stripe\.com/"),
                                lambda route: route.fulfill(status=200, body="QA checkout"))
                     page.goto(self.live_server_url + reverse("mission"))
                     for label, checkout in (("Give once", "https://donate.stripe.com/ExampleOnce"),
-                                            ("Give monthly", "https://buy.stripe.com/ExampleMonthly")):
+                                            ("Give monthly", "https://buy.stripe.com/ExampleMonthly"),
+                                            ("Cancel monthly support", "https://billing.stripe.com/p/login/ExamplePortal")):
                         link = page.get_by_role("link", name=label)
                         link.scroll_into_view_if_needed()
                         self.capture(page, "live-donations")

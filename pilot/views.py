@@ -53,7 +53,11 @@ def mission(request):
     pattern = rf"https://(?:buy|donate)\.stripe\.com/{prefix}[A-Za-z0-9]+"
     links = [(label, url) for label, url in (("Give once", once), ("Give monthly", monthly))
              if once != monthly and re.fullmatch(pattern, url)]
-    return render(request, "mission.html", {"donation_links": links, "live_donations": live})
+    portal = settings.STRIPE_CUSTOMER_PORTAL_LINK
+    if not re.fullmatch(r"https://billing\.stripe\.com/p/login/[A-Za-z0-9]+", portal):
+        portal = ""
+    return render(request, "mission.html", {"donation_links": links, "live_donations": live,
+                                            "support_portal": portal})
 
 
 CATALOG_FILTERS = ("category", "participation", "tier", "fit")

@@ -35,6 +35,9 @@
   {% else %}
   <p>Online donations are coming soon.</p>
   {% endif %}
+  {% if support_portal %}
+  <p>You can cancel your monthly support at any time. <a href="{{ support_portal }}" rel="noreferrer">Cancel monthly support</a></p>
+  {% endif %}
   <p><a href="{% static 'brand/little-garden-brand.zip' %}" download>Download the Little Garden brand kit</a></p>
   {% endif %}
 </article>
